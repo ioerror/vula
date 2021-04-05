@@ -54,55 +54,15 @@ deleting the old ones (eg, because they are "being prepared" as has happened to
 me once so far) you can fix this by restarting `multipassd` by running
 (assuming you installed it via snap) `sudo snap restart multipass.multipassd`.
 
-Note that running `vula` on your host system while running it in `multipass`
-is, hilariously, not actually working and in fact if you have `vula` running
-on your host when you run `start.sh` you may find you're unable to communicate
-with the multipass instances because the host-side interface got configured but
-the multipass instances haven't because the announcement isn't being made on
-their interface (unless you used the old -a option to publish, in which case it
-would still be announcing a foreign IP which organize on multipass instances
-will ignore).
+## Testing default route encryption in the multipass VMs
 
-One solution is to `wg-quick down vula` on the host side.
-
-The correct solution is to fix discover to make it only listen to the
-interface(s) of the IP(s) which it is announcing.
-
-Another is to run another instance of publish, with the multipass host IP of
-10.168.128.1, and then (this part is really irritating) after organize adds the
-routes you need to delete them and re-add them with src 10.168.128.1. Then, it
-works. Eg,
-    ```
-    sudo ip route delete 10.168.128.218 dev vula table 666
-    sudo ip route add 10.168.128.218 dev vula table 666 src 10.168.128.1
-    ```
-This should obviously be fixed... unfortunately passing
-`ip_route_organizer.route` a `src` argument didn't seem to add the correct
-routes.
-
-## Advanced
-
-It is (or was once, at least; this hasn't been tested in some time) possible to
-have vula on the host system peer with the VMs. TO do this, one must run
-additional publish and discover processes on the host:
-
-    sudo systemctl stop vula-organize
-    # edit state file to add mpqemubr0 to iface_PREFIX_allowed
-    sudo systemctl start vula-organize
-    sudo systemctl restart vula-publish@mpqemubr0 vula-discover@mpqemubr0
+To enable the VMs to communicate with the host via vula, run `vula prefs add
+iface_prefix_allowed mpqemubr` (if using the default qemu driver, or `virbr0`
+if using the libvirt) and then stop vula (`systemctl stop vula.slice`) and then
+start it again (`vula start`).
 
 While the host is aware of the VM peers, some tests such as retest.sh and
 test-repair.sh will not work because they take down the interface inside the VM
-which renders it unreachable. This may or may not be fixed soon.
-
-## Testing default route encryption for the downstream multipass VMs
-
-```
-sudo python3 setup.py install
-sudo rm /var/lib/vula-publish/publish.yaml
-sudo vula configure --interface mpqemubr0
-sudo vula prefs merge iface_PREFIX_allowed mpqemubr
-sudo vula status
-./start.sh
-vula peer
-```
+which renders it unreachable. This may or may not be fixed soon; for now, the
+authors usually don't keep the multipass interface in the
+`iface_prefix_allowed` allowed list on the host.

@@ -85,6 +85,9 @@ To see a list of peers:
 To see a list of peers, including disabled peers:
 * `vula peer show --all`
 
+To see descriptors and qrcodes for all enabled peers:
+* `vula peer show -Dq`
+
 To see the preferences:
 * `vula prefs`
 
