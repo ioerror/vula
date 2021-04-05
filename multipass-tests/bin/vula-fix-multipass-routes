@@ -1,0 +1,38 @@
+#!/bin/bash
+set -e
+
+# this script makes multipass routes look more like a normal desktop system by
+# making two changes:
+#   - it removes the static /32 route to the gateway
+#   - it adds a /24 route on ens4 to the DHCP subnet
+
+# These changes are necessary for multipass tests when vula is running on
+# the host (and publish and organize are configured for the mpqemubr0 device).
+
+# These changes are unnecessary but harmless when running multipass tests
+# without vula on the host.
+
+# ----
+
+# first we remove this multipass route which gets in our way (maybe it was
+# necessary for DHCP? why is this route even here? removing it doesn't seem to
+# break anything.)
+ip route show | while read route; do
+    if echo "$route"|grep ^10|grep '.1 '; then
+        set -x
+        sudo ip route del $route
+        set +x
+    fi
+done
+
+# for some reason multipass nodes don't have a /24 route for their subnet...
+# they start to need it when we add default route encryption, so that there is
+# a more specific route than the /1 for the encrypted packets to get routed.
+subnet=$(ip addr show dev ens4 2>/dev/null|grep 'inet 10'|awk '{print $2}'|perl -pe 's(\d+\/)(0/)')
+if [ "$subnet" != "" ]; then
+    # note that this currently only works with the 10. subnet on ens4, which is
+    # how multipass with the qemu backend works. this should be updated to work
+    # with other multipass drivers.
+    set -x
+    sudo ip route add $subnet dev ens4 2>/dev/null || echo "subnet route already existed"
+fi

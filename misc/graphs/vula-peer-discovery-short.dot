@@ -1,0 +1,51 @@
+digraph {
+  // Defaults for all nodes
+  node [margin=.25 fontcolor=white fontsize=16 width=0.75 shape=circle style=filled];
+
+  // Cylinder is for storage
+  // Diamonds are for decisions
+  // Parallelograms are for I/O
+  // Box is for computation
+
+  // Node definitions for labels and styles 
+  ListenForDescriptor [label="wg-mdns Organizer Daemon"];
+  ListenForDescriptor [shape=oval, fillcolor=darkblue, style=filled];
+
+  AddNewPeer [label="Add Descriptor as new Peer"];
+  AddNewPeer [shape=diamond, fillcolor=darkgreen, style=filled];
+
+  UpdatePeer [label="Update Peer Descriptor"];
+  UpdatePeer [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  ConfigurePeer [label="Configure wg-mdns device and add routes"];
+  ConfigurePeer [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  DiscardDescriptor [label="Log and discard Descriptor"];
+  DiscardDescriptor [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  CachePeer [label="Cache Peer Descriptor"];
+  CachePeer [shape=cylinder, fillcolor=darkred, style=filled];
+
+  DescriptorRecieved [label="mDNS packet with Peer Descriptor received"];
+  DescriptorRecieved [shape=parallelogram, fillcolor=darkorange, style=filled];
+
+  DescriptorParsed [label="Descriptor Parsed"];
+  DescriptorParsed [shape=diamond, fillcolor=darkgreen, style=filled];
+  
+  // Relationships between the different nodes
+  ListenForDescriptor -> DescriptorRecieved [label="Descriptor received"];
+  DescriptorRecieved -> DescriptorParsed [label="Descriptor parsed into required key value pairs"];
+
+  ConfigurePeer -> CachePeer [label="Cache new Peer Descriptor"];
+
+  DescriptorParsed -> AddNewPeer [label="Descriptor for unknown Peer"];
+  AddNewPeer -> ConfigurePeer [label="Configure New Peer with Descriptor"];
+
+  DescriptorParsed -> UpdatePeer [label="Descriptor for known Peer"];
+  UpdatePeer -> ConfigurePeer [label="Update Peer configuration"];
+
+  DescriptorParsed -> DiscardDescriptor [label="Invalid Descriptor"];
+  DiscardDescriptor -> ListenForDescriptor [label="Descriptor logged"];
+
+  CachePeer -> ListenForDescriptor [style=dotted, label="Successfully Cached"];
+}

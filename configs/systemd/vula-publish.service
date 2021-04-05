@@ -1,0 +1,41 @@
+# sudo cp vula-publish.service /etc/systemd/system/
+# sudo chmod 644 /etc/systemd/system/vula-publish.service
+
+[Unit]
+Description=vula publish daemon
+After=network.target
+PartOf=vula-publish.target
+
+[Service]
+TasksMax=24
+Slice=vula.slice
+Type=dbus
+BusName=local.vula.publish
+ExecStart=vula publish
+Restart=always
+User=vula-publish
+Group=vula
+StandardOutput=journal
+StandardError=journal
+CapabilityBoundingSet=CAP_NET_BROADCAST
+AmbientCapabilities=CAP_NET_BROADCAST
+IPAddressAllow=multicast
+PrivateTmp=yes
+NoNewPrivileges=yes
+PrivateDevices=yes
+DevicePolicy=closed
+ProtectHome=read-only
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectKernelLogs=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_NETLINK AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+InaccessiblePaths=/dev/shm
+
+[Install]
+WantedBy=multi-user.target

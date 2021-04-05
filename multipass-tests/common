@@ -1,0 +1,127 @@
+# vim: set syn=sh
+
+source config
+
+Hosts() {
+    for i in $(seq 1 $INSTANCE_COUNT); do
+        printf "%s%d\n" $PREFIX $i
+    done
+}
+
+if [ "$BACKEND" == "multipass" ]; then
+
+    Exec() {
+        host=$(shift);
+        multipass exec $host -- "$@"
+    }
+
+    Launch() {
+        name="$1"
+        image="$2"
+
+        multipass launch -n $name $image || return 1
+        multipass mount "$VULA_REPO" "${name}:vula" || return 1
+
+        if [ "$IMAGE" != "packer" ]; then
+            Exec $name bash -c '
+                echo export PATH=$PATH:/home/ubuntu/vula/multipass-tests/bin >> .profile
+                source ~/.profile
+                vula-install-deps' || return 1
+        fi
+    }
+
+    LaunchAll() {
+        # this function does (too) many things:
+        # first, if IMAGE==packer we build the image if it isn't built yet.
+        # then, we start the instances in parallel, and record the output to
+        # use for a progress bar estimate for subsequent launches. if any fail,
+        # all are stopped. if/when all launch, it installs vula in each.
+        # lastly, it fixes the weird multipass routes.
+
+        if [ "$IMAGE" == "packer" ]; then
+            IMAGE_FILE="$PWD/../packer/output-qemu/packer-qemu"
+            IMAGE_ARG="file://$IMAGE_FILE"
+            if [ -f "$IMAGE_FILE" ]; then
+                echo "Using local image $IMAGE_FILE"
+            else
+                echo "Building image using packer"
+                cd ../packer
+                packer build template.json
+                cd -
+            fi
+        else
+            IMAGE_ARG="$IMAGE"
+        fi
+        rm -f fail-marker
+        for host in $(Hosts); do
+            log="${host}.partial.launch.log"
+            complete_log="${host}.complete.launch.log"
+            len=$(cat $complete_log 2>/dev/null |wc -l)
+            ( Launch $host $IMAGE_ARG 2>&1 || (
+                echo "$host failed." >/dev/stderr
+                touch fail-marker
+                ./stop.sh 2>/dev/null
+                )
+            ) | perl -pe 'BEGIN{$|++; $/=\1} s/\x08/\n/g' |
+            pv -l -s $len -c -N "bootstrapping $host" > $log  &
+            sleep 1
+        done
+
+        wait
+
+        if [ -e fail-marker ]; then
+            echo
+            echo "something failed; cleaning up."
+            ./stop.sh 2>/dev/null
+            rm fail-marker
+            exit 1
+        fi
+
+        for host in $(Hosts); do
+            log="${host}.partial.launch.log"
+            complete_log="${host}.complete.launch.log"
+            previous_log="${host}.previous.launch.log"
+            mv -v $complete_log $previous_log || true
+            mv -v $log $complete_log || true
+        done
+
+        echo "OK: launched $INSTANCE_COUNT multipass instances"
+
+#        echo "Installing vula on each instance..."
+#        ExecEach /home/ubuntu/vula/multipass-tests/bin/vula-install
+        
+        ExecEach /home/ubuntu/vula/multipass-tests/bin/vula-fix-multipass-routes
+
+    }
+
+fi
+
+ExecEach() {
+    # TODO:
+    #  - add parallelize option, as ping and inspect do already
+    #  - learn howto getopt argparse or whatever in bash
+    if [ "$1" == "-sleep" ]; then
+        sleep=$2;
+        shift; shift;
+    fi
+    if [ "$1" == "-e" ]; then
+        shift;
+        careful=1
+    fi
+    for host in $(Hosts); do
+        echo "--- $host\$ $@"
+        if [ "$careful" == "1" ]; then
+            if ! Exec $host "$@"; then
+                echo "ExecEach: stopping because -e was specified and there was an error on '$host' running '$@'" >/dev/stderr
+                exit 1
+            fi
+        else
+            Exec $host "$@" || true
+        fi
+        if [ "$sleep" != "" ]; then
+            echo sleeping $sleep
+            sleep $sleep
+        fi
+    done
+}
+

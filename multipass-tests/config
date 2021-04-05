@@ -1,0 +1,23 @@
+
+
+INSTANCE_COUNT=3
+
+PREFIX=vula-test
+
+BACKEND=multipass
+
+# this can be set to a canonical multipass image like "20.10"
+IMAGE=20.10
+
+# or to the special string "packer" which makes us use a locally-built packer image
+IMAGE=packer
+
+if [ "$(multipass get local.driver)" == "libvirt" ]; then
+    INTERFACE=ens3
+else
+    INTERFACE=ens4 # multipass with qemu backend
+    # FIXME: add elifs for windows and mac backends' interface names here?
+fi
+
+# this is the directory that gets exposed to the test instance.
+VULA_REPO="$(readlink -f "$(dirname "$(readlink -f "$0" 2>/dev/null)")/..")"

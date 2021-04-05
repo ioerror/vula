@@ -1,0 +1,23 @@
+#!/bin/bash
+set -ex
+
+cd
+cd vula
+
+# compile C code
+python3 setup.py compile
+
+# install everything
+sudo python3 setup.py install
+
+# replace installed python module with symlink to code in repo
+sudo pip3 install -e .
+
+# for reinstalls where unit files have changed
+sudo systemctl daemon-reload
+
+set +x
+
+echo "OK: install completed on $(hostname)"
+
+exit 0

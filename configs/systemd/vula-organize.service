@@ -1,0 +1,44 @@
+# sudo cp vula-organize.service /etc/systemd/system/
+# sudo chmod 644 /etc/systemd/system/vula-organize.service
+
+[Unit]
+Description=vula organize service
+After=network.target vula-discover.target vula-publish.target
+
+[Service]
+TasksMax=24
+TimeoutStartSec=infinity
+Slice=vula.slice
+Type=dbus
+BusName=local.vula.organize
+ExecStart=vula organize
+Restart=always
+RestartSec=5s
+CapabilityBoundingSet=CAP_NET_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN
+User=vula-organize
+Group=vula
+StateDirectory=vula-organize
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+IPAddressDeny=any
+PrivateTmp=yes
+NoNewPrivileges=yes
+PrivateDevices=yes
+DevicePolicy=closed
+ProtectHome=read-only
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectKernelLogs=yes
+RestrictAddressFamilies=AF_NETLINK AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+InaccessiblePaths=/dev/shm
+
+[Install]
+WantedBy=multi-user.target

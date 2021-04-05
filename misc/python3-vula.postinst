@@ -1,0 +1,26 @@
+#!/bin/bash
+
+VULA_ORGANIZE_DIR=/var/lib/vula-organize/
+VULA_KEYS="${VULA_ORGANIZE_DIR}"/keys.yaml
+systemctl daemon-reload
+systemctl reload dbus
+systemctl restart systemd-sysusers
+
+if [ ! -d "${VULA_ORGANIZE_DIR}" ]; then
+  echo "Creating vula organize daemon state directory"
+  mkdir -p "${VULA_ORGANIZE_DIR}"
+fi
+
+if [ ! -f "${VULA_KEYS}" ]; then
+  echo "Generating vula keys..."
+  vula configure genkeys > "${VULA_KEYS}"
+  chown -R vula-organize:vula "${VULA_ORGANIZE_DIR}"
+else
+  echo "Keys appear to exist; not generating new keys"
+fi
+
+vula configure nsswitch
+echo "Enabling and starting vula-organize systemd service"
+systemctl enable --now vula-organize
+
+exit 0

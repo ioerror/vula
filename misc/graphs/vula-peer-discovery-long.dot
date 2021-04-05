@@ -1,0 +1,134 @@
+digraph {
+  // Defaults for all nodes
+  node [margin=.25 fontcolor=white fontsize=16 width=0.75 shape=circle style=filled];
+
+  // Cylinder is for storage
+  // Diamonds are for decisions
+  // Parallelograms are for I/O
+  // Box is for computation
+
+  // Node definitions for labels and styles 
+  ListenForDescriptor [label="wg-mdns Organizer Daemon"];
+  ListenForDescriptor [shape=oval, fillcolor=darkblue, style=filled];
+
+  AddNewPeer [label="Add Descriptor as new Peer"];
+  AddNewPeer [shape=diamond, fillcolor=darkgreen, style=filled];
+
+  UpdatePeer [label="Update Peer Descriptor"];
+  UpdatePeer [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  ConfigurePeer [label="Configure wg-mdns device and add routes"];
+  ConfigurePeer [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  DiscardDescriptor [label="Log and discard Descriptor"];
+  DiscardDescriptor [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  //LogError [label="Log error"];
+  //LogError [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  //CachePeer [label="Cache Peer Descriptor"];
+  //CachePeer [shape=cylinder, fillcolor=darkred, style=filled];
+  
+  CachePeerUpdate [label="Peer Descriptor Cache Modified"];
+  CachePeerUpdate [shape=cylinder, fillcolor=darkred, style=filled];
+
+  DescriptorRecieved [label="mDNS packet with Peer Descriptor received"];
+  DescriptorRecieved [shape=parallelogram, fillcolor=darkorange, style=filled];
+
+  //DiscoverLocalIPs [label="Organizer enumerates local networks"];
+  //DiscoverLocalIPs [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  ParseDescriptor [label="Parse Descriptor into key,value pairs"];
+  ParseDescriptor [shape=diamond, fillcolor=darkgreen, style=filled];
+
+  DescriptorParsed [label="Descriptor Parsed"];
+  DescriptorParsed [shape=diamond, fillcolor=darkgreen, style=filled];
+
+  FilterDescriptor [label="Filter Descriptor by constraints"];
+  FilterDescriptor [shape=diamond, fillcolor=darkgreen, style=filled];
+  
+  //FilterDescriptorIPs [label="Remove any IP address which is not local to the Organizer"];
+  //FilterDescriptorIPs [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  CheckCacheForDescriptorIPs [label="Check the cache to see if Peer IP address is already claimed"]; 
+  CheckCacheForDescriptorIPs [shape=diamond, fillcolor=darkgreen, style=filled];
+
+  CheckCacheForDescriptorPK [label="Check the cache if Peer PK is already known"];
+  CheckCacheForDescriptorPK [shape=diamond, fillcolor=darkgreen, style=filled];
+
+
+  IPUpdate [label="IP address now claimed by Peer in Descriptor"];
+  IPUpdate [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  IPConflict [label="IP address claimed by a Peer"];
+  IPConflict [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  PKConflict [label="Announcement is from our own Public Key"];
+  PKConflict [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  IsSigned [label="Descriptor checked for signature data"];
+  IsSigned [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  IsNotSigned [label="Descriptor is unsigned"];
+  IsNotSigned [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  VerifySignature [label="Verify Peer signature for Descriptor contents"];
+  VerifySignature [shape=diamond, fillcolor=darkgreen, style=filled];
+
+  SignatureVerified [label="Peer cryptographic signature is correct"];
+  SignatureVerified [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+  SignatureIncorrect [label="Peer cryptographic signature is incorrect"];
+  SignatureIncorrect [shape=rect, fillcolor=lightblue, style="filled,rounded"];
+
+
+  // Relationships between the different nodes
+
+
+  // Signed update flow for known peer
+  ListenForDescriptor -> DescriptorRecieved [label="Descriptor received"];
+
+  // Unsigned descriptors are tossed out
+  DescriptorRecieved -> IsNotSigned [style=dotted, color="red", label="Descriptor is not signed"];
+  IsNotSigned -> DiscardDescriptor [style=dotted, color="red", label="Not signed; discard descriptor"];
+
+  // Signed descriptors are checked
+  DescriptorRecieved -> IsSigned [label="Descriptor is signed"];
+  IsSigned -> VerifySignature [label="Verify signature"];
+
+  // If the descriptor is signed and verified to match sigs from vk
+  // then we check it for conflicts and either add or update the cache
+  VerifySignature -> SignatureVerified [label="Signature verified"];
+  SignatureVerified -> ParseDescriptor;
+  ParseDescriptor -> DescriptorParsed [label="Descriptor parsed into required key value pairs"];
+  ParseDescriptor -> DiscardDescriptor [style=dotted, color="red", label="Descriptor parse error"];
+
+  // Invalid signatures or a lack of signature are a failure mode
+  VerifySignature -> SignatureIncorrect [style=dotted, color="red", label="Signature incorrect"];
+  SignatureIncorrect -> DiscardDescriptor [style=dotted, color="red", label="Forgery detected; discard descriptor"];
+
+  DescriptorParsed -> FilterDescriptor [label="Filter Descriptor for various constraints"]; 
+
+  FilterDescriptor -> PKConflict [style=dotted, color="red", label="Discard Descriptors which have a conflicting Public Key"];
+  PKConflict -> DiscardDescriptor [style=dotted, color="red", label="Discard Descriptors which contain our own Public Key"];
+
+  //FilterDescriptor -> FilterDescriptorIPs [label="Transform Descriptor"];
+  //FilterDescriptorIPs -> CheckCacheForDescriptorIPs [label="Check if Descriptor IP is claimed by another Peer"];
+  CheckCacheForDescriptorIPs -> IPConflict [style=dotted, color="red", label="IP already claimed by a different Peer public key"];
+  IPConflict -> DiscardDescriptor [style=dotted, color="red", label="IP address may only be claimed by one Peer public key"];
+
+  FilterDescriptor -> DiscardDescriptor [style=dotted, color="red", label="Discard Descriptors which contain another known Public Key signed by incorrect vk"];
+  FilterDescriptor -> CheckCacheForDescriptorPK [label="Peer PK with correct vk"];
+  CheckCacheForDescriptorPK -> DiscardDescriptor [style=dotted, color="red", label="Peer PK is known and VK is incorrect"];
+  CheckCacheForDescriptorPK -> CheckCacheForDescriptorIPs -> AddNewPeer [label="New peer Descriptor discovered"];
+  AddNewPeer -> ConfigurePeer -> CachePeerUpdate [label="Configure Peer for WireGuard and Add Peer to Cache"];
+
+  CheckCacheForDescriptorIPs -> IPUpdate [label="Known Peer now reachable at IP address in Descriptor"];
+  IPUpdate -> UpdatePeer [label="Modify peer configuration"];
+  UpdatePeer -> ConfigurePeer -> CachePeerUpdate [label="Configure Peer for WireGuard and Update Peer in Cache"];
+  CachePeerUpdate -> ListenForDescriptor [label="Successfully Updated Cache"];
+
+  DescriptorParsed -> DiscardDescriptor [style=dotted, color="red", label="Invalid Descriptor"];
+  DiscardDescriptor -> ListenForDescriptor [style=dotted, color="red", label="Descriptor logged"];
+
+}

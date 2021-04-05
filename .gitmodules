@@ -1,0 +1,3 @@
+[submodule "nss-altfiles"]
+	path = nss-altfiles
+	url = https://github.com/flatcar-linux/nss-altfiles

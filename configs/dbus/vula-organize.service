@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=local.vula.organize
+Exec=/bin/false
+User=root
+SystemdService=vula-organize.service

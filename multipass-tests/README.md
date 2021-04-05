@@ -1,0 +1,108 @@
+# Multipass test/dev environment
+
+If you have `multipass` installed (a thing which lets you easily run Ubuntu VMs
+on many modern GNU/Linux distros, or on Mac or Windows) then you can use the
+scripts in this directory to setup virtual machines that communicate over
+vula.
+
+On GNU/Linux distros with `snapd` installed, you can install `multipass` by
+running `sudo snap install multipass --classic`.
+
+By default, these integration tests build a multipass image with vula
+installed using a tool called `packer`. Run `apt install packer` to use this.
+
+Alternately, you can maybe edit the config file in this directory to set
+`IMAGE` to `20.10` instead of `packer`. This will be much slower as vula and
+its dependencies must be installed on each instance instead of just once. This
+functionality may be removed later, but remains for now so that we can test on
+other multipass images without needing to make new packer configs for each. It
+hasn't been tested recently.
+
+## Quick start
+
+Simply run `./start.sh` and three VMs will be created and will ping each other.
+
+Aside from the multipass instances and the build (which happens in-place in
+this source checkout) the host system will not be modified.
+
+When you are finished and want to destroy the VMs, run `./stop.sh` and they
+will be stopped and deleted.
+
+## Development
+
+Running `start.sh` will build an image with debs built from the current commit.
+This does *not* include uncomitted changes.
+
+You can run other scripts in this directory such as `retest.sh`, or you can run
+`multipass shell vula-test1` to go exploring inside one of the VMs.
+
+You can run `./reinstall.sh` which will use pip to (re)install vula in
+"editable" mode in each instance, so that that after you edit the code in your
+local checkout of this repository (which is mounted in the VMs) you can simply
+restart services (with `restart-services.sh` in them without needing to run
+`setup.py install` or anything else.
+
+Using `./reinstall.sh && ./retest.sh` (which will remove all non-key state and
+restart the services) should be sufficient to test code changes most of the
+time (which is useful since starting the VMs from scratch takes ~2 minutes).
+
+## Troubleshooting
+
+If multipass gets confused, you can delete the instances and start over by
+simply running `./stop.sh`. If you are unable to start new instances after
+deleting the old ones (eg, because they are "being prepared" as has happened to
+me once so far) you can fix this by restarting `multipassd` by running
+(assuming you installed it via snap) `sudo snap restart multipass.multipassd`.
+
+Note that running `vula` on your host system while running it in `multipass`
+is, hilariously, not actually working and in fact if you have `vula` running
+on your host when you run `start.sh` you may find you're unable to communicate
+with the multipass instances because the host-side interface got configured but
+the multipass instances haven't because the announcement isn't being made on
+their interface (unless you used the old -a option to publish, in which case it
+would still be announcing a foreign IP which organize on multipass instances
+will ignore).
+
+One solution is to `wg-quick down vula` on the host side.
+
+The correct solution is to fix discover to make it only listen to the
+interface(s) of the IP(s) which it is announcing.
+
+Another is to run another instance of publish, with the multipass host IP of
+10.168.128.1, and then (this part is really irritating) after organize adds the
+routes you need to delete them and re-add them with src 10.168.128.1. Then, it
+works. Eg,
+    ```
+    sudo ip route delete 10.168.128.218 dev vula table 666
+    sudo ip route add 10.168.128.218 dev vula table 666 src 10.168.128.1
+    ```
+This should obviously be fixed... unfortunately passing
+`ip_route_organizer.route` a `src` argument didn't seem to add the correct
+routes.
+
+## Advanced
+
+It is (or was once, at least; this hasn't been tested in some time) possible to
+have vula on the host system peer with the VMs. TO do this, one must run
+additional publish and discover processes on the host:
+
+    sudo systemctl stop vula-organize
+    # edit state file to add mpqemubr0 to iface_PREFIX_allowed
+    sudo systemctl start vula-organize
+    sudo systemctl restart vula-publish@mpqemubr0 vula-discover@mpqemubr0
+
+While the host is aware of the VM peers, some tests such as retest.sh and
+test-repair.sh will not work because they take down the interface inside the VM
+which renders it unreachable. This may or may not be fixed soon.
+
+## Testing default route encryption for the downstream multipass VMs
+
+```
+sudo python3 setup.py install
+sudo rm /var/lib/vula-publish/publish.yaml
+sudo vula configure --interface mpqemubr0
+sudo vula prefs merge iface_PREFIX_allowed mpqemubr
+sudo vula status
+./start.sh
+vula peer
+```

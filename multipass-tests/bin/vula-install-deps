@@ -1,0 +1,44 @@
+#!/bin/bash
+set -e
+apt update;
+if [ $? != 0 ]; then
+  sudo apt update;
+fi
+
+if [ "${container}" == "docker" ]; then
+  apt install -y sudo;
+fi
+
+# skipping upgrade for now as it started needing to upgrade the kernel which
+# takes too long
+if [ "${container}" == "docker" ]; then
+  sudo apt upgrade -y;
+  sudo apt install -y git systemd qemu-user lsof iproute2 systemd-sysv vim htop net-tools iputils-ping dbus ufw --no-install-recommends;
+else
+  echo "Docker not detected; skipping extra package install";
+fi
+
+# CSIDH module deps
+sudo apt install -y dh-python python3-click  python3-sympy  python3-progress python3-mpmath \
+  python3-numpy python3-matplotlib python3-networkx \
+  python3-setuptools-scm python3-setuptools python3-cpuinfo --no-install-recommends
+
+sudo apt install -y wireguard wireguard-tools python3-yaml python3-click python3-nacl python3-schema python3-pip python3-watchdog python3-pathtools make libc-dev gcc python3-pydbus python3-click-man python3-pyroute2 python3-pytest-runner click-man python-is-python3 python3-pytest python3-toml python3-py python3-packaging python3-pluggy python3-hkdf python3-ifaddr python3-cryptography python3-dbus python3-pygments python3-systemd python3-qrcode python3-all python-all fakeroot build-essential dh-python debhelper --no-install-recommends
+
+# to satisfy debian dependency
+sudo apt install -y python3-zeroconf --no-install-recommends
+
+# to get newer version that fixes some bugs
+sudo pip3 install -U zeroconf
+
+sudo pip3 install stdeb
+
+sudo pip3 install sibc
+# for latest version:
+#sudo pip3 install git+https://github.com/JJChiDguez/sibc
+
+if [ "${container}" == "docker" ]; then
+  sudo apt autoremove && sudo apt clean;
+fi
+
+echo "OK: deps installed on $(hostname)"

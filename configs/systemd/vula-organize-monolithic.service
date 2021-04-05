@@ -1,0 +1,47 @@
+# sudo cp vula-organize-monolithic.service /etc/systemd/system/
+# sudo chmod 644 /etc/systemd/system/vula-organize-monolithic.service
+
+[Unit]
+Description=vula monolithic service
+After=network.target
+
+[Service]
+TasksMax=12
+TimeoutStartSec=infinity
+Slice=vula.slice
+Type=dbus
+BusName=local.vula.organize
+ExecStart=vula organize run --monolithic
+Restart=always
+RestartSec=5s
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BROADCAST
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BROADCAST
+User=vula-organize
+Group=vula
+StateDirectory=vula-organize
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+# To make this actually deny traffic we need some stacked systemd slices with
+# the following set: IPAddressDeny=any
+# What is needed for this program to function is only multicast:
+IPAddressAllow=multicast
+PrivateTmp=yes
+NoNewPrivileges=yes
+PrivateDevices=yes
+DevicePolicy=closed
+ProtectHome=read-only
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectKernelLogs=yes
+RestrictAddressFamilies=AF_NETLINK AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+InaccessiblePaths=/dev/shm
+
+[Install]
+WantedBy=vula-organize-monolithic.target

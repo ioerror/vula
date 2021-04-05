@@ -1,0 +1,15 @@
+[Unit]
+Description=Slice used to run vula related services 
+Before=slices.target
+
+[Slice]
+MemoryAccounting=true
+IOAccounting=true
+IPAccounting=true
+CPUAccounting=true
+TasksAccounting=true
+CPUWeight=100
+IOWeight=100
+MemoryMax=512M
+BlockIOWeight=100
+TasksMax=72

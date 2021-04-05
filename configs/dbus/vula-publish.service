@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=local.vula.publish
+Exec=/bin/false
+User=root
+SystemdService=vula-publish.service

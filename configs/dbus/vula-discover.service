@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=local.vula.discover
+Exec=/bin/false
+User=root
+SystemdService=vula-discover.service

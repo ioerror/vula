@@ -1,0 +1,25 @@
+#!/bin/bash
+set -e
+
+if [ "${container}" == "docker" ]; then
+  cd /etc/systemd/system/ && rm -vf *.wants/* && \
+    cd /lib/systemd/system/ && rm -vf *.wants/* && \
+    cd sysinit.target.wants/ && \
+    ln -s ../systemd-tmpfiles-setup-dev.service . && \
+    ln -s ../systemd-tmpfiles-setup.service . && \
+    ln -s ../systemd-journald.service . && \
+    cd ../sockets.target.wants/ && \
+    ln -s ../dbus.socket . && \
+    ln -s ../systemd-journald-audit.socket . && \
+    ln -s ../systemd-journald-dev-log.socket . && \
+    ln -s ../systemd-journald.socket . && \
+    cd ../getty.target.wants/ && \
+    ln -s ../getty-static.service . && \
+    ln -s ../systemd-update-utmp-runlevel.service . && \
+    cd ../timers.target.wants/ && \
+    ln -s ../systemd-tmpfiles-clean.timer;
+    echo "OK: systemd configured on $(hostname)"
+else
+  echo "Docker not detected; skipping systemd setup";
+fi
+

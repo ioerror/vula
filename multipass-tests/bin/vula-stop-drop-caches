@@ -1,0 +1,24 @@
+#!/bin/bash
+# this stops services, removes the organize cache, and brings the interface
+# down (which has the side effect of removing all peers and # routes).
+# it leaves the system with no services running, with the interface down, and
+# no peers known to organize.
+# The 3 keys ("vk" signing key, wg key, and csidh key) are not removed.
+
+if ip route get $(ip route |grep default|cut -f 3 -d " ")|grep 'dev vula'; then
+    echo "It appears the host is routed over vula, so stop-drop-caches will abort now to avoid losing SSH access to VMs."
+    exit 1
+fi
+
+sudo systemctl stop vula.slice
+set -e
+if ps auxwww|grep bin/vula|grep -v grep|grep -v stop-drop >/dev/stderr; then
+    echo >/dev/stderr
+    echo "abort: the above processes are still running after we stopped the slice." >/dev/stderr
+    exit 1
+fi
+sudo rm -f /var/lib/vula-organize/vula-organize.yaml
+sudo rm -f /var/lib/vula-organize/hosts
+sudo ip link delete vula || true
+sudo ip rule delete table 666 || true
+echo "OK: organize state is cleared; link and rule deleted."

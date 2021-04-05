@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<policyconfig>
+<vendor>vula</vendor>
+<vendor_url>https://codeberg.org/vula/vula/</vendor_url>
+<action id="local.vula.organize.Debug.test_auth">
+    <description gettext-domain="systemd">Authorization</description>
+    <message gettext-domain="systemd">Authentication is needed to retreive vula state.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  <annotate key="org.freedesktop.policykit.owner">unix-user:vula-organize</annotate>
+  </action>
+<action id="local.vula.organize.Debug.dump_state">
+    <description gettext-domain="systemd">Authorization</description>
+    <message gettext-domain="systemd">Authentication is needed to retreive vula state.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  <annotate key="org.freedesktop.policykit.owner">unix-user:vula-organize</annotate>
+  </action>
+<action id="local.vula.organize.Peers.show">
+    <description gettext-domain="systemd">Authorization</description>
+    <message gettext-domain="systemd">Authentication is needed to retreive vula state.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  <annotate key="org.freedesktop.policykit.owner">unix-user:vula-organize</annotate>
+  </action>
+</policyconfig>
