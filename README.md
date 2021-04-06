@@ -31,6 +31,12 @@ Vula's advantages over some other solutions include:
   adversaries
 * simple verification with QR codes to disrupt active surveillance adversaries
 
+# Status
+
+Vula is functional today, although it has a number of known issues documented in the `TODO` file. It is ready for testing by people who are proficient with networking and the commandline. It is not yet ready for novice users to test without assistance.
+
+If you encounter problems while running it, the steps to disable it are currently `sudo systemctl stop vula.slice` followed by `sudo ip link del vula`. Please open an issue on codeberg if you encounter any problems!
+
 # Requirements
 
 Currently, GNU/Linux is the only supported operating system. We plan to port
@@ -41,8 +47,12 @@ Ubuntu (20.04 and 20.10). It is likely to work on other modern distributions.
 
 # Installation
 
-To build and install a Debian package:
+We do not yet have packages available for download, but you can build your own deb or wheel from a git checkout.
 
+## option 1: build and install a Debian Package
+
+* `sudo apt install --no-install-recommends wireguard wireguard-tools python3-yaml python3-click python3-nacl python3-schema python3-pip python3-pydbus python3-pyroute2 python3-pytest-runner python3-pytest python3-toml python3-py python3-packaging python3-pluggy python3-hkdf python3-ifaddr python3-cryptography python3-dbus python3-pygments python3-systemd python3-qrcode python3-all python-all fakeroot build-essential dh-python debhelper make gcc`
+* `sudo pip3 install stdeb sibc` (note: unfortunately this step still requires installing stdeb, sibc, and its dependencies with pip as root - you can alternately build a deb of `sibc` but this procedure is not yet documented here. the stdeb version from Debian stable and Ubuntu 20.10 is insufficient, however.)
 * `git clone --recurse-submodules https://codeberg.org/vula/vula`
 * `cd vula`
 * `make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb`
@@ -51,11 +61,14 @@ Installing the deb will automatically configure `nsswitch`, restart
 `systemd-sysusers`, reload `dbus`, etc, and will tell `systemd` to enable and
 start the `vula-organize` service.
 
-Alternately, the software can be installed using pip:
+## option 2: install with pip
+
+If you don't mind installing many things using `sudo pip`, the software can be installed this way:
+
 * `git clone --recurse-submodules https://codeberg.org/vula/vula`
 * `cd vula`
 * `python3 setup.py compile`
-* `pip install .`
+* `sudo pip install .`
 
 After installing with pip, users will need to configure the system:
 * `sudo vula configure nsswitch`
