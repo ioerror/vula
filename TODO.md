@@ -5,15 +5,15 @@
 - fix discover/organize deadlock
     - easily reproducible by running rediscover while organize is blocked in
       csidh on startup
-        - organize's rediscover blocks on discover's listen([]) which blocks on
-          zeroconf.cancel() if there is a zeroconf thread already blocked on a
-          call to organize's process_descriptor (which won't begin executing
+        - organize's rediscover blocks on discover's `listen([])` which blocks on
+          `zeroconf.cancel()` if there is a zeroconf thread already blocked on a
+          call to organize's `process_descriptor` (which won't begin executing
           until the rediscover call is finished, which will never happen
-          because it is blocked waiting for the call to discover's listen([])
+          because it is blocked waiting for the call to discover's `listen([])`
           method)
-    - also theoretically triggerable by certain sequences of netlink and
-      descriptor events, eg, if a descriptor comes in at the same time as the
-      netlink monitor thread finds out we no longer have an IP bound.
+    - this is also almost certainly triggerable by certain sequences of netlink
+      and descriptor events, eg, if a descriptor comes in at the same time as
+      the netlink monitor thread finds out we no longer have an IP bound.
     - root cause is fundamentally a design flaw of ours: organize and discover
       both call the other.
         - fix might be to to replace dbus method calls in one or both
@@ -21,6 +21,12 @@
         - if we had the intermediate-state design for async csidh (described
           below) this bug would be much harder to trigger, but would still
           exist.
+
+- fix verify command
+    - it has bitrotted. it comes from the time when the publish daemon created
+      and signed the descriptor instead of organize doing it. (meanwhile, peers
+      can currently have their `pinned` and `verified` flags set using the
+      `vula peer set` command...)
 
 - async csidh?
     - the plan: make process descriptor commit quickly, before csidh is done.
@@ -36,7 +42,7 @@
 - vula-organize systemd service should be renamed to vula
 
 - add a "release-gateway" command
-    - this command will unset the use_as_gateway flag from a pinned peer which
+    - this command will unset the `use_as_gateway` flag from a pinned peer which
       is no longer in a locally bound subnet. this is the command to run to
       explicitly allow leaving a network with a pinned gateway.
 
@@ -99,7 +105,7 @@
   peers (including routers).
 
 - write a cryptographic warnings page like this:
- - https://ntruprime.cr.yp.to/warnings.html
+    - https://ntruprime.cr.yp.to/warnings.html
 
 - replace wireshark screenshot (the one currently in the paper has the old
   _wireguard._udp name)
@@ -130,7 +136,7 @@
 -- vula qr-discover
 --- qr code encoding our latest descriptor
 
-=============
+---
 
 - Protocol design discussion: private peer verification scheme with QR codes.
 -- post-paper deadline
@@ -197,7 +203,8 @@
 
 Enable Click (bash) tab completion (!)
     built-in support is no good for multicommands, but maybe the one from contrib is?
---
+
+---
 
 Investigate the use of RFCTBD:
   NetRange:       100.64.0.0 - 100.127.255.255
@@ -207,7 +214,7 @@ Investigate the use of RFCTBD:
   Parent:         NET100 (NET-100-0-0-0-0)
   NetType:        IANA Special Use
 
---
+---
 
 Consider adding IPSEC peers when WireGuard isn't supported.
   sudo apt install libreswan
