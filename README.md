@@ -33,9 +33,14 @@ Vula's advantages over some other solutions include:
 
 # Status
 
-Vula is functional today, although it has a number of known issues documented in the `TODO` file. It is ready for testing by people who are proficient with networking and the commandline. It is not yet ready for novice users to test without assistance.
+Vula is functional today, although it has a number of known issues documented
+in the `TODO` file. It is ready for daily use by people who are proficient with
+networking and the commandline, but we do not yet recommend it for people who
+are not.
 
-If you encounter problems while running it, the steps to disable it are currently `sudo systemctl stop vula.slice` followed by `sudo ip link del vula`. Please open an issue on codeberg if you encounter any problems!
+If you encounter problems while running it, the steps to disable it are
+currently `sudo systemctl stop vula.slice` followed by `sudo ip link del vula`.
+Please open an issue on codeberg if you encounter any problems!
 
 # Requirements
 
