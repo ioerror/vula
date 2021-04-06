@@ -338,7 +338,7 @@ class OrganizeState(Engine, yamlrepr_hl):
             # FIXME: this doesn't specify the routing table. maybe need to make
             # triggers api accept kwargs too?
             self.result.add_triggers(
-                remove_routes=('0.0.0.0/1', '128.0.0.0/1')
+                remove_routes=(('0.0.0.0/1', '128.0.0.0/1'),)
             )
             # these routes are currently only removed because we still call
             # sync (aka full repair) on system state change
