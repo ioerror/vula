@@ -1,3 +1,5 @@
+- Review this TODO file, remove outdated things, and file codeberg issues for what remains.
+
 - document considered attacks (eg: rogue DHCP servers, arp spoofing, etc)
 
 - fix discover/organize deadlock
