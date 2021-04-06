@@ -36,15 +36,7 @@ from yaml import safe_dump, safe_load
 
 from .click import DualUse
 from .constants import (
-    _DATE_FMT,
-    _LOG_FMT,
-    _FWMARK,
-    _TABLE,
-    _WG_CONFIG_FILE,
-    _WG_INTERFACE,
-    _WG_PORT,
     _WG_SERVICES,
-    _VULA_TEMPLATE,
     _ORGANIZE_KEYS_CONF_FILE,
 )
 
@@ -84,14 +76,6 @@ class Configure(attrdict):
             if daemon.booted() != 1:
                 log.error("not running systemd: manual configuration required")
                 raise Exit(2)
-
-    def _wg_config_str(
-        self, priv_key, wg_port=_WG_PORT, table=_TABLE, fw_mark=_FWMARK
-    ):
-        """
-        Return a populated wireguard configuration file as a string.
-        """
-        return _VULA_TEMPLATE.format(wg_port, priv_key, table, fw_mark)
 
     @DualUse.method()
     def wg_quick_config(self):

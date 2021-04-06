@@ -7,31 +7,14 @@ from typing import List
 _LOG_FMT: str = "%(asctime)s: %(message)s"
 _DATE_FMT: str = "%Y-%m-%d-%H:%M:%S"
 _WG_INTERFACE: str = "vula"
-_VULA_TEMPLATE: str = """[Interface]
-ListenPort = {a}
-PrivateKey = {b}
-Table = {c}
-FwMark = {d}
-PostUp = ip -4 rule add not fwmark {d} table {c} pref 666;ip -6 rule add not fwmark {d} table {c} pref 666;
-PostDown = ip -4 rule delete table {c};ip -6 rule delete table {c};
-"""
 
-_VULA_TEMPLATE = _VULA_TEMPLATE.format(a={0}, b={1}, c={2}, d={3})
-_WG_QUICK_SERVICE: str = "wg-quick@" + _WG_INTERFACE + ".service"
 _WG_SERVICES: List = [
     "vula-publish.service",
     "vula-organize.service",
     "vula-discover.service",
-    "vula-petname.service",
     "vula.slice",
 ]
 _ORGANIZE_CACHE_BASEDIR: str = "/var/lib/vula-organize/"
-_WG_CONFIG_FILE: str = "/etc/wireguard/" + _WG_INTERFACE + ".conf"
-_WG_PRIVATE_KEY_FILE: str = "/etc/wireguard/" + _WG_INTERFACE + ".priv"
-_WG_PUBLIC_KEY_FILE: str = "/etc/wireguard/" + _WG_INTERFACE + ".pub"
-_ED25519_SEED_FILE: str = "/etc/wireguard/" + _WG_INTERFACE + ".seed"
-_CSIDH_PRIVATE_KEY_FILE: str = _ORGANIZE_CACHE_BASEDIR + "csidh-" + _WG_INTERFACE + ".priv"
-_CSIDH_PUBLIC_KEY_FILE: str = "/etc/wireguard/" + "csidh-" + _WG_INTERFACE + ".pub"
 _WG_PORT: int = 5354
 _TABLE: int = 666
 _FWMARK: int = 555
@@ -49,13 +32,6 @@ _ORGANIZE_KEYS_CONF_FILE: str = _ORGANIZE_CACHE_BASEDIR + "keys.yaml"
 _ORGANIZE_HOSTS_FILE: str = _ORGANIZE_CACHE_BASEDIR + "hosts"
 _ORGANIZE_UPDATE_TEMP: str = "vula-organize-peer-update-"
 _DEFAULT_TABLE: int = 666
-
-_PETNAME_ORGANIZE_HOSTSFILE: str = "/var/lib/vula-organize/vula-organize-hosts"
-_PETNAME_HOSTSFILE_BASEDIR: str = "/var/lib/vula-petname/"
-_PETNAME_HOSTSFILE: str = _PETNAME_HOSTSFILE_BASEDIR + "hosts"
-_PETNAME_HOSTSFILE_MODE: int = 755
-_PETNAME_SOCKET: str = "/var/lib/private/vula-organize/hosts"
-_PETNAME_SOCKET_MODE: int = 660
 
 _ORGANIZE_DBUS_NAME: str = "local.vula.organize"
 _DISCOVER_DBUS_NAME: str = "local.vula.discover"

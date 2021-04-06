@@ -60,8 +60,6 @@ from .common import (
 )
 from .engine import Engine, Result
 from .constants import (
-    _B64ALPHABET,
-    _DATE_FMT,
     _DEFAULT_INTERFACE,
     _DEFAULT_TABLE,
     _FWMARK,
@@ -73,7 +71,6 @@ from .constants import (
     _ORGANIZE_HOSTS_FILE,
     _ORGANIZE_KEYS_CONF_FILE,
     _ORGANIZE_UPDATE_TEMP,
-    _CSIDH_PRIVATE_KEY_FILE,
     _ORGANIZE_DBUS_NAME,
     _ORGANIZE_DBUS_PATH,
     _DISCOVER_DBUS_NAME,
