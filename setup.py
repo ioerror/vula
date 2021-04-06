@@ -1,7 +1,6 @@
 import setuptools
-from setuptools.command.install import install as hookInstall
 from setuptools.command.build_ext import build_ext as hookBuild_ext
-from subprocess import check_call, check_output
+from subprocess import check_output
 import os
 from sys import platform
 from os import system
@@ -69,7 +68,6 @@ linux_data_files = [
     ),
     ("/usr/lib/sysusers.d/", ['configs/sysusers.d/vula.conf']),
     ("/usr/share/man/man1/", glob('man/vula*1'),),
-    ("/lib/", ["nss-altfiles/libnss_vula.so.2"]),
 ]
 
 our_data_files = linux_data_files
@@ -81,32 +79,6 @@ if platform.startswith("openbsd"):
 class print_version(hookBuild_ext):
     def run(self):
         print(version)
-
-
-def buildNSS():
-    if platform.startswith("linux"):
-        check_call(("cd nss-altfiles && make distclean"), shell=True)
-        check_call(
-            (
-                "cd nss-altfiles && ./configure "
-                + "--with-types=hosts "
-                + "--with-module-name='vula' "
-                + "--datadir=/var/lib/vula-organize/",
-            ),
-            shell=True,
-        )
-        check_call(("cd nss-altfiles && make"), shell=True)
-
-
-class buildHookInstall(hookInstall):
-    def run(self):
-        return hookInstall.run(self)
-
-
-class buildHook(hookBuild_ext):
-    def run(self):
-        buildNSS()
-
 
 setuptools.setup(
     name="vula",
@@ -135,8 +107,6 @@ setuptools.setup(
     zip_safe=False,
     tests_require=["pytest"],
     cmdclass=dict(
-        install=buildHookInstall,
-        compile=buildHook,
         bdist_deb=bdist_deb,
         sdist_dsc=sdist_dsc,
         man_pages=man_pages,

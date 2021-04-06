@@ -38,7 +38,6 @@
                         "cd vula-git-checkout",
                         "git submodule update --init",
                         "sudo ./multipass-tests/bin/vula-install-deps",
-                        "python3 setup.py compile",
                         "make deb",
                         "sudo dpkg -i deb_dist/*deb",
                         "sudo systemctl stop vula.slice",

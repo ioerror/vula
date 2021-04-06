@@ -4,9 +4,6 @@ set -ex
 cd
 cd vula
 
-# compile C code
-python3 setup.py compile
-
 # install everything
 sudo python3 setup.py install
 

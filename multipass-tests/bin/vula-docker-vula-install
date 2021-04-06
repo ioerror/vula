@@ -2,7 +2,7 @@
 set -e
 
 if [ "${container}" == "docker" ]; then
-  cd /root/vula && python3 setup.py compile && python3 setup.py install
+  cd /root/vula && python3 setup.py install
   echo "OK: vula installed on $(hostname)"
 else
   echo "Docker not detected; skipping systemd setup";
