@@ -62,7 +62,7 @@ We do not yet have packages available for download, but you can build your own d
 * `cd vula_libnss`
 * `make deb && sudo dpkg -i deb_dist/python3-vula-libnss_*_all.deb`
 * `cd ../`
-* `git clone --recurse-submodules https://codeberg.org/vula/vula`
+* `git clone https://codeberg.org/vula/vula`
 * `cd vula`
 * `make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb`
 
@@ -84,7 +84,6 @@ If you don't mind installing many things using `sudo pip`, the software can be i
 
 * `git clone --recurse-submodules https://codeberg.org/vula/vula`
 * `cd vula`
-* `python3 setup.py compile`
 * `sudo pip install .`
 
 After installing with pip, users will need to configure the system:

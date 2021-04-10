@@ -36,23 +36,24 @@ This does *not* include uncomitted changes.
 You can run other scripts in this directory such as `retest.sh`, or you can run
 `multipass shell vula-test1` to go exploring inside one of the VMs.
 
-You can run `./reinstall.sh` which will use pip to (re)install vula in
+You can also run `./reinstall.sh` which will use `pip -e .` to install vula in
 "editable" mode in each instance, so that that after you edit the code in your
 local checkout of this repository (which is mounted in the VMs) you can simply
-restart services (with `restart-services.sh` in them without needing to run
-`setup.py install` or anything else.
+restart services (with `restart-services.sh`) without needing to run `setup.py
+install` or anything else.
 
-Using `./reinstall.sh && ./retest.sh` (which will remove all non-key state and
-restart the services) should be sufficient to test code changes most of the
-time (which is useful since starting the VMs from scratch takes ~2 minutes).
+After having run `reinstall.sh`, using `./retest.sh` (which will remove all
+non-key state and restart the services) should be sufficient to test code
+changes most of the time (which is useful since starting the VMs from scratch
+takes >2 minutes).
 
 ## Troubleshooting
 
 If multipass gets confused, you can delete the instances and start over by
 simply running `./stop.sh`. If you are unable to start new instances after
-deleting the old ones (eg, because they are "being prepared" as has happened to
-me once so far) you can fix this by restarting `multipassd` by running
-(assuming you installed it via snap) `sudo snap restart multipass.multipassd`.
+deleting the old ones (eg, because they are "being prepared" as happens
+sometimes) you can fix this by restarting `multipassd` by running (assuming you
+installed it via snap) `sudo snap restart multipass.multipassd`.
 
 ## Testing default route encryption in the multipass VMs
 
