@@ -130,6 +130,9 @@ class Sys(object):
 
         return current_subnets, gateways
 
+    def get_new_system_state(self):
+        return self.organize.get_new_system_state()
+
     def sync_interface(self, dryrun=False):
         return self.wgi.sync_interface(
             private_key=str(self.organize._keys.wg_Curve25519_sec_key),
@@ -370,7 +373,7 @@ class Sys(object):
 
         system_state = self.organize.state.system_state
 
-        for dest in dests:
+        for dest in map(ip_network, dests):
             routes = self.ipr.route("show", dst=str(dest), table=table)
             if not routes:
                 src = None
@@ -380,7 +383,7 @@ class Sys(object):
                     # (for pinned peers, we want to add IPs from
                     # non-current subnets here; they only need to be in a
                     # current subnet the first time they're seen)
-                    if dest.subnet_of(net):
+                    if dest.version == net.version and dest.subnet_of(net):
                         src = system_state.current_subnets[net][0]
                         # select the first local IP we have in the first
                         # subnet. (it would be more correct to use the

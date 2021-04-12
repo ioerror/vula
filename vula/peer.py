@@ -626,13 +626,64 @@ class PeerCommands(object):
             else:
                 click.echo("process_descriptor_string returned None 🤔")
 
-    @DualUse.method()
+    @DualUse.object(short_help="Add and remove peer addresses")
+    @click.pass_context
+    class addr(object):
+        """
+        Modify peer addresses
+
+        In the future, this might also show addresses, but for now that can be
+        done with the "peer show" command.
+        """
+
+        def __init__(self, ctx):
+            self.organize = (
+                ctx.meta.get('Organize', {}).get('magic_instance')
+                or organize_dbus_if_active()
+            )
+
+        @DualUse.method()
+        @click.argument('vk', type=str)
+        @click.argument('ip', type=str)
+        def add(self, vk, ip):
+            """
+            Add an address to a peer
+            """
+            print(Result.from_yaml(self.organize.peer_addr_add(vk, ip)))
+
+        @DualUse.method(name='del')
+        @click.argument('vk', type=str)
+        @click.argument('ip', type=str)
+        def del_(self, vk, ip):
+            """
+            Delete an address from a peer
+
+            Note: if the peer re-announces the address, it will be re-added. To
+            prevent an address from being (re)enabled, you can set it to
+            disabled instead of deleting it. This is currently accomplished
+            using a command like "peer set $vk IPv4addrs x.x.x.x false"
+            """
+            print(Result.from_yaml(self.organize.peer_addr_del(vk, ip)))
+
+    @DualUse.method(short_help="Set arbitrary peer properties")
     @click.argument('vk', type=str)
-    @click.argument('path', type=str)
+    @click.argument('path', type=str, nargs=-1)
     @click.argument('value', type=str)
     def set(self, vk, path, value):
         """
-        Modify a peer
+        Modify arbitrary peer properties
+
+        This is currently the only way to verify peers, enable/disable them,
+        and enable or disable IP addresses.
+
+        In the future, this command should perhaps only be available for
+        debugging, and the normal user tasks which it currently performs should
+        be handled by other commands.
+
+        This command is *not* able to remove keys from dictionaries; for
+        removing IP addresses (instead of disabling them with this command) you
+        can use the "vula peer addr del" command. This command is able to add new
+        IPs, but that is better done with "vula peer addr add".
         """
         res = Result(json.loads(self.organize.set_peer(vk, path, value)))
         print(res)

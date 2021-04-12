@@ -41,11 +41,6 @@
 
 - vula-organize systemd service should be renamed to vula
 
-- add a "release-gateway" command
-    - this command will unset the `use_as_gateway` flag from a pinned peer which
-      is no longer in a locally bound subnet. this is the command to run to
-      explicitly allow leaving a network with a pinned gateway.
-
 - implement auto-repair feature which automatically calls sync periodically
 
 - investigate packaging change
