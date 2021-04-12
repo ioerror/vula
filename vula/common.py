@@ -45,6 +45,10 @@ except ImportError:
 
 bp = pdb.set_trace
 
+memoize = lambda f: (
+    lambda d={}: lambda *a: d.setdefault(a, a in d or f(*a))
+)()
+
 
 def chown_like_dir(path):
     if os.getuid() == 0:

@@ -99,7 +99,7 @@ class Descriptor(schemattrdict, serializable):
                 Regex('^[a-zA-Z0-9.-]+$'),
                 lambda name: 0 < len(name) < 256,
             ),
-            'port': int_range(0, 65535),
+            'port': int_range(1, 65535),
             'vk': b64_bytes.with_len(32),
             'dt': Use(int),
             'vf': Use(int),
@@ -606,11 +606,11 @@ class PeerCommands(object):
 
         echo_maybepager(("\n" if descriptor else "\n\n").join(res))
 
-    @DualUse.method(short_help="Adds new peers from descriptors")
+    @DualUse.method(short_help="Import peer descriptors", name='import')
     @click.argument('file', type=click.File(), default='-')
-    def add(self, file):
+    def import_(self, file):
         """
-        Add peers from descriptors
+        Import peer descriptors
 
         Reads from standard input if a file is not specified.
 

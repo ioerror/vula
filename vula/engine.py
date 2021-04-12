@@ -100,17 +100,33 @@ class Result(yamlrepr_hl, schemattrdict):
 class Engine(schemattrdict, yamlfile):
 
     """
-    This is a base class for a state engine providing transactional state
-    updates. An engine subclass should define @Engine.event methods and
-    @Engine.action methods. Events lead to actions, and actions have
-    writes. The three built-in write methods are SET, ADD, and
-    REMOVE.
+    This is a transactional state engine. Subclasses implement rules in the
+    form of events and actions.
 
-    Calling an event yields a Result object which contains all of the resulting
-    actions and writes, or contains the exception if one occurred. If there
-    are any exceptions, such as a SchemaError indicating the new state is not
-    valid, the entire event fails; that is, the state changes of any
-    pre-exception writes in the event are not applied.
+    An event engine using this class may be thought of as a pure function which
+    takes a current state and new event, and produces a new state.
+
+    Subclasses should define @Engine.event methods and @Engine.action methods.
+    Events should call one or more actions. Actions may mutate the state via
+    write operations, and may call other actions, and may register triggers
+    which will be run after the transaction is committed.
+
+    The three built-in write methods are SET, ADD, and REMOVE. These methods,
+    called from actions during an event transaction, are the only place where
+    the engine state is allowed to be modified.
+
+    If there are any exceptions during execution of the event and its actions,
+    or if the state after all of the actions have completed does not satisfy
+    the schema, then none of the event's actions' write operations are applied.
+
+    If the event does not have an error, after the new state is committed, the
+    triggers are executed and and their results are recorded in the event's
+    result object. Triggers may modify state which exists outside of the state
+    engine, and may also initiate new events.
+
+    Calling an event will yield a Result object which contains a record of the
+    event arguments and the resulting actions, writes, triggers, and trigger
+    results, or contains the exception if one occurred.
 
     This is all still subject to change and there may be comments which reflect
     earlier states of development. Look at the vula.organize.OrganizeState
@@ -167,6 +183,7 @@ class Engine(schemattrdict, yamlfile):
                 res.update(error=error[0], traceback=error[1], triggers=[])
                 res = self.Result(**res)
             finally:
+                self.result = None
                 self._lock.release()
             if self.trigger_target:
                 res.run_triggers(self.trigger_target)

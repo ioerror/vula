@@ -57,6 +57,7 @@ from .common import (
     raw,
     comma_separated_IPs,
     chown_like_dir,
+    memoize,
 )
 from .engine import Engine, Result
 from .constants import (
@@ -78,6 +79,7 @@ from .constants import (
     _PUBLISH_DBUS_NAME,
     _PUBLISH_DBUS_PATH,
     _WG_PORT,
+    IPv4_GW_ROUTES,
 )
 from .common import KeyFile
 from .configure import Configure
@@ -89,14 +91,6 @@ from .prefs import Prefs
 from .discover import Discover
 from .publish import Publish
 from .sys import Sys
-
-memoize = lambda f: (
-    lambda d={}: lambda *a: d.setdefault(a, a in d or f(*a))
-)()
-
-
-class ConsistencyError(ValueError):
-    pass
 
 
 class SystemState(schemattrdict):
@@ -172,10 +166,8 @@ class OrganizeState(Engine, yamlrepr_hl):
     def event_VERIFY_AND_PIN_PEER(self, vk, hostname):
         _id = self.peers.with_hostname(hostname).id
         if vk == _id:
-            self.action_ACCEPT_USER_EDIT(
-                'SET', ['peers', vk, 'verified'], True
-            )
-            self.action_ACCEPT_USER_EDIT('SET', ['peers', vk, 'pinned'], True)
+            self.action_EDIT('SET', ['peers', vk, 'verified'], True)
+            self.action_EDIT('SET', ['peers', vk, 'pinned'], True)
         else:
             raise Exception(f"Expected {hostname}: expected: {vk} have: {_id}")
 
@@ -245,6 +237,12 @@ class OrganizeState(Engine, yamlrepr_hl):
             # path[1] but the peer remove command calls event_USER_REMOVE_PEER
             # so that is ok for now
             self.result.add_triggers(sync_peer=(path[1],))
+        elif path[0] == 'prefs':
+            self.result.add_triggers(get_new_system_state=())
+        # FIXME: with more granular actions for peers and prefs, we could
+        # remove this call remove_unknown trigger. but for now, it is still
+        # necessary.
+        self.result.add_triggers(remove_unknown=())
 
     @Engine.event
     def event_NEW_SYSTEM_STATE(self, new_system_state):
@@ -263,6 +261,7 @@ class OrganizeState(Engine, yamlrepr_hl):
         ):
             # if a non-pinned peer had our gateway IP but no longer does, remove its gateway flag
             self._SET(('peers', cur_gw.id, 'use_as_gateway'), False)
+            self.result.add_triggers(remove_routes=(IPv4_GW_ROUTES,))
         if not (cur_gw and cur_gw.pinned):
             # if there isn't a pinned peer acting as the gateway.
             # FIXME: this could set two peers as the gateway if the system has
@@ -383,9 +382,7 @@ class OrganizeState(Engine, yamlrepr_hl):
         if peer.use_as_gateway:
             # FIXME: this doesn't specify the routing table. maybe need to make
             # triggers api accept kwargs too?
-            self.result.add_triggers(
-                remove_routes=(('0.0.0.0/1', '128.0.0.0/1'),)
-            )
+            self.result.add_triggers(remove_routes=(IPv4_GW_ROUTES,))
             # these routes are currently only removed because we still call
             # sync (aka full repair) on system state change
 
@@ -607,7 +604,7 @@ class Organize(attrdict):
             {
                 "pk": self._keys.wg_Curve25519_pub_key,
                 "c": self._keys.pq_csidhP512_pub_key,
-                "addrs": comma_separated_IPs(ip_addrs),
+                "addrs": ip_addrs,
                 "vk": self._keys.vk_Ed25519_pub_key,
                 "vf": vf,
                 "dt": "86400",
@@ -619,12 +616,12 @@ class Organize(attrdict):
         ).sign(self._keys.vk_Ed25519_sec_key)
 
     @DualUse.method()
-    def _sync_system_state_to_engine(self):
+    def get_new_system_state(self):
         old_state = self.state.system_state.copy()
         new_system_state = SystemState.read(self)
         res = self.state.event_NEW_SYSTEM_STATE(new_system_state)
         if res.error:
-            click.exit("Fatal: %r" % (res,))
+            click.exit("Fatal unable to handle new system state: %r" % (res,))
         if old_state == new_system_state:
             self.log.info("system state unchanged")
         else:
@@ -632,6 +629,7 @@ class Organize(attrdict):
             # remove this full repair sync call here:
             self.sync()
             self._instruct_zeroconf()
+        return res
 
     def _load_state(self):
         """

@@ -80,14 +80,13 @@ class print_version(hookBuild_ext):
     def run(self):
         print(version)
 
+
 setuptools.setup(
     name="vula",
     version=version,
     author="Vula Authors",
     author_email="git@vula.link",
-    description=(
-        "Automatic local network encryption"
-    ),
+    description=("Automatic local network encryption"),
     long_description=long_description,
     long_description_content_type="text/markdown",
     license="GPLv3",

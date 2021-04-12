@@ -4,7 +4,7 @@ from pyroute2.netlink.exceptions import NetlinkError
 from socket import AddressFamily
 from .wg import Interface as WgInterface
 from .peer import Peer
-from .constants import _LINUX_MAIN_ROUTING_TABLE
+from .constants import _LINUX_MAIN_ROUTING_TABLE, IPv4_GW_ROUTES
 import threading
 from pyroute2 import IPRSocket
 from pprint import pprint
@@ -62,18 +62,22 @@ class Sys(object):
                     msg,
                 )
                 continue
-            if msg[0].get('event') in [
+            event = msg[0].get('event')
+            if event in [
                 'RTM_DELADDR',
                 'RTM_NEWADDR',
                 'RTM_DELROUTE',
                 'RTM_NEWROUTE',
             ]:
                 self.log.debug("acting on netlink message: %r", msg)
-                self.organize._sync_system_state_to_engine()
+                self.get_new_system_state()
+            elif event == 'RTM_NEWNEIGH':
+                # this happens often, so we don't even debug log it
+                pass
             else:
                 self.log.debug(
                     "ignoring netlink message type %r (%s bytes)",
-                    msg[0].get('event'),
+                    event,
                     len(str(msg)),
                 )
             if self._stop_monitor:
@@ -161,7 +165,7 @@ class Sys(object):
             if peer.use_as_gateway:
                 res.append(
                     self.sync_routes(
-                        [ip_network("0.0.0.0/1"), ip_network('128.0.0.0/1')],
+                        [*IPv4_GW_ROUTES],
                         table=_LINUX_MAIN_ROUTING_TABLE,
                         dryrun=dryrun,
                     )
@@ -409,6 +413,6 @@ class Sys(object):
                     )
             else:
                 for route in routes:
-                    self.log.debug("found existing route: %r", route)
+                    self.log.debug("found existing route for %s", dest)
 
         return "\n".join(res)
