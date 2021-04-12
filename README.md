@@ -31,15 +31,87 @@ Vula's advantages over some other solutions include:
   adversaries
 * simple verification with QR codes to disrupt active surveillance adversaries
 
-# Status
+## Status
 
 Vula is functional today, although it has a number of known issues documented
-in the `TODO` file. It is ready for daily use by people who are proficient with
-networking and the commandline, but we do not yet recommend it for people who
-are not.
+in `TODO.md` and this README. It is ready for daily use by people who are
+proficient with Linux networking and the command line, but we do not yet
+recommend it for people who are not.
 
-If you encounter problems while running it, the steps to disable it are
-currently `sudo systemctl stop vula.slice` followed by `sudo ip link del vula`.
+### What works
+
+* Automatically adding and removing peers and their routes when the system
+  binds and unbinds IPs
+
+* Automatically adding and removing the default route over the vula interface
+  depending on if the system gateway coincides with a peer's IP.
+
+* Keeping pinned peers and routes (including the gateway, when applicable)
+  active after network state changes.
+
+* Releasing the route via a pinned gateway peer via the `vula release-gateway`
+  command, when the user is intentionally roaming away from a network where a
+  pinned peer was the gateway.
+
+* Editing peers and preferences using subcommands of `vula peer` and `vula
+  prefs`.
+
+### Known issues
+
+Numerous other in-progress known issues are documented in the `TODO.md`, but
+the most important issues to be aware of when using vula today are these:
+
+* IPv6 support is only partially implemented. At this time, IPv6 traffic is not
+  automatically protected. This includes internet-destined IPv6 traffic when
+  the gateway is running `vula`. It is likely that there are currently ways
+  that an attacker could use IPv6 to circumvent vula's protection of IPv4
+  traffic against active attacks, so, for those protections to be strong you
+  should currently disable IPv6 on the system completely. Vula's IPv6 support
+  is improving, however, and we plan to provide strong protections against
+  active attackers while using IPv6 in the near future.
+
+* Coexistence with other usage of wireguard is currently a bit complicated.
+  Activating another WireGuard interface using a typical `wg-quick`
+  configuration while `vula` is running will cause `wg-quick` to insert its
+  policy routing rules with a lower `pref` value (meaning, a higher priority)
+  which will circumvent vula's rule and prevent traffic to other vula peers
+  from being protected. This can be worked around by editing the other
+  connection's `wg-quick` config to set `Table = off` and to have `PostUp` and
+  `PostDown` lines to perform all of the steps `wg-quick` normally performs,
+  but with the addition of `pref` arguments in the `ip rule add` commands
+  specifying `pref` values greater than vula's (666). Additionally, the
+  `wg-quick`-managed interface should have its `Mtu` set it 1340, to allow for
+  the overhead of running it over a vula gateway, and, at least in some
+  configurations, a route to the other wireguard endpoint must be added (which can
+  be done using the `vula peer addr add` command). With all of this carefully
+  configured, and a route to the other endpoint added to a `pinned` gateway peer,
+  this configuration can persist and the normal wireguard configuration can
+  continue working while roaming on and off of a network with a vula gateway.
+  This will be handled much more smoothly in the future, and the documentation of
+  the current situation should improve in the nearer future.
+
+* The `vula verify` subcommands, including QR code scanning, have bitrotted and
+  are currently non-functional. Peers can be marked as `pinned` and `verified`
+  using the `vula peer set` command for now.
+
+### Troubleshooting
+
+The `vula repair` command will ensure that all peers have the correct routes
+and wireguard peer configuration. It can be run with the `--dry-run` option to
+print what would be corrected without actually modifying the system state. This
+command should generally not find anything which needs to be repaired.
+
+If you encounter problems while running vula and wish to stop the service, the
+steps to do so are currently:
+
+* `sudo systemctl stop vula.slice` to stop the software
+* `sudo ip link del vula` to delete the device and the routes
+* `sudo ip -4 rule delete 666 && sudo ip -6 rule delete 666` to remove the
+  rules
+
+To prevent the daemons from launching on startup, you can run `systemctl
+disable --now vula-organize` and/or `apt remove python3-vula`.
+
 Please open an issue on codeberg if you encounter any problems!
 
 # Requirements
@@ -48,11 +120,15 @@ Currently, GNU/Linux is the only supported operating system. We plan to port
 the software to other operating systems in the future.
 
 The software has been developed and tested on Debian (bullseye), Mobian, and
-Ubuntu (20.04 and 20.10). It is likely to work on other modern distributions.
+Ubuntu (20.04 and 20.10). It is likely to work on other modern systemd-based
+distributions.
+
+Vula can also be run without systemd, and/or in a single monolithic process,
+but how to do so is not yet documented.
 
 # Installation
 
-We do not yet have packages available for download, but you can build your own deb or wheel from a git checkout.
+We do not yet offer packages for download, but you can build your own deb or wheel from a git checkout.
 
 ## option 1: build and install a Debian Package
 
@@ -70,15 +146,15 @@ Installing the deb will automatically configure `nsswitch`, restart
 `systemd-sysusers`, reload `dbus`, etc, and will tell `systemd` to enable and
 start the `vula-organize` service.
 
-## option 2: install with pip
+## option 2: build a wheel and install with pip
 
 This option is available for advanced technical users - it requires manual
-setup of [vula_libnss](https://codeberg.org/vula/vula_libnss) after installing
-`vula_libnss`. This essentially means ensuring that the libnss shared object
-file is installed in `/lib/libnss_vula.so.2`. This may be installed by building
-a Debian package or by installing `vula_libnss` with pip and manually copying
-the `libnss_vula.so.2` file from inside the installed location to the correct
-location on the system.
+setup of `[vula_libnss](https://codeberg.org/vula/vula_libnss)` after
+installing `vula_libnss`. This essentially means ensuring that the libnss
+shared object file is installed in `/lib/libnss_vula.so.2`. This may be
+installed by building a Debian package or by installing `vula_libnss` with pip
+and manually copying the `libnss_vula.so.2` file from inside the installed
+location to the correct location on the system.
 
 If you don't mind installing many things using `sudo pip`, the software can be installed this way:
 
@@ -93,10 +169,7 @@ After installing with pip, users will need to configure the system:
 * `sudo systemctl reload dbus`
 * `sudo systemctl enable --now vula-organize`
 
-Vula can also be run without systemd, and/or in a single monolithic process
-under systemd, but how to do so is not yet documented.
-
-## Running vula
+# Running vula
 
 To see the current status:
 * `vula`
@@ -110,6 +183,9 @@ To see a list of subcommands:
 
 To see a list of peers:
 * `vula peer`
+
+To see a list of commands for working with peers:
+* `vula peer --help`
 
 To see a list of peers, including disabled peers:
 * `vula peer show --all`
@@ -125,21 +201,21 @@ To see commands for editing preferences:
 
 More documentation is coming soon.
 
-## Technical details and vision
+# Technical details and vision
 
 The vula paper outlines the design decisions, the threat model, the vision for
 the `vula` system as well as the `vula` protocol. Please send an email to
 `paper at vula dot link` requesting a copy of our current draft while it is
 under submission.
 
-### IPv4 and IPv6 limitations
+## IPv4 and IPv6 limitations
 
 Currently, vula supports IPv4 for networks with [RFC 1918
 addresses](https://tools.ietf.org/html/rfc1918) and will support IPv6 networks
 in the future.  With a small amount of manual configuration, vula also supports
 any other subnets desired if RFC 1918 address space isn't sufficient. 
 
-### Secure local names
+## Secure local names
 
 On GNU/Linux systems, vula connections are available if `vula configure
 nsswitch` is run after installation of the vula package. This is performed
@@ -149,25 +225,34 @@ system will usually resolve hostnames of vula peers to the same IPs as mDNS
 would, so it is possible to use vula without it. However, resolving names via
 vula is required to achieve strong protection against active attackers.
 
-### Post-quantum protection
+## Post-quantum protection
 
-Vula is designed as a transitionally secure post-quantum protocol. It does not
-currently resist an active adversary with a quantum computer; it is designed to
-resist an attacker that logs captured surveillance data in anticipation of
-access to quantum computer at a later date. The vula protocol uses
-[CSIDH](https://csidh.isogeny.org/) to achieve non-interactive post-quantum key
-agreement in much the same way that Curve25519 is used for contemporary
-security protections in the vula protocol. CSIDH is implemented in pure Python
-on the Montgomery curve by the [sibc
+Vula is designed as a transitionally secure post-quantum protocol, meaning that
+it does not currently resist active attacks using a quantum computer but rather
+is designed to resist an attacker that retains surveiled ciphertext in
+anticipation of having access to quantum computer at a later date. The vula
+protocol uses [CSIDH](https://csidh.isogeny.org/) to achieve non-interactive
+post-quantum key agreement in much the same way that Curve25519 is used for
+contemporary security protections in the vula protocol. CSIDH is implemented in
+pure Python on the Montgomery curve by the [sibc
 library](https://github.com/JJChiDguez/sibc/). It is implemented with p512
 using the hvelu formula in a dummy-free style, and it uses 10 as the exponent.
 
-The post-quantum protection is not currently forward secret; that is, an
-attacker who records ciphertext and later has a quantum computer *and* obtains a
-user's CSIDH secret key will be able to decrypt the traffic. Rotating the CSIDH
-key is possible, but this does not (yet) happen automatically.
+Vula's post-quantum protection is not currently forward secret; that is to say,
+an attacker who records ciphertext and later has a quantum computer *and*
+somehow obtains a user's CSIDH secret key will be able to decrypt the traffic.
+Rotating the CSIDH key is possible, but this does not (yet) happen
+automatically.
 
-### Default route encryption
+CSIDH is a very new cryptographic primitive, having only been discovered in
+2018 and currently being studied by the academic community. While we do not
+know of any feasible attacks against it today, it would be inappropriate to
+rely solely on such a new primitive. In the event that CSIDH were to be
+completely broken, vula's use of it to generate a wireguard PSK (Pre-Shared
+Key) would only result in a loss of post-quantum protection; security against
+attackers without quantum computers is not dependent on CSIDH in any way.
+
+## Default route encryption
 
 The `vula organize` daemon will automatically secure traffic to the local
 gateway when that gateway is also a vula peer.
@@ -182,7 +267,7 @@ inner IP packets contain the destination or source of the upstream resource.
 This does not prevent the router from seeing this traffic but it blinds all
 other local network adversaries.
 
-### Constraints
+## Constraints
 
 By design `vula` only attempts to add newly discovered peers in the same local
 network segments where multicast DNS is currently used. Unpinned peers will be
@@ -204,7 +289,7 @@ for the first time. As with `ssh`, key verification should be performed and it
 should happen through an out of band secure channel. We provide a method to
 verify peers with QR codes as well as through other command line tools.
 
-## Security and privacy goals
+### Security and privacy goals
 
 Our goals for the `vula` project are very modest. We hope to help people who
 are subject to various kinds of surveillance - especially in the privacy of
@@ -234,6 +319,11 @@ to `security at vula dot link`.
 Our current bug bounty for security issues is humble. We will treat qualifying
 reporters to a beverage after the COVID-19 crisis has ended; ojalá. Locations
 limited to qualifying CCC events such as the yearly Congress.
+
+# Authors
+
+The authors of vula are anonymous for now, while our paper is undergoing peer
+review.
 
 # Acknowledgements
 
