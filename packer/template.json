@@ -2,8 +2,8 @@
     "builders": [
         {
             "type": "qemu",
-            "iso_url": "https://cloud-images.ubuntu.com/releases/groovy/release/ubuntu-20.10-server-cloudimg-amd64.img",
-            "iso_checksum_url": "https://cloud-images.ubuntu.com/releases/groovy/release/SHA256SUMS",
+            "iso_url": "https://cloud-images.ubuntu.com/hirsute/current/hirsute-server-cloudimg-amd64.img",
+            "iso_checksum_url": "https://cloud-images.ubuntu.com/hirsute/current/SHA256SUMS",
             "iso_checksum_type": "sha256",
             "disk_image": true,
             "disk_size": 6120,
@@ -61,8 +61,8 @@
                 "find /usr/share/netplan -name __pycache__ -exec rm -r {} +",
                 "rm -f /var/cache/pollinate/seeded /var/cache/motd-news",
                 "rm -r /var/lib/cloud /var/lib/dbus/machine-id /var/lib/private /var/lib/systemd/timers /var/lib/systemd/timesync /var/lib/systemd/random-seed",
-                "rm /var/lib/ubuntu-release-upgrader/release-upgrade-available",
-                "rm /var/lib/update-notifier/fsck-at-reboot /var/lib/update-notifier/hwe-eol",
+                "rm -f /var/lib/ubuntu-release-upgrader/release-upgrade-available",
+                "rm -f /var/lib/update-notifier/fsck-at-reboot /var/lib/update-notifier/hwe-eol",
                 "find /var/log -type f -exec rm {} +",
                 "rm -r /tmp/* /tmp/.*-unix /var/tmp/*",
                 "for i in group gshadow passwd shadow subuid subgid; do mv /etc/$i- /etc/$i; done",
