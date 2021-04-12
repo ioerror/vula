@@ -197,16 +197,31 @@ class DualUse(click.Group):
 
         super(DualUse, self).__init__(callback=wrapper, *a, **kw)
 
+    @property
+    def all_commands(self):
+        """
+        Return dictionary of DualUse methods and child classes, with
+        self.commands applied on top of it.
+
+        (FIXME: possibly wg.Interface is the only DualUse.object that actually
+        uses self.commands/add_command? if so, this could be renamed
+        'commands' if the link commands were ported to a nested dualuse
+        object...)
+        """
+        res = {
+            value.cli.name: value.cli
+            for value in vars(self).values()
+            if hasattr(value, 'cli') and value.cli is not self
+        }
+        res.update(**self.commands)
+        return res
+
     def list_commands(self, ctx):
-        return [
+        return list(self.all_commands.keys()) + [
             name
-            for name in self.callback.__dict__
-            if (
-                hasattr(getattr(self.callback, name), 'cli')
-                or isinstance(getattr(self.callback, name), property)
-            )
-            and name != "__wrapped__"
-        ] + list(self.commands)
+            for name, value in vars(self.callback).items()
+            if isinstance(value, property) and name != "__wrapped__"
+        ]
 
     def get_command(self, ctx, name):
         """
@@ -218,13 +233,11 @@ class DualUse(click.Group):
         yet. I reserve the right to remove this unsupported magic in the
         future.
         """
-        if name in self.commands:
-            return self.commands[name]
+        res = self.all_commands.get(name)
 
-        if hasattr(self.callback, name) and hasattr(
-            getattr(self.callback, name), 'cli'
-        ):
-            return getattr(self.callback, name).cli
+        if res:
+            return res
+
         else:
 
             @click.group(

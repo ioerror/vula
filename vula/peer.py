@@ -99,14 +99,14 @@ class Descriptor(schemattrdict, serializable):
                 Regex('^[a-zA-Z0-9.-]+$'),
                 lambda name: 0 < len(name) < 256,
             ),
-            'port': int_range(0, 65535),
+            'port': int_range(1, 65535),
             'vk': b64_bytes.with_len(32),
             'dt': Use(int),
             'vf': Use(int),
             'r': Use(
                 comma_separated_Nets
             ),  # AllowedIPs may be set from this in the future; fixme
-            'e': Flexibool.make(),
+            'e': Flexibool,
             Optional('s'): b64_bytes.with_len(64),
         }
     )
@@ -216,14 +216,14 @@ class Peer(schemattrdict):
             {
                 'descriptor': Use(Descriptor),
                 'petname': str,
-                'nicknames': {Optional(str): Flexibool.make()},
-                'IPv4addrs': {Optional(Use(IPv4Address)): Flexibool.make()},
-                'IPv6addrs': {Optional(Use(IPv6Address)): Flexibool.make()},
-                'enabled': Flexibool.make(),
-                'verified': Flexibool.make(),
-                'pinned': Flexibool.make(),
-                Optional('use_as_gateway'): Flexibool.make(),
-                Optional('_allow_unsigned_descriptor'): Flexibool.make(),
+                'nicknames': {Optional(str): Flexibool},
+                'IPv4addrs': {Optional(Use(IPv4Address)): Flexibool},
+                'IPv6addrs': {Optional(Use(IPv6Address)): Flexibool},
+                'enabled': Flexibool,
+                'verified': Flexibool,
+                'pinned': Flexibool,
+                Optional('use_as_gateway'): Flexibool,
+                Optional('_allow_unsigned_descriptor'): Flexibool,
             },
             #     lambda peer: peer['descriptor'].verify_signature() or peer.get('_allow_unsigned_descriptor')
         )
@@ -281,6 +281,12 @@ class Peer(schemattrdict):
     def enabled_ips(self):
         return [ip for ip, on in self.IPv4addrs.items() if on] + [
             ip for ip, on in self.IPv6addrs.items() if on
+        ]
+
+    @property
+    def disabled_ips(self):
+        return [ip for ip, on in self.IPv4addrs.items() if not on] + [
+            ip for ip, on in self.IPv6addrs.items() if not on
         ]
 
     @property
@@ -364,6 +370,7 @@ class Peer(schemattrdict):
                 ),
                 ('endpoint', self.endpoint),
                 ('allowed ips', ", ".join(map(str, self.allowed_ips))),
+                ('disabled ips', ", ".join(map(str, self.disabled_ips))),
                 (
                     'latest signature',
                     str(
@@ -599,11 +606,11 @@ class PeerCommands(object):
 
         echo_maybepager(("\n" if descriptor else "\n\n").join(res))
 
-    @DualUse.method(short_help="Adds new peers from descriptors")
+    @DualUse.method(short_help="Import peer descriptors", name='import')
     @click.argument('file', type=click.File(), default='-')
-    def add(self, file):
+    def import_(self, file):
         """
-        Add peers from descriptors
+        Import peer descriptors
 
         Reads from standard input if a file is not specified.
 
@@ -626,13 +633,64 @@ class PeerCommands(object):
             else:
                 click.echo("process_descriptor_string returned None 🤔")
 
-    @DualUse.method()
+    @DualUse.object(short_help="Add and remove peer addresses")
+    @click.pass_context
+    class addr(object):
+        """
+        Modify peer addresses
+
+        In the future, this might also show addresses, but for now that can be
+        done with the "peer show" command.
+        """
+
+        def __init__(self, ctx):
+            self.organize = (
+                ctx.meta.get('Organize', {}).get('magic_instance')
+                or organize_dbus_if_active()
+            )
+
+        @DualUse.method()
+        @click.argument('vk', type=str)
+        @click.argument('ip', type=str)
+        def add(self, vk, ip):
+            """
+            Add an address to a peer
+            """
+            print(Result.from_yaml(self.organize.peer_addr_add(vk, ip)))
+
+        @DualUse.method(name='del')
+        @click.argument('vk', type=str)
+        @click.argument('ip', type=str)
+        def del_(self, vk, ip):
+            """
+            Delete an address from a peer
+
+            Note: if the peer re-announces the address, it will be re-added. To
+            prevent an address from being (re)enabled, you can set it to
+            disabled instead of deleting it. This is currently accomplished
+            using a command like "peer set $vk IPv4addrs x.x.x.x false"
+            """
+            print(Result.from_yaml(self.organize.peer_addr_del(vk, ip)))
+
+    @DualUse.method(short_help="Set arbitrary peer properties")
     @click.argument('vk', type=str)
-    @click.argument('path', type=str)
+    @click.argument('path', type=str, nargs=-1)
     @click.argument('value', type=str)
     def set(self, vk, path, value):
         """
-        Modify a peer
+        Modify arbitrary peer properties
+
+        This is currently the only way to verify peers, enable/disable them,
+        and enable or disable IP addresses.
+
+        In the future, this command should perhaps only be available for
+        debugging, and the normal user tasks which it currently performs should
+        be handled by other commands.
+
+        This command is *not* able to remove keys from dictionaries; for
+        removing IP addresses (instead of disabling them with this command) you
+        can use the "vula peer addr del" command. This command is able to add new
+        IPs, but that is better done with "vula peer addr add".
         """
         res = Result(json.loads(self.organize.set_peer(vk, path, value)))
         print(res)

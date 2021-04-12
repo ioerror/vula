@@ -99,6 +99,20 @@ def rediscover():
     click.echo('Discovering on ' + organize.rediscover())
 
 
+@main.command()
+def release_gateway():
+    """
+    Stop using vula for the default route.
+
+    This command must be run to roam to a non-vula gateway after using a pinned
+    peer as the gateway.
+
+    When the system gateway changes to the IP of a pinned peer, it will
+    automatically re-enable that peer as the gateway.
+    """
+    click.echo(common.organize_dbus_if_active().release_gateway())
+
+
 for name, value in list(globals().items()):
     if name == 'wg':
         wg = wg.main

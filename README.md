@@ -190,10 +190,9 @@ automatically removed when they become no longer local (eg, due to no longer
 having an IP bound in their subnet). Pinned peers will retain their routes, so
 that traffic to them will fail closed in the event that a DHCP attacker has
 moved us to a new subnet. This includes the default route, when the gateway is
-a pinned peer, so explicit user action is necessary when connecting to a new
-network after being in the presence of a pinned gateway peer (currently via
-`vula peer set $peer_id use_as_gateway false`; in the future there will be a
-`vula release-gateway` command).
+a pinned peer, so explicit the explicit user action of running `vula
+release-gateway` is necessary when connecting to a new network after being in
+the presence of a pinned gateway peer.
 
 ## Threat Model Basics
 

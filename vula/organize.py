@@ -57,6 +57,7 @@ from .common import (
     raw,
     comma_separated_IPs,
     chown_like_dir,
+    memoize,
 )
 from .engine import Engine, Result
 from .constants import (
@@ -78,6 +79,7 @@ from .constants import (
     _PUBLISH_DBUS_NAME,
     _PUBLISH_DBUS_PATH,
     _WG_PORT,
+    IPv4_GW_ROUTES,
 )
 from .common import KeyFile
 from .configure import Configure
@@ -89,14 +91,6 @@ from .prefs import Prefs
 from .discover import Discover
 from .publish import Publish
 from .sys import Sys
-
-memoize = lambda f: (
-    lambda d={}: lambda *a: d.setdefault(a, a in d or f(*a))
-)()
-
-
-class ConsistencyError(ValueError):
-    pass
 
 
 class SystemState(schemattrdict):
@@ -172,10 +166,8 @@ class OrganizeState(Engine, yamlrepr_hl):
     def event_VERIFY_AND_PIN_PEER(self, vk, hostname):
         _id = self.peers.with_hostname(hostname).id
         if vk == _id:
-            self.action_ACCEPT_USER_EDIT(
-                'SET', ['peers', vk, 'verified'], True
-            )
-            self.action_ACCEPT_USER_EDIT('SET', ['peers', vk, 'pinned'], True)
+            self.action_EDIT('SET', ['peers', vk, 'verified'], True)
+            self.action_EDIT('SET', ['peers', vk, 'pinned'], True)
         else:
             raise Exception(f"Expected {hostname}: expected: {vk} have: {_id}")
 
@@ -188,17 +180,69 @@ class OrganizeState(Engine, yamlrepr_hl):
             self.action_IGNORE("no such peer")
 
     @Engine.event
-    def event_USER_EDIT(self, operation, path, value):
-        self.action_ACCEPT_USER_EDIT(operation, path, value)
+    def event_USER_PEER_ADDR_ADD(self, vk, ip):
+        "user added IP address"
+        peer = self.peers.get(vk)
+        if peer:
+            self.action_PEER_ADDR_ADD(peer, vk, ip)
+        else:
+            self.action_IGNORE("no such peer")
 
     @Engine.action
-    def action_ACCEPT_USER_EDIT(self, operation, path, value):
+    def action_PEER_ADDR_ADD(self, peer, vk, ip):
+        "added IP address"
+        ipa = ip_address(ip)
+        self._SET(('peers', vk, 'IPv%saddrs' % (ipa.version,), ip), True)
+        self.result.add_triggers(sync_peer=(peer.id,))
+
+    @Engine.event
+    def event_USER_PEER_ADDR_DEL(self, vk, ip):
+        "user removed IP address"
+        peer = self.peers.get(vk)
+        if peer:
+            self.action_PEER_ADDR_DEL(peer, vk, ip)
+        else:
+            self.action_IGNORE("no such peer")
+
+    @Engine.action
+    def action_PEER_ADDR_DEL(self, peer, vk, ip):
+        "removed IP address"
+        ipa = ip_address(ip)
+        self._REMOVE(('peers', vk, 'IPv%saddrs' % (ipa.version,)), ip)
+        self.result.add_triggers(sync_peer=(peer.id,))
+        self.result.add_triggers(
+            remove_routes=(ip + ('/32' if ipa.version == 4 else '/128'),)
+        )
+
+    @Engine.event
+    def event_USER_EDIT(self, operation, path, value):
+        self.action_EDIT(operation, path, value)
+
+    @Engine.event
+    def event_RELEASE_GATEWAY(self):
+        cur_gw = list(self.peers.limit(use_as_gateway=True).values())
+        if cur_gw:
+            self.action_EDIT(
+                'SET', ['peers', cur_gw[0].id, 'use_as_gateway'], False
+            )
+            self.result.add_triggers(get_new_system_state=())
+        else:
+            self.action_IGNORE("no current gateway peer")
+
+    @Engine.action
+    def action_EDIT(self, operation, path, value):
         getattr(self, '_' + operation)(path, value)
         if path[0] == 'peers':
             # bug: this doesn't work for the REMOVE operation where there is no
             # path[1] but the peer remove command calls event_USER_REMOVE_PEER
             # so that is ok for now
             self.result.add_triggers(sync_peer=(path[1],))
+        elif path[0] == 'prefs':
+            self.result.add_triggers(get_new_system_state=())
+        # FIXME: with more granular actions for peers and prefs, we could
+        # remove this call remove_unknown trigger. but for now, it is still
+        # necessary.
+        self.result.add_triggers(remove_unknown=())
 
     @Engine.event
     def event_NEW_SYSTEM_STATE(self, new_system_state):
@@ -217,6 +261,7 @@ class OrganizeState(Engine, yamlrepr_hl):
         ):
             # if a non-pinned peer had our gateway IP but no longer does, remove its gateway flag
             self._SET(('peers', cur_gw.id, 'use_as_gateway'), False)
+            self.result.add_triggers(remove_routes=(IPv4_GW_ROUTES,))
         if not (cur_gw and cur_gw.pinned):
             # if there isn't a pinned peer acting as the gateway.
             # FIXME: this could set two peers as the gateway if the system has
@@ -337,9 +382,7 @@ class OrganizeState(Engine, yamlrepr_hl):
         if peer.use_as_gateway:
             # FIXME: this doesn't specify the routing table. maybe need to make
             # triggers api accept kwargs too?
-            self.result.add_triggers(
-                remove_routes=(('0.0.0.0/1', '128.0.0.0/1'),)
-            )
+            self.result.add_triggers(remove_routes=(IPv4_GW_ROUTES,))
             # these routes are currently only removed because we still call
             # sync (aka full repair) on system state change
 
@@ -457,12 +500,22 @@ class Organize(attrdict):
         </method>
         <method name='set_peer'>
           <arg type='s' name='vk' direction='in'/>
-          <arg type='s' name='path' direction='in'/>
+          <arg type='as' name='path' direction='in'/>
           <arg type='s' name='value' direction='in'/>
           <arg type='s' name='response' direction='out'/>
         </method>
         <method name='remove_peer'>
           <arg type='s' name='vk' direction='in'/>
+          <arg type='s' name='response' direction='out'/>
+        </method>
+        <method name='peer_addr_add'>
+          <arg type='s' name='vk' direction='in'/>
+          <arg type='s' name='value' direction='in'/>
+          <arg type='s' name='response' direction='out'/>
+        </method>
+        <method name='peer_addr_del'>
+          <arg type='s' name='vk' direction='in'/>
+          <arg type='s' name='value' direction='in'/>
           <arg type='s' name='response' direction='out'/>
         </method>
         <method name='get_vk_by_name'>
@@ -499,6 +552,9 @@ class Organize(attrdict):
           <arg type='s' name='response' direction='out'/>
           <arg type='s' name='pref' direction='in'/>
           <arg type='s' name='value' direction='in'/>
+        </method>
+        <method name='release_gateway'>
+          <arg type='s' name='response' direction='out'/>
         </method>
       </interface>
     </node>
@@ -548,7 +604,7 @@ class Organize(attrdict):
             {
                 "pk": self._keys.wg_Curve25519_pub_key,
                 "c": self._keys.pq_csidhP512_pub_key,
-                "addrs": comma_separated_IPs(ip_addrs),
+                "addrs": ip_addrs,
                 "vk": self._keys.vk_Ed25519_pub_key,
                 "vf": vf,
                 "dt": "86400",
@@ -560,12 +616,12 @@ class Organize(attrdict):
         ).sign(self._keys.vk_Ed25519_sec_key)
 
     @DualUse.method()
-    def _sync_system_state_to_engine(self):
+    def get_new_system_state(self):
         old_state = self.state.system_state.copy()
         new_system_state = SystemState.read(self)
         res = self.state.event_NEW_SYSTEM_STATE(new_system_state)
         if res.error:
-            click.exit("Fatal: %r" % (res,))
+            click.exit("Fatal unable to handle new system state: %r" % (res,))
         if old_state == new_system_state:
             self.log.info("system state unchanged")
         else:
@@ -573,6 +629,7 @@ class Organize(attrdict):
             # remove this full repair sync call here:
             self.sync()
             self._instruct_zeroconf()
+        return res
 
     def _load_state(self):
         """
@@ -695,6 +752,13 @@ class Organize(attrdict):
         return ",".join(map(str, self.state.system_state.current_ips))
 
     @DualUse.method()
+    def release_gateway(self):
+        """
+        Release the current gateway
+        """
+        return str(yamlrepr(self.state.event_RELEASE_GATEWAY()))
+
+    @DualUse.method()
     def bp(self):
         """
         Call pdb.set_trace()
@@ -735,7 +799,7 @@ class Organize(attrdict):
         # remove old listener, if there is one
         self.discover.listen([])
 
-        self._sync_system_state_to_engine()
+        self.get_new_system_state()
         self.sys.start_monitor()
         self._instruct_zeroconf()
         self.sync()
@@ -862,23 +926,26 @@ class Organize(attrdict):
             return "Forbidden"
 
     def set_peer(self, vk, path, value):
-        res = self.state.event_USER_EDIT(
-            'SET', ['peers', vk] + path.split('.'), value
-        )
-        if res.ok:
-            # FIXME: this should instead be called by a deferred in
-            # OrganizeState when we have a SET_PEER event there
-            self.sys.sync_peer(vk)
-            self.sys.remove_unknown()
+        res = self.state.event_USER_EDIT('SET', ['peers', vk] + path, value)
         return str(jsonrepr(res))
 
     def remove_peer(self, query):
         return str(yamlrepr(self.state.event_USER_REMOVE_PEER(query)))
 
+    def peer_addr_add(self, vk, ip):
+        return str(yamlrepr(self.state.event_USER_PEER_ADDR_ADD(vk, ip)))
+
+    def peer_addr_del(self, vk, ip):
+        return str(yamlrepr(self.state.event_USER_PEER_ADDR_DEL(vk, ip)))
+
     def show_prefs(self):
         return str(yamlrepr(self.state.prefs))
 
     def set_pref(self, pref, value):
+        # this should call event_EDIT_PREF instead of event_USER_EDIT; this
+        # as-yet unwritten event should call an action which should trigger
+        # get_new_system_state to cause, eg, removal of allowed subnets
+        # or interfaces to take effect immediately.
         return str(self.state.event_USER_EDIT('SET', ['prefs', pref], value))
 
     def add_pref(self, pref, value):

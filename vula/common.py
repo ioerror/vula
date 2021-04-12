@@ -45,6 +45,10 @@ except ImportError:
 
 bp = pdb.set_trace
 
+memoize = lambda f: (
+    lambda d={}: lambda *a: d.setdefault(a, a in d or f(*a))
+)()
+
 
 def chown_like_dir(path):
     if os.getuid() == 0:
@@ -159,7 +163,7 @@ def raw(value):
     """
     if type(value) in (int, str, bool, float):
         return value
-    if isinstance(value, Flexibool):
+    if isinstance(value, IntBool):
         return bool(value)
     if hasattr(value, '_dict'):
         return value._dict()
@@ -494,32 +498,34 @@ class b64_bytes(bytes):
         )
 
 
-class Flexibool(int):
-    @classmethod
-    def make(cls):
-        return And(
-            Or(
-                bool,
-                And(int, lambda n: n in (0, 1)),
-                And(
-                    str,
-                    Use(
-                        lambda v: 1
-                        if v.lower()
-                        in ('true', 'yes', 'on', '1', 'y', 'j', 'ja')
-                        else 0
-                        if v.lower()
-                        in ('false', 'no', 'off', '0', 'n', 'nein', 'nej')
-                        else 'error',
-                    ),
-                ),
-            ),
-            Use(cls),
-            error="invalid value {!r}; must be one of <true|false|1|0|on|off|yes|no|ja|nein|nej|y|j|n>",
-        )
+class IntBool(int):
+    """
+    This holds values defined as Flexibool in schemas, which allows bools to be
+    specified by users in a variety of ways.
 
-    def __repr__(self):
-        return "01"[self]
+    This class exists so that these values can be identified in the 'raw'
+    function, which will convert them to normal bools.
+    """
+
+
+Flexibool = And(
+    Or(
+        bool,
+        And(int, lambda n: n in (0, 1)),
+        And(
+            str,
+            Use(
+                lambda v: 1
+                if v.lower() in ('true', 'yes', 'on', '1', 'y', 'j', 'ja')
+                else 0
+                if v.lower() in ('false', 'no', 'off', '0', 'n', 'nein', 'nej')
+                else 'error',
+            ),
+        ),
+    ),
+    Use(IntBool),
+    error="invalid value {!r}; must be one of <true|false|1|0|on|off|yes|no|ja|nein|nej|y|j|n>",
+)
 
 
 class queryable(dict):

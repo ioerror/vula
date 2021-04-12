@@ -1,3 +1,5 @@
+- stop calling sync from `get_new_system_state`, triggers should handle it
+
 - Review this TODO file, remove outdated things, and file codeberg issues for what remains.
 
 - document considered attacks (eg: rogue DHCP servers, arp spoofing, etc)
@@ -40,11 +42,6 @@
 - organize should catch the TERM signal and tell discover and publish to exit
 
 - vula-organize systemd service should be renamed to vula
-
-- add a "release-gateway" command
-    - this command will unset the `use_as_gateway` flag from a pinned peer which
-      is no longer in a locally bound subnet. this is the command to run to
-      explicitly allow leaving a network with a pinned gateway.
 
 - implement auto-repair feature which automatically calls sync periodically
 

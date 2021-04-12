@@ -28,18 +28,18 @@ class Prefs(yamlrepr_hl, schemattrdict):
 
     schema = Schema(
         {
-            'pin_new_peers': Flexibool.make(),
-            'auto_repair': Flexibool.make(),
+            'pin_new_peers': Flexibool,
+            'auto_repair': Flexibool,
             'subnets_allowed': [Use(ip_network)],
             'subnets_forbidden': [Use(ip_network)],
             'iface_prefix_allowed': [str],
-            'accept_nonlocal': Flexibool.make(),
+            'accept_nonlocal': Flexibool,
             'local_domains': [str],
-            'ephemeral_mode': Flexibool.make(),
-            'accept_default_route': Flexibool.make(),
-            Optional('overwrite_unpinned'): Flexibool.make(),  # TODO
+            'ephemeral_mode': Flexibool,
+            'accept_default_route': Flexibool,
+            Optional('overwrite_unpinned'): Flexibool,  # TODO
             Optional('expire_time'): int,  # TODO
-            'record_events': Flexibool.make(),
+            'record_events': Flexibool,
         }
     )
 
