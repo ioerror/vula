@@ -93,15 +93,15 @@ class PeerConfig(schemattrdict, serializable):
             for k, v in dict(peer['attrs']).items()
         }
         res['allowed_ips'] = [
-            "%s/%s"
-            % (
-                ".".join(
-                    str(int(b, 16))
-                    for b in ip['WGALLOWEDIP_A_IPADDR'].split(':')
+            ip_network(
+                (
+                    bytes.fromhex(
+                        net['WGALLOWEDIP_A_IPADDR'].replace(':', '')
+                    ),
+                    net['WGALLOWEDIP_A_CIDR_MASK'],
                 ),
-                ip['WGALLOWEDIP_A_CIDR_MASK'],
             )
-            for ip in (
+            for net in (
                 dict(atom['attrs']) for atom in res.pop('allowedips', ())
             )
         ]
