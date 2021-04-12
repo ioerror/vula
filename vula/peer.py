@@ -106,7 +106,7 @@ class Descriptor(schemattrdict, serializable):
             'r': Use(
                 comma_separated_Nets
             ),  # AllowedIPs may be set from this in the future; fixme
-            'e': Flexibool.make(),
+            'e': Flexibool,
             Optional('s'): b64_bytes.with_len(64),
         }
     )
@@ -216,14 +216,14 @@ class Peer(schemattrdict):
             {
                 'descriptor': Use(Descriptor),
                 'petname': str,
-                'nicknames': {Optional(str): Flexibool.make()},
-                'IPv4addrs': {Optional(Use(IPv4Address)): Flexibool.make()},
-                'IPv6addrs': {Optional(Use(IPv6Address)): Flexibool.make()},
-                'enabled': Flexibool.make(),
-                'verified': Flexibool.make(),
-                'pinned': Flexibool.make(),
-                Optional('use_as_gateway'): Flexibool.make(),
-                Optional('_allow_unsigned_descriptor'): Flexibool.make(),
+                'nicknames': {Optional(str): Flexibool},
+                'IPv4addrs': {Optional(Use(IPv4Address)): Flexibool},
+                'IPv6addrs': {Optional(Use(IPv6Address)): Flexibool},
+                'enabled': Flexibool,
+                'verified': Flexibool,
+                'pinned': Flexibool,
+                Optional('use_as_gateway'): Flexibool,
+                Optional('_allow_unsigned_descriptor'): Flexibool,
             },
             #     lambda peer: peer['descriptor'].verify_signature() or peer.get('_allow_unsigned_descriptor')
         )
