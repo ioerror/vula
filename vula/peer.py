@@ -284,6 +284,12 @@ class Peer(schemattrdict):
         ]
 
     @property
+    def disabled_ips(self):
+        return [ip for ip, on in self.IPv4addrs.items() if not on] + [
+            ip for ip, on in self.IPv6addrs.items() if not on
+        ]
+
+    @property
     def enabled_ips_str(self):
         return [str(ip) for ip in self.enabled_ips]
 
@@ -364,6 +370,7 @@ class Peer(schemattrdict):
                 ),
                 ('endpoint', self.endpoint),
                 ('allowed ips', ", ".join(map(str, self.allowed_ips))),
+                ('disabled ips', ", ".join(map(str, self.disabled_ips))),
                 (
                     'latest signature',
                     str(
