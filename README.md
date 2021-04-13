@@ -16,21 +16,21 @@ traffic will also be encrypted on the LAN.
 Automatically.
 
 Vula combines [WireGuard](https://www.wireguard.com/papers/wireguard.pdf) for
-forward-secret point to point tunnels with
+forward-secret point-to-point tunnels with
 [mDNS](https://tools.ietf.org/html/rfc6762) and
-[DNS-SD](https://tools.ietf.org/html/rfc6763) for local service announcements.
-Vula further enhances the confidentiality of WireGuard tunnels by using
-[CSIDH](https://csidh.isogeny.org/), a post-quantum non-interactive
-key exchange primitive, to generate a peer-wise pre-shared
-key for each WireGuard tunnel configuration.
+[DNS-SD](https://tools.ietf.org/html/rfc6763) for local service announcements,
+and enhances the confidentiality of WireGuard tunnels by using
+[CSIDH](https://csidh.isogeny.org/), a post-quantum non-interactive key
+exchange primitive, to generate a peer-wise pre-shared key for each tunnel
+configuration.
 
 Vula's advantages over some other solutions include:
 
 * design is absent of single points of failure (SPOFs)
-* avoids needing to attempt handshakes with non-participating hosts
-* uses existing IP addresses inside and outside the tunnels, allowing
+* uses existing IP addresses inside and outside of the tunnels, allowing
   seamless integration into existing LAN environments using DHCP and/or manual
   addressing
+* avoids needing to attempt handshakes with non-participating hosts
 * does not require any configuration to disrupt passive surveillance
   adversaries
 * simple verification with QR codes to disrupt active surveillance adversaries

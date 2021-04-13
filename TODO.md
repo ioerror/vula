@@ -5,32 +5,40 @@
 - document considered attacks (eg: rogue DHCP servers, arp spoofing, etc)
 
 - fix discover/organize deadlock
+
     - easily reproducible by running rediscover while organize is blocked in
       csidh on startup
+
         - organize's rediscover blocks on discover's `listen([])` which blocks on
           `zeroconf.cancel()` if there is a zeroconf thread already blocked on a
           call to organize's `process_descriptor` (which won't begin executing
           until the rediscover call is finished, which will never happen
           because it is blocked waiting for the call to discover's `listen([])`
           method)
+
     - this is also almost certainly triggerable by certain sequences of netlink
       and descriptor events, eg, if a descriptor comes in at the same time as
       the netlink monitor thread finds out we no longer have an IP bound.
+
     - root cause is fundamentally a design flaw of ours: organize and discover
       both call the other.
+
         - fix might be to to replace dbus method calls in one or both
           directions with dbus signals?
+
         - if we had the intermediate-state design for async csidh (described
           below) this bug would be much harder to trigger, but would still
           exist.
 
 - fix verify command
+
     - it has bitrotted. it comes from the time when the publish daemon created
       and signed the descriptor instead of organize doing it. (meanwhile, peers
       can currently have their `pinned` and `verified` flags set using the
       `vula peer set` command...)
 
 - async csidh?
+
     - the plan: make process descriptor commit quickly, before csidh is done.
       when syncing a peer with no psk, omit its endpoint to nullroute packets
       to it. when a csidh worker process completes, fire a new event and commit
@@ -46,12 +54,16 @@
 - implement auto-repair feature which automatically calls sync periodically
 
 - investigate packaging change
-    - something changed and now our deb has python3-* deps and the egg has our
-      whole repo
+
+    - something changed and now our deb has `python3-*` deps and the egg has
+      our whole repo
 
 - review netlink monitor
+
     - which events do we ignore
+
     - should we batch events?
+
         - eg, when turning off wifi, there is an event for removing the default
           route before the event to unbind the ip. currently we process those
           events separately, so we remove the use_as_gateway flag before we
@@ -61,25 +73,29 @@
 
 - document that discover and publish shouldn't be restarted without also
   restarting organize?
+
     - the current situation (i think) is that organize can be safely restarted,
       and will publish a new descriptor and cause discover to (re-)discover.
       however, if publish or discover is restarted, organize will not instruct
       them until a netlink event (or an organize restart).
 
 - unpinned peers should expire
+
     - this requires new descriptors to be generated and signed even if nothing
       else has changed to bump the vf value up.
 
 - we should have different events for peer and pref edits, instead of using
-  ev_USER_EDIT, and then we should have triggers fired by the state engine to
+  `ev_USER_EDIT`, and then we should have triggers fired by the state engine to
   update just the bits we know need to be updated instead of running a full
-  sync() for each change.
+  `sync()` for each change.
+
     - once this happens, we can have the full sync be optionally run
       periodically and/or after every event based on the auto_repair preference
+
     - this will also let us stop logging intentional peer removal/disabling as
       "unexpected"
 
-- there should be a "stop" command which tells all 3 daemons to stop (via
+- there should be a `vula stop` command which tells all 3 daemons to stop (via
   dbus), upon which organize can delete the interface and rules.
 
 - dbus policy XML needs to be cleaned up a lot; currently it has lots of
@@ -89,23 +105,29 @@
 - there should also be a prerm or postrm hook to remove our nsswitch config
   (prerm means we could make a subcommand of configure for it)
 
----
+- replace `record_events` feature with an event log saved to another file
+  instead of the state itself
 
-- replace record_events feature with an event log saved to another file instead
-  of the state itself
     - add a monitor command which subscribes to event notifications via dbus
       signals or something and prints results as they happen
+
+    - the current `record_events` feature defaults to off and hasn't been used
+      it a while and may or may not still function
 
 - add "join" command which takes a reunion passphrase as performs
   reunion-on-an-ethernet to automatically verify (and thus pin) any other peers
   using that passphrase. this will allow bidirectional pinning with headless
   peers (including routers).
 
-- write a cryptographic warnings page like this:
+- write a cryptographic warnings page about CSIDH similar to this one about
+  ntruprime:
+
     - https://ntruprime.cr.yp.to/warnings.html
 
+---
+
 - replace wireshark screenshot (the one currently in the paper has the old
-  _wireguard._udp name)
+  `_wireguard._udp` name)
 
 - validate hostname
 - qrcodes
@@ -113,6 +135,8 @@
 - graphs:
   - latency
   - bandwidth
+
+---
 
 -  sub-command called key-gen (including VK key) / rotate-sub-keys (not VK key)
 -- pre-paper deadline
@@ -196,24 +220,28 @@
 -- not fun, annoying
 -- post paper deadline
 
---
+---
 
 Enable Click (bash) tab completion (!)
-    built-in support is no good for multicommands, but maybe the one from contrib is?
+
+- built-in support is no good for multicommands, but maybe the one from contrib is?
 
 ---
 
 Investigate the use of RFCTBD:
+```
   NetRange:       100.64.0.0 - 100.127.255.255
   CIDR:           100.64.0.0/10
   NetName:        SHARED-ADDRESS-SPACE-RFCTBD-IANA-RESERVED
   NetHandle:      NET-100-64-0-0-1
   Parent:         NET100 (NET-100-0-0-0-0)
   NetType:        IANA Special Use
+```
 
 ---
 
 Consider adding IPSEC peers when WireGuard isn't supported.
+```
   sudo apt install libreswan
   wget https://raw.githubusercontent.com/libreswan/libreswan/main/docs/examples/oe-upgrade-authnull.conf
   sudo mv oe-upgrade-authnull.conf /etc/ipsec.d/oe-upgrade-authnull.conf
@@ -226,38 +254,26 @@ Consider adding IPSEC peers when WireGuard isn't supported.
   sudo systemctl start ipsec
   sudo ipsec verify
   sudo ipsec whack --oppohere 192.168.2.129 --oppothere 192.168.2.130
+```
+via [IPsec OE](https://libreswan.org/wiki/HOWTO:_Opportunistic_IPsec)
 
-
-  See also https://libreswan.org/wiki/HOWTO:_Opportunistic_IPsec
+---
 
 Add Firewall rules for each peer to prevent leakage of IP packets when a user
 accidentally brings up another vpn and local network packets would traverse the
-wrong link. Any application that uses ip rules and adds a rule without a
-priority.
+wrong link? Any application that uses ip rules and adds a rule without a
+priority, as `wg-quick` does, will cause us to leak presently.
 
  - iptables rule from vula IP address to peer IP address with fwmark
    allowed through, REJECT otherwise.
 
-Add default route support - when a gateway to the internet is also a valid
-peer, we can encrypt all traffic destined to the gateway already (DNS, DHCP
-unicast, tftp, etc) and we should also be able to encrypt every packet destined
-for the internet as well. The client should be able to automatically detect
-this if a peer announces a key, value pair of r=1. The client should then check
-its default route and if it matches, it should add corresponding routes and
-AllowedIP addresses to the local system. The system announcing r=1 needs no
-adjustment. The r=1 flag could be set automatically by checking if the value in
-/proc/sys/net/ipv4/ip_forward is 1.
+- Add ephemeral mode flag to publish/discover: e=0
 
-Add ephemeral mode flag to publish/discover:
-  e=0
-Add hostname binding - only accept under a given domain (default: .local):
-  policy constraint on host
+- Announcing more complicated routes is out of scope for now but later we may
+  allow a user to announce other routes. This could allow peer-by-peer NAT and
+  tunnel sharing. More info required for this design idea.
 
-Announcing more complicated routes may be out of scope but it may allow a user
-to announce their local routes. This will allow peer by peer NAT and tunnel
-sharing. More info required for this design idea.
-
-Investigate how WebRTC works these days.
+- Investigate how WebRTC works these days.
     - this demo
       https://github.com/warren-bank/js-get-local-area-network-ip-address
       returns uuid-lookin' names like
@@ -267,13 +283,10 @@ Investigate how WebRTC works these days.
         - https://bloggeek.me/psa-mdns-and-local-ice-candidates-are-coming/
         - https://datatracker.ietf.org/doc/draft-ietf-rtcweb-mdns-ice-candidates/
 
-Read and consider our relation to "Efficient Privacy PreservingMulticast DNS Service Discovery"
-    https://www.uni-konstanz.de/mmsp/pubsys/publishedFiles/KaWa14a.pdf
+- Read and consider our relation to [Efficient Privacy PreservingMulticast DNS Service Discovery](https://www.uni-konstanz.de/mmsp/pubsys/publishedFiles/KaWa14a.pdf)
 
 Think about combining vula with the reunion protocol. Could "reunion on an
 ethernet" work via a gethostbyname interface? Maybe.
-
-- Integrate python3-qrcode, python3-zbar into vula-verify
 
 - need to install new packages on debian: python3-opencv
 
@@ -284,31 +297,6 @@ ethernet" work via a gethostbyname interface? Maybe.
   parsed and result in a key value pair where every byte can be used.
   Currently, we do a half-assed thing and we should do something smarter.
 
-- Discover and publish both throw an exception when they lose network
-  connectivity.  We should catch, sleep, and try again.
-  - This is handled internally with zeroconf, we can't do anything as far as I
-    can tell unless we patch the library.
-    - We should file a bug upstream.
-
-- Publish should use an interface and not an IP address as an optional
-  argument.
-
-- write test inputs for organize, and refactor it so that it can perform its
-  logic without actually interacting with wg (these tests shouldn't require
-  privileges). one way to do this might be to simply add a "dry-run" mode where
-  it logs what it would do and then have the test runner feed the test input
-  (in the format of discover output) to organize --dry-run and then inspect its
-  output (with timestamps removed) to validate that the test had the correct
-  results
-
-https://wiki.python.org/moin/UsingAssertionsEffectively
- especially note the last two paragraphs particularly: "Assertions should not
- be used to test for failure cases that can occur because of bad user input or
- operating system/environment failures, such as a file not being found.
- Instead, you should raise an exception, or print an error message, or whatever
- is appropriate." (read the rest of that page for what they should be used for)
- tldr, you can use lots of asserts, but when one gets hit it should always mean
- there is a bug in the program. bad data from the network or user or
- environment should never cause an assert to fail.
-
-
+- Discover and publish used to throw exceptions when they lost network
+  connectivity. This problem has hopefully gone away but we should carefully
+  investigate what happens in various scenarios to be sure.

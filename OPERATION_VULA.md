@@ -47,6 +47,6 @@ Pretoria prison](https://m.youtube.com/watch?v=0WyeAaYjlxE) where he was held
 as a political prisoner by the racist apartheid regime. *[Escape from
 Pretoria](https://en.wikipedia.org/wiki/Escape_from_Pretoria)* has recently been
 retold as a major motion picture. We also encourage you to check out what Tim
-is working on these days with his [Community Exchange
+is working on these days with the [Community Exchange
 System](https://www.community-exchange.org/).
 
