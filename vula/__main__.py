@@ -14,7 +14,6 @@ from . import (
     peer,
     prefs,
     wg,
-    repair,
     engine,
     common,
 )
@@ -91,6 +90,21 @@ def start(quick):
         args=(('--only-systemd',) if quick else ()), standalone_mode=False
     )
 
+@main.command(short_help="Ensure that system is configured correctly")
+@click.option(
+    '-n',
+    '--dry-run',
+    is_flag=True,
+    help="Print what would be done, without doing it",
+)
+def repair(dry_run):
+    """
+    This checks if the system is configured correctly, and (re)configures it if
+    it isn't.
+    """
+    res = common.organize_dbus_if_active().sync(dry_run)
+    if res:
+        click.echo("\n".join(res))
 
 @main.command()
 def rediscover():

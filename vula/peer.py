@@ -656,7 +656,7 @@ class PeerCommands(object):
             """
             Add an address to a peer
             """
-            print(Result.from_yaml(self.organize.peer_addr_add(vk, ip)))
+            click.echo(Result.from_yaml(self.organize.peer_addr_add(vk, ip)))
 
         @DualUse.method(name='del')
         @click.argument('vk', type=str)
@@ -670,7 +670,7 @@ class PeerCommands(object):
             disabled instead of deleting it. This is currently accomplished
             using a command like "peer set $vk IPv4addrs x.x.x.x false"
             """
-            print(Result.from_yaml(self.organize.peer_addr_del(vk, ip)))
+            click.echo(Result.from_yaml(self.organize.peer_addr_del(vk, ip)))
 
     @DualUse.method(short_help="Set arbitrary peer properties")
     @click.argument('vk', type=str)
@@ -693,7 +693,7 @@ class PeerCommands(object):
         IPs, but that is better done with "vula peer addr add".
         """
         res = Result(json.loads(self.organize.set_peer(vk, path, value)))
-        print(res)
+        click.echo(res)
 
     @DualUse.method()
     @click.argument('vk', type=str)
