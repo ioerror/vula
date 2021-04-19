@@ -1,3 +1,4 @@
+- petnames are broken on Ubuntu 20.04 due to a permissions issue
 - stop calling sync from `get_new_system_state`, triggers should handle it
 
 - Review this TODO file, remove outdated things, and file codeberg issues for what remains.
