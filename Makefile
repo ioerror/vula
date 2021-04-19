@@ -15,7 +15,7 @@ pypi-upload:
 .PHONY: deb
 deb:
 	echo $(VERSION)
-	python setup.py --command-packages=stdeb.command sdist_dsc
+	python3 setup.py --command-packages=stdeb.command sdist_dsc
 	cp -v misc/python3-vula.postinst deb_dist/vula-$(VERSION)/debian/
 	cd deb_dist/vula-$(VERSION) &&	dpkg-buildpackage -rfakeroot -us -uc
 
