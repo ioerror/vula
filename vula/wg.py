@@ -129,21 +129,18 @@ class PeerConfig(schemattrdict, serializable):
     def wg_show(self: PeerConfig):
         return "\n  ".join(
             click.style(label, bold=True) + ': ' + value
-            for label, value in (
-                (
-                    click.style('peer', fg="yellow"),
-                    click.style(self['public_key'], fg="yellow"),
+            for label, value in {
+                click.style('peer', fg="yellow"): click.style(
+                    self['public_key'], fg="yellow"
                 ),
-                ('preshared key', self.get('preshared_key') and '(hidden)'),
-                (
-                    'endpoint',
+                'preshared key': (self.get('preshared_key') and '(hidden)'),
+                'endpoint': (
                     'endpoint_addr' in self
                     and 'endpoint_port' in self
-                    and "{endpoint_addr}:{endpoint_port}".format(**self),
+                    and "{endpoint_addr}:{endpoint_port}".format(**self)
                 ),
-                ('allowed ips', ", ".join(self['allowed_ips']) or "(none)"),
-                (
-                    'latest handshake',
+                'allowed ips': (", ".join(self['allowed_ips']) or "(none)"),
+                'latest handshake': (
                     self['stats']['latest_handshake']
                     and str(
                         timedelta(
@@ -152,21 +149,19 @@ class PeerConfig(schemattrdict, serializable):
                             )
                         ),
                     )
-                    + ' ago',
+                    + ' ago'
                 ),
-                (
-                    'transfer',
+                'transfer': (
                     sum(self['stats'].values())
                     and "{rx_bytes} received, {tx_bytes} sent".format(
                         **format_byte_stats(self['stats'])
-                    ),
+                    )
                 ),
-                (
-                    'persistent keepalive',
+                'persistent keepalive': (
                     self.get('persistent_keepalive')
-                    and "every %s seconds" % (self['persistent_keepalive'],),
+                    and "every %s seconds" % (self['persistent_keepalive'],)
                 ),
-            )
+            }.items()
             if value not in (None, False)
         )
 
@@ -174,22 +169,20 @@ class PeerConfig(schemattrdict, serializable):
     def wg_showconf(self: PeerConfig):
         return "[Peer]\n" + "\n".join(
             label + ' = ' + value
-            for label, value in (
-                ('PublicKey', self['public_key']),
-                ('PresharedKey', self.get('preshared_key')),
-                ('AllowedIPs', ", ".join(self['allowed_ips'])),
-                (
-                    'Endpoint',
+            for label, value in {
+                'PublicKey': self['public_key'],
+                'PresharedKey': self.get('preshared_key'),
+                'AllowedIPs': ", ".join(self['allowed_ips']),
+                'Endpoint': (
                     'endpoint_addr' in self
                     and 'endpoint_port' in self
-                    and "{endpoint_addr}:{endpoint_port}".format(**self),
+                    and "{endpoint_addr}:{endpoint_port}".format(**self)
                 ),
-                (
-                    'PersistentKeepalive',
+                'PersistentKeepalive': (
                     self.get('persistent_keepalive')
-                    and str(self['persistent_keepalive']),
+                    and str(self['persistent_keepalive'])
                 ),
-            )
+            }.items()
             if value not in (None, False, '')
         )
 
@@ -450,22 +443,19 @@ class Interface(attrdict, yamlrepr_hl):
         return (
             "\n  ".join(
                 click.style(label, bold=True) + ': ' + str(value)
-                for label, value in (
-                    (
-                        click.style('interface', fg="green", bold=True),
-                        click.style(self.name, fg="green"),
+                for label, value in {
+                    click.style(
+                        'interface', fg="green", bold=True
+                    ): click.style(self.name, fg="green"),
+                    'public key': (
+                        'public_key' in self and self['public_key'].decode()
                     ),
-                    (
-                        'public key',
-                        'public_key' in self and self['public_key'].decode(),
+                    'private key': ('public_key' in self and '(hidden)'),
+                    'listening port': self.get('listen_port'),
+                    'fwmark': (
+                        self.get('fwmark') and "0x%x" % (self['fwmark'],)
                     ),
-                    ('private key', 'public_key' in self and '(hidden)'),
-                    ('listening port', self.get('listen_port'),),
-                    (
-                        'fwmark',
-                        self.get('fwmark') and "0x%x" % (self['fwmark'],),
-                    ),
-                )
+                }.items()
                 if value not in (None, False)
             )
             + ("\n\n" if peers else '')
@@ -481,14 +471,13 @@ class Interface(attrdict, yamlrepr_hl):
         return "[Interface]\n" + (
             "\n".join(
                 "%s = %s" % (label, value)
-                for label, value in (
-                    ('ListenPort', self.get('listen_port')),
-                    (
-                        'FwMark',
-                        self.get('fwmark') and "0x%x" % (self['fwmark'],),
+                for label, value in {
+                    'ListenPort': self.get('listen_port'),
+                    'FwMark': (
+                        self.get('fwmark') and "0x%x" % (self['fwmark'],)
                     ),
-                    ('PrivateKey', self.get('private_key', b'').decode()),
-                )
+                    'PrivateKey': self.get('private_key', b'').decode(),
+                }.items()
                 if value not in (None, False, '')
             )
             + ("\n\n" if peers else '')

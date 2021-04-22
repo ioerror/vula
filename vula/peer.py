@@ -335,53 +335,39 @@ class Peer(schemattrdict):
         )
         return "\n  ".join(
             bold(label) + ': ' + str(value) if label else str(value)
-            for label, value in (
-                (green_or_yellow('peer'), green_or_yellow(self.name)),
-                ('id', self.id),
-                (
-                    red('warning'),
-                    None if stats else red('wireguard peer is not configured'),
+            for label, value in {
+                green_or_yellow('peer'): green_or_yellow(self.name),
+                'id': self.id,
+                red('warning'): (
+                    None if stats else red('wireguard peer is not configured')
                 ),
-                ('other names', ", ".join(self.other_names)),
-                (
-                    'status',
-                    " ".join(
-                        filter(
-                            None,
-                            [
-                                (red("disabled"), green("enabled"))[
-                                    self.enabled
-                                ],
-                                (yellow("unpinned"), green("pinned"))[
-                                    self.pinned
-                                ],
-                                (
-                                    (red if self.pinned else yellow)(
-                                        "unverified"
-                                    ),
-                                    green("verified"),
-                                )[self.verified],
-                                ('', bold(blue("gateway")))[
-                                    self.use_as_gateway
-                                ],
-                            ],
-                        )
-                    ),
+                'other names': ", ".join(self.other_names),
+                'status': " ".join(
+                    filter(
+                        None,
+                        [
+                            (red("disabled"), green("enabled"))[self.enabled],
+                            (yellow("unpinned"), green("pinned"))[self.pinned],
+                            (
+                                (red if self.pinned else yellow)("unverified"),
+                                green("verified"),
+                            )[self.verified],
+                            ('', bold(blue("gateway")))[self.use_as_gateway],
+                        ],
+                    )
                 ),
-                ('endpoint', self.endpoint),
-                ('allowed ips', ", ".join(map(str, self.allowed_ips))),
-                ('disabled ips', ", ".join(map(str, self.disabled_ips))),
-                (
-                    'latest signature',
+                'endpoint': self.endpoint,
+                'allowed ips': ", ".join(map(str, self.allowed_ips)),
+                'disabled ips': ", ".join(map(str, self.disabled_ips)),
+                'latest signature': (
                     str(
                         timedelta(
                             seconds=int(time.time() - self.descriptor.vf)
                         ),
                     )
-                    + ' ago',
+                    + ' ago'
                 ),
-                (
-                    'latest handshake',
+                'latest handshake': (
                     str(
                         timedelta(
                             seconds=int(
@@ -391,18 +377,17 @@ class Peer(schemattrdict):
                     )
                     + ' ago'
                     if stats and stats.get('latest_handshake')
-                    else yellow('none'),
+                    else yellow('none')
                 ),
-                (
-                    'transfer',
+                'transfer': (
                     stats
                     and sum(stats.values())
                     and "{rx_bytes} received, {tx_bytes} sent".format(
                         **format_byte_stats(stats)
-                    ),
+                    )
                 ),
-                ('wg pubkey', self.descriptor.pk),
-            )
+                'wg pubkey': self.descriptor.pk,
+            }.items()
             if value not in (None, False, '')
         )
 

@@ -90,6 +90,7 @@ def start(quick):
         args=(('--only-systemd',) if quick else ()), standalone_mode=False
     )
 
+
 @main.command(short_help="Ensure that system is configured correctly")
 @click.option(
     '-n',
@@ -105,6 +106,7 @@ def repair(dry_run):
     res = common.organize_dbus_if_active().sync(dry_run)
     if res:
         click.echo("\n".join(res))
+
 
 @main.command()
 def rediscover():
