@@ -33,7 +33,6 @@ sleep 1
 
 # Download the source for vula_libnss and vula
 tmp_dir=$(mktemp -d -t vula-XXX-XXX)
-mkdir $tmp_dir
 cd $tmp_dir
 git clone --recurse-submodules https://codeberg.org/vula/vula_libnss
 git clone https://codeberg.org/vula/vula
