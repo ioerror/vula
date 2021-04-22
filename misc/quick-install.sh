@@ -8,7 +8,7 @@ sudo apt update
 sudo apt install --no-install-recommends -y dh-python python3-click \
   python3-progress python3-numpy python3-matplotlib python3-networkx \
   python3-stdeb python3-setuptools-scm python3-setuptools python3-cpuinfo \
-  python3-all-dev
+  python3-all-dev git
 
 # vula dependencies
 sudo apt install --no-install-recommends -y wireguard wireguard-tools \
@@ -47,3 +47,5 @@ cd ..
 # install the packages we have just built:
 sudo dpkg -i vula_libnss/deb_dist/python3-vula-libnss_*.deb
 sudo dpkg -i vula/deb_dist/python3-vula_*_all.deb
+
+echo "vula is now installed"
