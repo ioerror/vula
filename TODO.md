@@ -1,4 +1,9 @@
+- we need to research more to figure out what our minimum requirements actually
+  are, and better define a way to install everything on older systems.
+  pipx? docker?
+
 - petnames are broken on Ubuntu 20.04 due to a permissions issue
+
 - stop calling sync from `get_new_system_state`, triggers should handle it
 
 - Review this TODO file, remove outdated things, and file codeberg issues for what remains.
