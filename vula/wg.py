@@ -60,6 +60,7 @@ class PeerConfig(schemattrdict, serializable):
 
     schema = Schema(
         {
+            Optional('unspec'): object,
             Optional('remove'): bool,
             Optional('public_key'): And(b64_bytes.with_len(32), Use(str)),
             Optional('preshared_key'): And(b64_bytes.with_len(32), Use(str)),
