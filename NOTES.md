@@ -6,10 +6,22 @@ dot link` requesting a copy of our current draft while it is under peer review.
 
 Currently, vula's fully automatic configuration is only applied to IPv4
 networks using [RFC 1918 addresses](https://tools.ietf.org/html/rfc1918).
-We will support IPv6 networks in the future. With a small amount of manual
-configuration, vula can be used with non-RFC1918 IPv4 subnets.
+With a small amount of manual configuration, vula can be used with non-RFC1918
+IPv4 subnets.
 
-## Secure local names
+We will support IPv6 networks in the future. There are several scenarios to
+consider for IPv6 support:
+
+* link-local (`fe80`) addresses only
+  * On Ubuntu and other distros today, by default these are advertised by avahi if no other addresses 
+    are configured, but they are not actually resolved unless the querying user has enabled them by 
+    replacing `mdns4_minimal` with `mdns_minimal` in `/etc/nssswitch.conf`.
+* Public IPs configured, and a default route
+* ULA addresses configured, without a default route
+* ULA addresses configured, with a default route (NAT)
+
+
+##  Secure local names
 
 On GNU/Linux systems, vula connections are available if `vula configure
 nsswitch` is run after installation of the vula package. This is performed
