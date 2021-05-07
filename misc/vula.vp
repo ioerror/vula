@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2021 Vula Authors <git@vula.link>
 // SPDX-License-Identifier: GPLv3
-// Simplified version of vula in Verifpal
+// Simplified implementation of vula in Verifpal
 
 attacker[active]
 
@@ -9,10 +9,10 @@ principal Laura[
   knows public _hkdf_info
   generates time_stamp_a_0
   knows private vk_a
+  vk_a_pk = G^vk_a
   generates csidh_a
   csidh_a_pk = G^csidh_a
-  vk_a_pk = G^vk_a
-  descriptor_a_pt0 = CONCAT(time_stamp_a_0, G^csidh_a)
+  descriptor_a_pt0 = CONCAT(time_stamp_a_0, csidh_a_pk)
   ha_0 = HASH(descriptor_a_pt0)
   sig_a_0 = SIGN(vk_a, ha_0)
 ]
@@ -25,7 +25,7 @@ principal Glenn[
   vk_b_pk = G ^ vk_b
   generates csidh_b
   csidh_b_pk = G ^ csidh_b
-  descriptor_b_pt0 = CONCAT(time_stamp_b_0, G^csidh_b)
+  descriptor_b_pt0 = CONCAT(time_stamp_b_0, csidh_b_pk)
   hb_0 = HASH(descriptor_b_pt0)
   sig_b_0 = SIGN(vk_b, hb_0)
 ]
