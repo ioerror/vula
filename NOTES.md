@@ -2,6 +2,12 @@ The upcoming vula paper outlines the design decisions, threat model, and vision
 for the `vula` software and protocol. Please send an email to `paper at vula
 dot link` requesting a copy of our current draft while it is under peer review.
 
+
+## Cryptographic protocol visualization
+
+We have [modeled the Vula protocol](./misc/vula.vp) using Verifpal
+![Vula Verifpal model](./misc/vula.png)
+
 ## IPv4 and IPv6 limitations
 
 Currently, vula's fully automatic configuration is only applied to IPv4
