@@ -36,7 +36,9 @@ Vula's advantages over some other solutions include:
 * simple verification with QR codes to disrupt active surveillance adversaries
 
 See [`NOTES.md`](https://codeberg.org/vula/vula/src/branch/main/NOTES.md) for
-some discussion of the threat model and other technical details.
+some discussion of the threat model and other technical details, and
+[`COMPARISON.md`](https://codeberg.org/vula/vula/src/branch/main/COMPARISON.md)
+for a comparison of Vula to some related projects.
 
 ### Current status
 
