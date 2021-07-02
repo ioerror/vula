@@ -34,7 +34,7 @@ does not provide secure names, and its key verification system requires
 application-specific support. These and other deployment impediments have
 prevented its adoption.
 
-IPsec OE also is designed to provide opportunistic encryption, but has numerous shortcomings and has failed to gain adoption.
+IPsec OE also is designed to provide opportunistic encryption, but has [numerous](https://nohats.ca/wordpress/blog/2013/09/12/history-and-implementation-status-of-opportunistic-encryption-for-ipsec/) [shortcomings](https://www.mail-archive.com/cryptography@metzdowd.com/msg12325.html) and has failed to gain adoption.
 
 |           | zero configuration | encrypts                                                | works offline | Required infrastructure                                                  | Transitionally post-quantum | protects traffic using existing IPs | secure hostnames | free software         | encrypted transport               |
 |-----------|--------------------|---------------------------------------------------------|---------------|--------------------------------------------------------------------------|-----------------------------|-------------------------------------|------------------|-----------------------|-----------------------------------|
