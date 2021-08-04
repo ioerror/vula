@@ -1,0 +1,58 @@
+baseURL = "https://vula.codeberg.page/"
+languageCode = "en-us"
+title = "Vula"
+theme = "smol"
+copyright = "Vula Authors"
+disableKinds = ["RSS", "sitemap", "section", "taxonomy"]
+ignoreErrors = ["error-disable-taxonomy"]
+
+[params]
+    subtitle = "automatic local network encryption"
+    dateFmt = "02.01.2006 15:04"
+
+[taxonomies]
+    category = "categories"
+    tag = "tags"
+
+[menu]
+  [[menu.main]]
+        identifier = "introduction"
+        name = "introduction"
+        url = "/introduction/"
+        weight = 1
+
+  [[menu.main]]
+        identifier = "status"
+        name = "status"
+        url = "/status/"
+        weight = 2
+
+  [[menu.main]]
+        identifier = "install"
+        name = "install"
+        url = "/install/"
+        weight = 3
+
+  [[menu.main]]
+        identifier = "hacking"
+        name = "hacking"
+        url = "/hacking/"
+        weight = 4
+
+  [[menu.main]]
+        identifier = "comparison"
+        name = "comparison"
+        url = "/comparison/"
+        weight = 5
+
+  [[menu.main]]
+        identifier = "historical name"
+        name = "historical name"
+        url = "/operation-vula/"
+        weight = 6
+
+  [[menu.main]]
+        identifier = "source code"
+        name = "source code"
+        url = "https://codeberg.org/vula/vula"
+        weight = 7
