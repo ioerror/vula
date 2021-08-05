@@ -1,12 +1,12 @@
 {{ define "main" }}
-    <main aria-role="main">
+    <main>
       <header class="homepage-header">
         {{ with .Params.subtitle }}
         <span class="subtitle">{{.}}</span>
         {{ end }}
       </header>
       <div class="homepage-content">
-        <h2>Vula is available for testing</h2>
+        <h1>Vula is available for testing</h1>
 <p>Check out the <a href="https://codeberg.org/vula/vula">source code</a> and <a href="/install/">install it</a> to experiment with Vula!</p>
 
 <h2>Vula welcomes contributions</h2>
@@ -14,7 +14,7 @@
 
 <h2>Vula is available for peer review</h2>
 <p>We encourage reading about Vula's <a href="/notes/">threat model
-  and other technical details</a>, a <a href="/comparison/">preliminary comparision with other similar systems</a>, and <a href="/operation-vula/">a note about the history behind the name</a>.
+  and other technical details</a>, a <a href="/comparison/">preliminary comparision with other similar systems</a>, and <a href="/operation-vula/">a note about the history behind the name</a>.</p>
       </div>
     </main>
 {{ end }}
