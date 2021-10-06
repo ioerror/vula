@@ -35,6 +35,10 @@ from click.exceptions import Exit
 import pydbus
 from time import sleep
 
+from .common import (
+    jsonrepr
+)
+import json
 from .constants import (
     _DATE_FMT,
     _LABEL,
@@ -61,8 +65,14 @@ class VerifyCommands(object):
             organize = bus.get(_ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH)
 
         self.organize = organize
-        with open(_WG_PUBLISH_BASEDIR + 'descriptor') as fhandle:
-            self.raw_descriptor = fhandle.read()
+        self.raw_descriptor = ""
+        x = json.loads(self.organize.our_latest_descriptors())
+        for d in x.keys():
+            desc = x[d]
+            for y in desc:
+                self.raw_descriptor += "{}={};".format(y, desc[y])
+        #import pdb, traceback
+        #pdb.set_trace()
         self.descriptor = Descriptor.parse(self.raw_descriptor)
         self.vk = self.descriptor.vk
         self.qr = qrcode.QRCode()
@@ -76,7 +86,7 @@ class VerifyCommands(object):
     @DualUse.method()
     def my_descriptor(self):
         self.qr.add_data(data="local.vula:desc:" + self.raw_descriptor)
-        click.echo(green(bold("Your latest descriptor is: ")))
+        click.echo(green(bold("Your latest descriptor is: ")) + str('"' + self.raw_descriptor +'"'))
         self.qr.print_ascii()
 
     @DualUse.method()

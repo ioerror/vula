@@ -518,6 +518,9 @@ class Organize(attrdict):
           <arg type='s' name='value' direction='in'/>
           <arg type='s' name='response' direction='out'/>
         </method>
+        <method name='our_latest_descriptors'>
+          <arg type='s' name='descriptors' direction='out'/>
+        </method>
         <method name='get_vk_by_name'>
           <arg type='s' name='hostname' direction='in'/>
           <arg type='s' name='response' direction='out'/>
@@ -572,6 +575,7 @@ class Organize(attrdict):
         self._state.trigger_target = self.sys
         self._state.save = self.save
         self._state.debug_log = self.log.debug
+        self._latest_descriptors = {}
 
         if ctx.invoked_subcommand is None:
             self.run(monolithic=False)
@@ -595,6 +599,9 @@ class Organize(attrdict):
     @property
     def our_wg_pk(self):
         return str(self._keys.wg_Curve25519_pub_key)
+
+    def our_latest_descriptors(self):
+        return repr(jsonrepr(self._latest_descriptors))
 
     def _construct_service_descriptor(
         self, ip_addrs: str, vf: int
@@ -834,6 +841,9 @@ class Organize(attrdict):
         )
         self.discover.listen(current_ips)
         self.publish.listen(descriptors)
+        self._latest_descriptors = descriptors
+        self.log.info("Current IP(s): {}".format(current_ips))
+        self.log.info("Current descriptors: {}".format(self._latest_descriptors))
 
     @DualUse.method(opts=(click.argument('query', type=str),))
     def show_peer(self, query):
