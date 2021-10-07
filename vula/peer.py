@@ -402,7 +402,11 @@ class Peers(yamlrepr, queryable, schemadict):
     SystemState does not contain conflicts.
     """
 
-    schema = Schema({Optional(And(str, Length(44))): Use(Peer),},)
+    schema = Schema(
+        {
+            Optional(And(str, Length(44))): Use(Peer),
+        },
+    )
 
     def with_hostname(self: Peers, name: str):
         res = self.limit(enabled=True).by('nicknames').get(name, [])
@@ -494,7 +498,8 @@ class Peers(yamlrepr, queryable, schemadict):
 
 
 @DualUse.object(
-    short_help="View and modify peer information", invoke_without_command=True,
+    short_help="View and modify peer information",
+    invoke_without_command=True,
 )
 @click.pass_context
 class PeerCommands(object):

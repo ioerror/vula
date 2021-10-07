@@ -52,7 +52,10 @@ linux_data_files = [
             "configs/systemd/vula-organize-monolithic.service",
         ],
     ),
-    ("/etc/dbus-1/system.d/", ['configs/dbus/local.vula.services.conf'],),
+    (
+        "/etc/dbus-1/system.d/",
+        ['configs/dbus/local.vula.services.conf'],
+    ),
     (
         # "/etc/dbus-1/system-services/",
         "/usr/share/dbus-1/system-services/",
@@ -67,7 +70,10 @@ linux_data_files = [
         ['configs/polkit/local.vula.organize.Debug.policy'],
     ),
     ("/usr/lib/sysusers.d/", ['configs/sysusers.d/vula.conf']),
-    ("/usr/share/man/man1/", glob('man/vula*1'),),
+    (
+        "/usr/share/man/man1/",
+        glob('man/vula*1'),
+    ),
 ]
 
 our_data_files = linux_data_files
@@ -99,7 +105,11 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.7",
-    entry_points={"console_scripts": ["vula=vula.__main__:main",]},
+    entry_points={
+        "console_scripts": [
+            "vula=vula.__main__:main",
+        ]
+    },
     install_requires=requirements,
     data_files=our_data_files,
     include_package_data=True,

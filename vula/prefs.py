@@ -70,7 +70,9 @@ class Prefs(yamlrepr_hl, schemattrdict):
     )
 
 
-@DualUse.object(invoke_without_command=True,)
+@DualUse.object(
+    invoke_without_command=True,
+)
 @click.pass_context
 class PrefsCommands(object):
     """

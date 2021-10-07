@@ -121,7 +121,11 @@ class attrdict(dict):
         if key in self:
             raise ValueError(
                 "Programmer error: attempt to set an attribute (%s=%r) of an instance of %r (which is an attrdict, which provides read-only access to keys through the attribute interface). Attributes which are dictionary keys are not allowed to be set through the attrdict attribute interface."
-                % (key, value, type(self),)
+                % (
+                    key,
+                    value,
+                    type(self),
+                )
             )
         super(attrdict, self).__setattr__(key, value)
 
@@ -149,7 +153,11 @@ class ro_dict(dict):
 
     def update(self, *a, **kw):
         raise ValueError(
-            "Attempt to update read-only dictionary (*%s, **%s)" % (a, kw,)
+            "Attempt to update read-only dictionary (*%s, **%s)"
+            % (
+                a,
+                kw,
+            )
         )
 
 
@@ -491,7 +499,11 @@ class b64_bytes(bytes):
                 Use(cls),
                 Length(length),
             ),
-            And(bytes, Length(length), Use(cls),),
+            And(
+                bytes,
+                Length(length),
+                Use(cls),
+            ),
             error="{!r} is not %s bytes or a %s-char base64 string which decodes to %s bytes"
             % (length, b64_length, length),
             # name = '%s bytes base64-encoded' % (length,), # when we upgrade to the newer schema lib
@@ -612,9 +624,11 @@ class chunkable_values(dict):
             else:
                 c = 0
                 cs = length - len(k) - 3
-                assert cs >= 1, (
-                    "no room for data with chunk size %s and key %s"
-                    % (length, k)
+                assert (
+                    cs >= 1
+                ), "no room for data with chunk size %s and key %s" % (
+                    length,
+                    k,
                 )
                 while v:
                     res["%s%02d" % (k, c)] = v[:cs]

@@ -110,7 +110,11 @@ class SystemState(schemattrdict):
         )
     )
 
-    default = dict(our_wg_pk=b'\x00' * 32, current_subnets={}, gateways=[],)
+    default = dict(
+        our_wg_pk=b'\x00' * 32,
+        current_subnets={},
+        gateways=[],
+    )
 
     @classmethod
     def read(cls, organize):
@@ -843,7 +847,9 @@ class Organize(attrdict):
         self.publish.listen(descriptors)
         self._latest_descriptors = descriptors
         self.log.info("Current IP(s): {}".format(current_ips))
-        self.log.info("Current descriptors: {}".format(self._latest_descriptors))
+        self.log.info(
+            "Current descriptors: {}".format(self._latest_descriptors)
+        )
 
     @DualUse.method(opts=(click.argument('query', type=str),))
     def show_peer(self, query):

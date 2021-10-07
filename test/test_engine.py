@@ -264,7 +264,8 @@ class TestOrganizeEngine(unittest.TestCase):
             )
         )
         self.assertEqual(
-            s.peers.with_ip('10.0.0.1').enabled_names, ['alice-1.local'],
+            s.peers.with_ip('10.0.0.1').enabled_names,
+            ['alice-1.local'],
         )
 
     def test_ignore_replay_unpinned(self):
@@ -318,7 +319,8 @@ class TestOrganizeEngine(unittest.TestCase):
         # make it equal again:
         sd['peers'][mkk('bobvk')]['petname'] = ''
         self.assertEqual(
-            OrganizeState(sd)._dict(), self.state._dict(),
+            OrganizeState(sd)._dict(),
+            self.state._dict(),
         )
         # and then invalid due to an IP address conflict:
         sd['peers'][mkk("bobvk")]['IPv4addrs'].update(
@@ -338,7 +340,8 @@ class TestOrganizeEngine(unittest.TestCase):
             list(peers.with_hostname('alice.local')['IPv4addrs'].keys())[0]
         ]
         self.assertEqual(
-            OrganizeState(sd)._dict(), self.state._dict(),
+            OrganizeState(sd)._dict(),
+            self.state._dict(),
         )
 
         # create another invalid state, where two peers are both set as the gateway

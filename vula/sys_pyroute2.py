@@ -159,7 +159,9 @@ class Sys(object):
             )
             res.append(
                 self.sync_routes(
-                    peer.routes, table=self.organize.table, dryrun=dryrun,
+                    peer.routes,
+                    table=self.organize.table,
+                    dryrun=dryrun,
                 )
             )
             if peer.use_as_gateway:
@@ -237,7 +239,9 @@ class Sys(object):
                 self.ipr.route("del", **route)
             res.append(
                 "ip route del {dst} dev {dev} table {table}".format(
-                    dst=route['dst'], dev=dev, table=route['table'],
+                    dst=route['dst'],
+                    dev=dev,
+                    table=route['table'],
                 )
             )
         return "\n".join(res)

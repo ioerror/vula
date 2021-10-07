@@ -127,6 +127,8 @@ class TestPeerShow(unittest.TestCase):
     """
 
 
+# fmt: off
+ 
 class TestDescriptor_qrcode(unittest.TestCase):
     """
     >>> print(
@@ -173,6 +175,7 @@ class TestDescriptor_qrcode(unittest.TestCase):
         █ ▀▀▀ █   ▄▀█ ▀█▄ █▀▄█▄▄▀▀ ▀█  ▀███▀█ ▄█▀▀▄█ ▄ ██▀▄██▄▄▀▀▀▀██▀█  ▀▄▀██▄██    
         ▀▀▀▀▀▀▀ ▀ ▀▀▀  ▀▀ ▀▀▀▀  ▀▀▀  ▀    ▀    ▀     ▀ ▀▀ ▀ ▀  ▀  ▀▀▀ ▀ ▀▀  ▀   ▀
         """
+# fmt: on
 
 
 if __name__ == '__main__':

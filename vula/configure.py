@@ -44,7 +44,8 @@ from .common import attrdict, KeyFile
 
 
 @DualUse.object(
-    short_help="Configure system for vula", invoke_without_command=True,
+    short_help="Configure system for vula",
+    invoke_without_command=True,
 )
 @click.option(
     "-k",
@@ -176,7 +177,9 @@ class Configure(attrdict):
         return keys
 
     def _reconfigure_restart_systemd_services(
-        self, mode: str = "replace", restart: bool = False,
+        self,
+        mode: str = "replace",
+        restart: bool = False,
     ):
         """
         Use DBus to check the status of, enable, and restart systemd services.

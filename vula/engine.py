@@ -159,7 +159,10 @@ class Engine(schemattrdict, yamlfile):
         def _method(self, *a, **kw):
             new_state = None
             res = self.Result(
-                event=(name, *a), actions=[], writes=[], error=None,
+                event=(name, *a),
+                actions=[],
+                writes=[],
+                error=None,
             )
             error = None
             self._lock.acquire()
