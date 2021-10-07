@@ -137,6 +137,7 @@ class Configure(attrdict):
         keys = None
         try:
             keys = KeyFile.from_yaml_file(path)
+            os.chmod(path, mode=0o600)
         except FileNotFoundError:
             self.log.info("Keys file not found")
         except Exception as ex:
