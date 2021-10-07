@@ -36,9 +36,7 @@ from click.exceptions import Exit
 import pydbus
 from time import sleep
 
-from .common import (
-    jsonrepr
-)
+from .common import jsonrepr
 from .constants import (
     _DATE_FMT,
     _LABEL,
@@ -65,29 +63,29 @@ class VerifyCommands(object):
             organize = bus.get(_ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH)
 
         self.organize = organize
-        self.raw_descriptor = ""
-        x = json.loads(self.organize.our_latest_descriptors())
-        for d in x.keys():
-            desc = x[d]
-            for y in desc:
-                self.raw_descriptor += "{}={};".format(y, desc[y])
-        #import pdb, traceback
-        #pdb.set_trace()
-        self.descriptor = Descriptor.parse(self.raw_descriptor)
-        self.vk = self.descriptor.vk
-        self.qr = qrcode.QRCode()
+        self.my_descriptors = {
+            ip: Descriptor(d)
+            for ip, d in json.loads(
+                self.organize.our_latest_descriptors()
+            ).items()
+        }
+        (self.vk,) = set(d.vk for d in self.my_descriptors.values())
 
     @DualUse.method()
     def my_vk(self):
-        self.qr.add_data(data="local.vula:vk:" + str(self.vk))
         click.echo(green(bold("Your VK is: ")) + str(self.vk))
-        self.qr.print_ascii()
+        qr = qrcode.QRCode()
+        qr.add_data(data="local.vula:vk:" + str(self.vk))
+        qr.print_ascii()
 
     @DualUse.method()
     def my_descriptor(self):
-        self.qr.add_data(data="local.vula:desc:" + self.raw_descriptor)
-        click.echo(green(bold("Your latest descriptor is: ")) + str('"' + self.raw_descriptor +'"'))
-        self.qr.print_ascii()
+        for ip, desc in self.my_descriptors.items():
+            click.echo(green(bold("Descriptor for {}: ".format(ip))))
+            qr = qrcode.QRCode()
+            qr.add_data(data="local.vula:desc:" + str(desc))
+            qr.print_ascii()
+            click.echo(repr(str(desc)))
 
     @DualUse.method()
     @click.argument('name', type=str)
