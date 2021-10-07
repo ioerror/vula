@@ -29,6 +29,7 @@ try:
 except ImportError:
     qrcode = None
 
+import json
 import yaml
 import click
 from click.exceptions import Exit
@@ -38,7 +39,6 @@ from time import sleep
 from .common import (
     jsonrepr
 )
-import json
 from .constants import (
     _DATE_FMT,
     _LABEL,
@@ -168,7 +168,8 @@ class VerifyCommands(object):
             click.echo(res)
             raise Exit(1)
         else:
-            click.echo(res)
+            if debug:
+                click.echo(res)
             raise Exit(0)
 
 
