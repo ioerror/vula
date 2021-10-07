@@ -155,7 +155,7 @@ class VerifyCommands(object):
             if vk == data:
                 res = self.organize.verify_and_pin_peer(vk, hostname)
                 res = Result(yaml.safe_load(res))
-                if res.error != "None":
+                if res.error != None:
                     click.echo(res)
                     raise Exception(res.error)
             else:
@@ -164,7 +164,7 @@ class VerifyCommands(object):
         else:
             click.echo("unknown qrcode subtype")
             raise Exit(1)
-        if res.error != "None":
+        if res.error != None:
             click.echo(res)
             raise Exit(1)
         else:
