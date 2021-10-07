@@ -36,12 +36,11 @@
           below) this bug would be much harder to trigger, but would still
           exist.
 
-- fix verify command
+- implement encrypted `verify against` command
 
-    - it has bitrotted. it comes from the time when the publish daemon created
-      and signed the descriptor instead of organize doing it. (meanwhile, peers
-      can currently have their `pinned` and `verified` flags set using the
-      `vula peer set` command...)
+  - Implement an AEAD payload keyed by a DH between host keys and target
+    system's keys to ensure a camera cannot meaningfully make use of a QR code
+    on a screen.
 
 - async csidh?
 
