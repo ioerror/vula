@@ -1,3 +1,6 @@
+**Note**: We plan to remove these multipass-based tests. See `podman/README.md`
+for the new way to run a vula test network.
+
 # Multipass test/dev environment
 
 If you have `multipass` installed (a thing which lets you easily run Ubuntu VMs

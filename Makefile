@@ -19,6 +19,7 @@ deb:
 	cp -v misc/python3-vula.postinst deb_dist/vula-$(VERSION)/debian/
 	cd deb_dist/vula-$(VERSION) &&	dpkg-buildpackage -rfakeroot -us -uc
 
+
 .PHONY: clean
 clean:
 	-rm -rf build/ dist/ vula.egg-info deb_dist
