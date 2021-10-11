@@ -19,14 +19,6 @@ if [ ! -d "${VULA_ORGANIZE_DIR}" ]; then
   mkdir -p "${VULA_ORGANIZE_DIR}"
 fi
 
-if [ ! -f "${VULA_KEYS}" ]; then
-  echo "Generating vula keys..."
-  vula configure genkeys > "${VULA_KEYS}"
-  chown -R vula-organize:vula "${VULA_ORGANIZE_DIR}"
-else
-  echo "Keys appear to exist; not generating new keys"
-fi
-
 if [ -f ${VULA_NSSLIB_INSTALL} ]; then
   echo "Found ${VULA_NSSLIB_INSTALL}!"
 else
