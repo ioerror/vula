@@ -3,6 +3,10 @@ DEB_NAME := ../deb_dist/python3-vula_${VERSION}-1_all.deb
 
 podman_args=--volume $(shell readlink -f ..):/root/vula --workdir /root/vula
 
+.PHONY: help
+help:
+	@cat README.md
+
 .PHONY: deb
 deb: ${DEB_NAME}
 
@@ -15,13 +19,14 @@ ${DEB_NAME}: debian-deps-stamp
 	podman run --rm ${podman_args} --network none -it vula-debian-deps make deb
 
 dpkg-image-stamp: ${DEB_NAME}
-	# create new vula container
+    # Now going to build a new image with vula installed via dpkg.
+	# first, create new vula container:
 	podman run --name vula-tmp ${podman_args} --network none --detach vula-debian-deps /bin/systemd
-	# install debs
+	# install debs:
 	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp dpkg -i deb_dist/${DEB_NAME}
-	# stop container
+	# stop container:
 	podman stop vula-tmp
-	# save container as new image
+	# save container as new image, over old one if it exists:
 	podman commit vula-tmp vula-debian
 	#
 	# Although we can build the image as root, we can't grant it CAP_NET_ADMIN

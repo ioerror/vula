@@ -11,9 +11,9 @@ unprivileged user.
 
 ### `make deb`
 
-This is the default target. It does not require root to run. It will use Debian
-bullseye to build a `.deb` package of vula in `../deb_dist/` using the current
-checkout (including any uncomitted changes).
+This target will use Debian bullseye to build a `.deb` package of vula in
+`../deb_dist/` using the current checkout (including any uncomitted changes).
+It does not require root to run.
 
 ### Other OS packages
 
@@ -50,10 +50,11 @@ This will stop and delete the testnet containers.
 
 ### `make lan-start`
 
-This will create a new podman container (as root) called `vula` in the `host`
-namespace. This is a convenient way that one can run vula to communicate with
-other hosts on their physical lan, without needing to install any dependencies
-besides `podman`, `make`, and `sudo`.
+This will create a new podman container (as root) called `vula` with `host`
+networking, meaning that it will operate in the default network namespace. This
+is a convenient way that one can run vula to communicate with other hosts on
+their physical LAN, without needing to install any dependencies besides
+`wireguard`, `podman`, `make`, and `sudo`.
 
 ### `make lan-shell`
 
@@ -84,12 +85,14 @@ might want to prefix it with `clean`.
 
 ### `make clean`
 
-This will delete the built deb file, the `vula-debian` image, the test
-containers, and any stray intermediate containers. It will not delete the
-`vula-debian-deps` image, which requires network access to recreate, nor will
-it delete the `vula` container which is created by the `lan-start` target.
+This will delete the `.deb` package built in `../deb_dist`, the `vula-debian`
+podman image, the test containers, and any stray intermediate containers. It
+will *not* delete the `vula-debian-deps` image, which requires network access
+to recreate, nor will it delete the `vula` container which is created by the
+`lan-start` target.
 
 ### `make clean-all`
 
 This will delete all vula-related podman containers, including `vula`, and all
-images, including `vula-debian-deps`.
+images, including `vula-debian-deps`, as well as the `vula-net` podman network
+and the `.deb` package in `../deb_dist/`.
