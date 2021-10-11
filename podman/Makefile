@@ -8,7 +8,7 @@ deb: ${DEB_NAME}
 
 debian-deps-stamp:
 	# build base image with systemd
-	podman build -t vula-debian-deps -f Dockerfile.debian-systemd .
+	podman build -t vula-debian-deps -f Dockerfile.debian-systemd --no-cache .
 	touch $@
 
 ${DEB_NAME}: debian-deps-stamp
@@ -18,7 +18,7 @@ dpkg-image-stamp: ${DEB_NAME}
 	# create new vula container
 	podman run --name vula-tmp ${podman_args} --network none --detach vula-debian-deps /bin/systemd
 	# install debs
-	podman exec -e VULA_SKIP_POSTINST=1 vula-tmp dpkg -i deb_dist/${DEB_NAME}
+	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp dpkg -i deb_dist/${DEB_NAME}
 	# stop container
 	podman stop vula-tmp
 	# save container as new image
@@ -48,10 +48,17 @@ dpkg-image:
 editable-image: editable-image-stamp
 editable-image-stamp: dpkg-image-stamp
 	# create new vula container
-	podman run --name vula-tmp ${podman_args} --network none --detach vula-debian-deps /bin/systemd
+	podman run --name vula-tmp ${podman_args} --network none --detach vula-debian /bin/systemd
 	# install debs
 	podman exec vula-tmp python setup.py install
 	podman exec vula-tmp python setup.py develop
+#
+# 	if we built the editable image from vula-debian-deps instead of vula-debian, we
+#   would now run this:
+#	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp ./misc/python3-vula.postinst
+#   ... but that isn't actually working, we we build editable on top of the
+#   dpkg image for now. FIXME.
+#
 	# stop container
 	podman stop vula-tmp
 	# save container as new image
@@ -79,7 +86,6 @@ testnet-started-stamp: dpkg-image-stamp
 	for c in vula-test1 vula-test2; do \
 		sudo podman create ${podman_args} --name $$c --hostname $$c --network vula-net --cap-add NET_ADMIN,NET_RAW vula-debian; \
 		sudo podman start $$c; \
-		sudo podman exec $$c /var/lib/dpkg/info/python3-vula.postinst; \
 	done
 	touch $@
 
@@ -93,8 +99,8 @@ testnet-stop:
 .PHONY: testnet-restart
 testnet-restart: testnet-stop testnet-start
 
-.PHONY: testnet-retest
-testnet-retest: testnet-restart test
+.PHONY: retest
+retest: testnet-restart test
 
 .PHONY: testnet-clean
 testnet-clean: testnet-stop
@@ -114,24 +120,23 @@ test: testnet-start
 	# 		 or "make testnet-clean" to delete them.
 	#
 	sudo podman exec -it vula-test1 pytest-3
-	sudo podman exec -it vula-test1 vula
-	sudo podman exec -it vula-test2 vula
+	sudo podman exec -it vula-test1 vula start
+	sudo podman exec -it vula-test2 vula start
 	sudo podman exec -it vula-test2 ping -c 1 vula-test1.local.
 	sudo podman exec -it vula-test1 vula peer
 
 lan-container-stamp: dpkg-image-stamp
 	sudo podman create ${podman_args} --name vula --hostname $(shell hostname) --cap-add NET_ADMIN,NET_RAW --network host vula-debian
-	sudo podman start vula
-	sudo podman exec vula /var/lib/dpkg/info/python3-vula.postinst
-	sudo podman stop vula
 	touch $@
 
 lan-container-started-stamp: lan-container-stamp
 	sudo podman start vula
+	sleep 1
 	touch $@
 
 .PHONY: lan-start
 lan-start: lan-container-started-stamp
+	sudo podman exec vula vula status --only-systemd
 	# podman should now have a "vula" container in the host network namespace.
 	# to get a shell in it, run "make lan-shell"
 
@@ -173,6 +178,7 @@ clean-images:
 
 .PHONY: clean
 clean: clean-containers clean-images testnet-clean
+	rm -f ${DEB_NAME}
 	# OK (errors are normal for this target)
 	# note that the "make clean" target doesn't clean all podman artifacts:
 	# - use "make lan-clean" to delete the "vula" container made by "make lan-start"

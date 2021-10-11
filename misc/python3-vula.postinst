@@ -1,10 +1,5 @@
 #!/bin/bash
 
-if [ "$VULA_SKIP_POSTINST" != "" ]; then
-    echo "skipping vula postinst because VULA_SKIP_POSTINST is set"
-    exit 0
-fi
-
 VULA_ORGANIZE_DIR=/var/lib/vula-organize/
 VULA_KEYS="${VULA_ORGANIZE_DIR}"/keys.yaml
 VULA_NSSLIB=$(python3 -c 'import vula_libnss; print(vula_libnss.__path__[0]+"/../lib/libnss_vula.so.2")')
@@ -33,7 +28,14 @@ fi
 
 echo "Configuring nsswitch"
 vula configure nsswitch
-echo "Enabling and starting vula-organize systemd service"
-systemctl enable --now vula-organize
+
+if [ "$VULA_POSTINST_DONT_START" = "" ]; then
+    echo "Enabling and starting vula-organize systemd service"
+    systemctl enable --now vula-organize
+else
+    echo "Enabling vula-organize systemd service but not starting it now"
+    systemctl enable vula-organize
+fi
+
 
 exit 0
