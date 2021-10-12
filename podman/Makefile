@@ -1,7 +1,7 @@
 VERSION := $(shell cd ..; python3 setup.py version|tail -n1)
 DEB_NAME := ../deb_dist/python3-vula_${VERSION}-1_all.deb
 
-podman_args=--volume $(shell readlink -f ..):/root/vula --workdir /root/vula
+podman_args=--volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula
 
 .PHONY: help
 help:
