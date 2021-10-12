@@ -2,6 +2,7 @@ import setuptools
 from setuptools.command.build_ext import build_ext as hookBuild_ext
 from subprocess import check_output
 import os
+import time
 from sys import platform
 from os import system
 from glob import glob
@@ -18,9 +19,12 @@ try:
 except ImportError:
     man_pages = None
 
-os.environ['SOURCE_DATE_EPOCH'] = (
-    check_output("git log -1 --pretty=%ct", shell=True).decode().strip()
-)
+try:
+    os.environ['SOURCE_DATE_EPOCH'] = (
+        check_output("git log -1 --pretty=%ct", shell=True).decode().strip()
+    )
+except:
+    os.environ['SOURCE_DATE_EPOCH'] = str(int(time.time()))
 
 if os.path.exists('vula/__version__.py'):
     with open("vula/__version__.py", "r") as obj:
