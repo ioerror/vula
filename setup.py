@@ -88,6 +88,10 @@ linux_data_files = [
         "/usr/share/man/man1/",
         glob('man/vula*1'),
     ),
+    (
+        "",
+        ["misc/python3-vula.postinst"],
+    ),
 ]
 
 our_data_files = linux_data_files
