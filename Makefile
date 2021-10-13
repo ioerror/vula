@@ -1,4 +1,5 @@
 VERSION := $(shell python3 setup.py version|tail -n1)
+DEB_NAME := ./deb_dist/python3-vula_${VERSION}-1_all.deb
 
 .PHONY: test
 test:
@@ -13,11 +14,10 @@ pypi-upload:
 	python3 -m twine upload --repository pypi dist/*$(VERSION)*
 
 .PHONY: deb
-deb:
-	echo $(VERSION)
-	python3 setup.py --command-packages=stdeb.command sdist_dsc
-	cp -v misc/python3-vula.postinst deb_dist/vula-$(VERSION)/debian/
-	cd deb_dist/vula-$(VERSION) &&	dpkg-buildpackage -rfakeroot -us -uc
+deb: ${DEB_NAME}
+
+${DEB_NAME}: vula vula/*py configs configs/* configs/*/*
+	python3 setup.py --command-packages=stdeb.command sdist_dsc bdist_deb
 
 .PHONY: clean
 clean:
