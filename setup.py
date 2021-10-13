@@ -12,8 +12,17 @@ from platform import machine
 try:
     from stdeb.command.sdist_dsc import sdist_dsc
     from stdeb.command.bdist_deb import bdist_deb
+
+    class sdist_dsc_with_postinst(sdist_dsc):
+        def run(self):
+            res = super(sdist_dsc_with_postinst, self).run()
+            print("Installing vula postinst")
+            copy2('misc/python3-vula.postinst', 'deb_dist/vula-{}/debian/'.format(version))
+            return res
+
 except ImportError:
     sdist_dsc = None
+    sdist_dsc_with_postinst = None
     bdist_deb = None
 try:
     from click_man.commands.man_pages import man_pages
@@ -90,13 +99,6 @@ if platform.startswith("openbsd"):
 class print_version(hookBuild_ext):
     def run(self):
         print(version)
-
-class sdist_dsc_with_postinst(sdist_dsc):
-    def run(self):
-        res = super(sdist_dsc_with_postinst, self).run()
-        print("Installing vula postinst")
-        copy2('misc/python3-vula.postinst', 'deb_dist/vula-{}/debian/'.format(version))
-        return res
 
 setuptools.setup(
     name="vula",
