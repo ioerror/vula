@@ -17,7 +17,7 @@ try:
         def run(self):
             res = super(sdist_dsc_with_postinst, self).run()
             print("Installing vula postinst")
-            copy2('misc/python3-vula.postinst', 'deb_dist/vula-{}/debian/'.format(version))
+            copy2('misc/python3-vula.postinst', self.dist_dir+'/vula-{}/debian/'.format(version))
             return res
 
 except ImportError:
