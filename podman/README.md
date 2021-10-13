@@ -79,7 +79,12 @@ installation of vula. This image can be modified or replaced.
 This target will replace the `vula-debian` image with one where vula is is
 installed in editable mode (eg, `python setup.py develop`). This will not
 affect containers created prior to this target being run, so, in practice you
-might want to prefix it with `clean`.
+might want to prefix it with `clean`. **This is currently semi-broken.** The
+resulting image currently runs vula from the local checkout in the
+testnet-shell, but for some reason systemd is continuing to use the
+deb-installed version. So, for now it is still necessary to run `make clean
+test` to rebuild a new image to test new changes. This is still quite fast,
+however, as the deps image is not removed by `make clean`.
 
 ## Cleaning up
 

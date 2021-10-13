@@ -14,7 +14,7 @@ debian-deps-stamp:
 	# build base image with systemd.
 	# uncomment this to avoid using the podman cache:
 	# podman build -t vula-debian-deps -f Dockerfile.debian-systemd --no-cache .
-	podman build -t vula-debian-deps -f Dockerfile.debian-systemd .
+	cd .. && podman build -t vula-debian-deps -f podman/Dockerfile.debian-systemd .
 	touch $@
 
 ${DEB_NAME}: debian-deps-stamp
