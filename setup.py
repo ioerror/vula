@@ -3,6 +3,7 @@ from setuptools.command.build_ext import build_ext as hookBuild_ext
 from subprocess import check_output
 import os
 import time
+from shutil import copy2
 from sys import platform
 from os import system
 from glob import glob
@@ -11,8 +12,17 @@ from platform import machine
 try:
     from stdeb.command.sdist_dsc import sdist_dsc
     from stdeb.command.bdist_deb import bdist_deb
+
+    class sdist_dsc_with_postinst(sdist_dsc):
+        def run(self):
+            res = super(sdist_dsc_with_postinst, self).run()
+            print("Installing vula postinst")
+            copy2('misc/python3-vula.postinst', 'deb_dist/vula-{}/debian/'.format(version))
+            return res
+
 except ImportError:
     sdist_dsc = None
+    sdist_dsc_with_postinst = None
     bdist_deb = None
 try:
     from click_man.commands.man_pages import man_pages
@@ -90,7 +100,6 @@ class print_version(hookBuild_ext):
     def run(self):
         print(version)
 
-
 setuptools.setup(
     name="vula",
     version=version,
@@ -121,7 +130,7 @@ setuptools.setup(
     tests_require=["pytest"],
     cmdclass=dict(
         bdist_deb=bdist_deb,
-        sdist_dsc=sdist_dsc,
+        sdist_dsc=sdist_dsc_with_postinst,
         man_pages=man_pages,
         version=print_version,
     ),
