@@ -74,9 +74,9 @@ linux_data_files = [
         # "/etc/dbus-1/system-services/",
         "/usr/share/dbus-1/system-services/",
         [
-            'configs/dbus/vula-organize.service',
-            'configs/dbus/vula-publish.service',
-            'configs/dbus/vula-discover.service',
+            'configs/dbus/local.vula.organize.service',
+            'configs/dbus/local.vula.publish.service',
+            'configs/dbus/local.vula.discover.service',
         ],
     ),
     (
