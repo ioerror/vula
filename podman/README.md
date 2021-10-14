@@ -46,6 +46,18 @@ This will launch a shell in the first testnet container.
 
 This will stop and delete the testnet containers.
 
+### `make test-all`
+
+This will currently run these commands:
+```
+    make dist=hirsute testnet-clean test
+    make dist=bullseye testnet-clean test
+    make dist=impish testnet-clean test
+```
+..which will run the test network with each of the three distributions where
+tests currently pass. `dist=buster` and `dist=focal` are also supported, but
+are not currently working.
+
 ## Running vula on the host's LAN
 
 ### `make lan-start`
@@ -71,12 +83,12 @@ This will delete the `vula` container started by `lan-start`.
 ## Development mode
 
 The `test-*` and `lan-*` make targets both have the side effect of creating a
-podman image called `vula-debian`, which by default contains a dpkg
-installation of vula. This image can be modified or replaced.
+podman image called `vula-$dist` (bullseye, by default), which by default
+contains a dpkg installation of vula. This image can be modified or replaced.
 
 ### `make editable-image`
 
-This target will replace the `vula-debian` image with one where vula is is
+This target will replace the `vula-$dist` image with one where vula is is
 installed in editable mode (eg, `python setup.py develop`). This will not
 affect containers created prior to this target being run, so, in practice you
 might want to prefix it with `clean`. **This is currently semi-broken.** The
@@ -90,14 +102,14 @@ however, as the deps image is not removed by `make clean`.
 
 ### `make clean`
 
-This will delete the `.deb` package built in `../deb_dist`, the `vula-debian`
-podman image, the test containers, and any stray intermediate containers. It
-will *not* delete the `vula-debian-deps` image, which requires network access
-to recreate, nor will it delete the `vula` container which is created by the
+This will delete the `.deb` package built in `../deb_dist`, the `vula-$dist`
+podman images, the test containers, and any stray intermediate containers. It
+will *not* delete the `vula-deps-$dist` images, which require network access to
+recreate, nor will it delete the `vula` container which is created by the
 `lan-start` target.
 
 ### `make clean-all`
 
 This will delete all vula-related podman containers, including `vula`, and all
-images, including `vula-debian-deps`, as well as the `vula-net` podman network
+images, including `vula-deps-$dist`, as well as the `vula-net` podman network
 and the `.deb` package in `../deb_dist/`.
