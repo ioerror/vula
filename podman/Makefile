@@ -153,11 +153,12 @@ $(RPM_NAME): .deps-$(dist)-stamp
 #	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
 	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) sleep 3600
 	podman exec -it vula-tmp apk add \
-py3-click py3-cryptography py3-ifaddr py3-matplotlib py3-networkx \
-py3-numpy py3-packaging py3-pathtools py3-pip py3-pluggy py3-progress \
-py3-py py3-pydbus py3-pygments py3-pynacl py3-pyroute2 py3-pytest py3-pytest-runner \
-py3-qrcode py3-setuptools py3-toml py3-yaml py3-zeroconf \
-gcc make musl-dev nss-dev musl-nscd-dev
+		py3-click py3-cryptography py3-ifaddr py3-matplotlib py3-networkx \
+		py3-numpy py3-packaging py3-pathtools py3-pip py3-pluggy py3-progress \
+		py3-py py3-pydbus py3-pygments py3-pynacl py3-pyroute2 py3-pytest py3-pytest-runner \
+		py3-qrcode py3-setuptools py3-toml py3-yaml py3-zeroconf \
+		gcc make musl-dev nss-dev musl-nscd-dev \
+		apkbuild-pypi
 	podman exec -it vula-tmp pip install hkdf schema sibc # cpuinfo mpmath
 	podman stop vula-tmp
 	podman commit vula-tmp vula-$(dist)
