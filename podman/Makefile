@@ -169,7 +169,7 @@ test-all-clean:
 	make dist=impish clean test
 
 lan-container-stamp: dpkg-install-$(dist)-stamp
-	sudo podman create ${podman_args} --name vula --hostname $(shell hostname) --cap-add NET_ADMIN,NET_RAW --network host vula-installed
+	sudo podman create ${podman_args} --name vula --hostname $(shell hostname) --cap-add NET_ADMIN,NET_RAW --network host vula-$(dist)
 	touch $@
 
 lan-container-started-stamp: lan-container-stamp
