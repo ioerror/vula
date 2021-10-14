@@ -17,13 +17,13 @@ pypi-upload:
 .PHONY: deb
 deb: ${DEB_NAME}
 
-${DEB_NAME}: vula vula/*py configs configs/* configs/*/*
+${DEB_NAME}: vula vula/*py configs configs/* configs/*/* setup.py
 	python3 setup.py --command-packages=stdeb.command sdist_dsc bdist_deb
 
 .PHONY: rpm
 rpm: ${RPM_NAME}
 
-${RPM_NAME}: vula vula/*py configs configs/* configs/*/*
+${RPM_NAME}: vula vula/*py configs configs/* configs/*/* setup.py
 	python3 setup.py --command-packages=stdeb.command bdist_rpm
 
 .PHONY: clean

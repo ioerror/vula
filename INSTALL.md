@@ -23,12 +23,14 @@ for installing a debian package via `pypi-install`, run this command:
 
 ## option 0: dpkg installation via PyPI
 
-The `pypi-install` command, provided by the `python3-stdeb` package, can create
-and install `.deb` packages from many packages available on the Python Package
-Index. This is currently our recommended way for users of Debian and Ubuntu to
-install vula and any Python dependencies which are not included with your
-distribution. On Debian 11 or Ubuntu 21.x, after running the above `apt`
-command, simply run these three commands:
+The
+[`pypi-install`](https://pypi.org/project/stdeb/#pypi-install-command-line-command)
+command, provided by the `python3-stdeb` package, can create and install `.deb`
+packages from many packages available on the Python Package Index. This is
+currently our recommended way for users of Debian and Ubuntu to install vula
+and any Python dependencies which are not included with your distribution. On
+Debian 11 or Ubuntu 21.x, after running the above `apt` command, simply run
+these three commands:
 
 ```
 sudo pypi-install sibc
@@ -47,8 +49,9 @@ for Ubuntu 20.04 should be restored here soon.
 ## option 1: build and install Debian Packages from a git checkout
 
 In addition to the dependencies in the `apt` command above, you will also need
-`[sibc](https://github.com/JJChiDguez/sibc)`. It can be installed using
-`pypi-install`, as shown above, or other ways as described in its README.
+the [`sibc`](https://github.com/JJChiDguez/sibc) module. It can be installed
+using `pypi-install` as shown above, or other ways as described in its
+[`README`](https://github.com/JJChiDguez/sibc#for-development).
 
 ```
 git clone --recurse-submodules https://codeberg.org/vula/vula_libnss
@@ -97,11 +100,11 @@ script](https://codeberg.org/vula/vula/src/branch/main/misc/python3-vula.postins
 
 ## option 3: run vula in a podman container
 
-If you are on a a distribution that supports podman, and can run it as root, it
-is possible to run vula under Debian GNU/systemd in a container with access to
-your host's network namespace. Root access is required to grant the
-`CAP_NET_ADMIN` capability, but after that privleges are dropped inside the
-container.
+If you are using a Linux distribution that supports
+[`podman`](https://podman.io/), and can run it as root, you can run vula under
+Debian GNU/systemd in a container with access to your host's network namespace.
+Root access is required to grant the `CAP_NET_ADMIN` capability, but after that
+privleges are dropped inside the container.
 
 ```
 git clone https://codeberg.org/vula/vula
@@ -109,11 +112,23 @@ cd vula/podman
 make lan-start
 ```
 
-After the container is started, you can spawn a shell where you will have
-access to the vula commandline tools by running `make lan-shell`. To shut it
-down or delete it, run `make lan-stop` or `make lan-clean`. See
+After the container is started, you can spawn a shell inside of it where you
+will have access to the vula commandline tools by running `make lan-shell`. To
+shut it down or delete it, run `make lan-stop` or `make lan-clean`. See
 [podman/README](https://codeberg.org/vula/vula/src/branch/main/podman/README.md)
 for more information.
+
+## option 4: build an RPM
+
+We have only done minimal testing of Vula on RPM-based systems, but, it is
+possible to type `make rpm` in the vula repo and generate an RPM (using stdeb's
+`bdist_rpm` command). The post-installation steps mentioned in option 2 above
+currently apply here as well, as the RPM does not include a postinstall script.
+
+It is also possible to build an RPM in Fedora inside of a `podman` container by
+running `make dist=fedora34 rpm` in the `podman` directory, and to launch the
+host-networking vula container described in option 3 using Fedora instead of
+Debian by running `make dist=fedora34 lan-start`.
 
 # Running vula
 
