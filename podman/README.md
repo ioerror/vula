@@ -58,6 +58,25 @@ make dist=impish testnet-clean test
 tests currently pass. `dist=buster` and `dist=focal` are also supported, but
 are not currently working.
 
+### `make systemd-shell`
+
+This will create a new container which, unlike the test hosts created by the
+test target, is connected to both the normal `podman` network (online behind
+NAT) *and* the `vula-net` internal network which test hosts are connected to.
+Shells and tests for different dists can be run concurrently and communicate
+with eachother; if a clean test network is desired one can run `make clean` or
+`make testnet-clean` prior to running `make test`.
+
+This example will create two test containers for each of three dists, and then
+spawn a shell from which six peers should (eventually) be visible when running
+`vula peer`:
+```
+make dist=bullseye test
+make dist=hirsute test
+make dist=impish test
+make dist=bullseye systemd-shell
+```
+
 ## Running vula on the host's LAN
 
 ### `make lan-start`

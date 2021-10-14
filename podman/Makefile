@@ -1,9 +1,13 @@
 VERSION := $(shell cd ..; python3 setup.py version|tail -n1)
-DEB_NAME := ../deb_dist/python3-vula_${VERSION}-1_all.deb
-RPM_NAME := ../dist/vula-${VERSION}-1.noarch.rpm
+DEB_NAME := ../deb_dist/python3-vula_$(VERSION)-1_all.deb
+RPM_NAME := ../dist/vula-$(VERSION)-1.noarch.rpm
 dist := bullseye
 dists=buster focal hirsute bullseye impish fedora34
 podman_args=--volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula
+add_caps=--cap-add NET_ADMIN,NET_RAW
+test1=vula-$(dist)-test1
+test2=vula-$(dist)-test2
+test_hosts=$(test1) $(test2)
 
 .PHONY: help
 help:
@@ -33,24 +37,24 @@ ifeq ($(dist),impish)
 	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=21.10
 endif
 
-installed_image_stamp=dpkg-install-$(dist)-stamp
+installed_image_stamp=.dpkg-install-$(dist)-stamp
 systemd_path=/bin/systemd
 
 ifeq ($(dist),fedora34)
 	# fedora support is in-progress
-	installed_image_stamp=rpm-install-$(dist)-stamp
+	installed_image_stamp=.rpm-install-$(dist)-stamp
 	systemd_path=/usr/sbin/init
 endif
 
-deps-buster-stamp deps-focal-stamp deps-hirsute-stamp deps-bullseye-stamp deps-impish-stamp:
+.deps-buster-stamp .deps-focal-stamp .deps-hirsute-stamp .deps-bullseye-stamp .deps-impish-stamp:
 	cd .. && podman build -t vula-deps-$(dist) -f podman/Dockerfile.vula-deps $(build_args) .
-	touch $@
+	touch .deps-$(dist)-stamp
 
-deps-fedora34-stamp:
+.deps-fedora34-stamp:
 	podman run --name vula-tmp -it fedora:34 dnf -y install systemd
 	podman commit vula-tmp vula-deps-$(dist)
 	podman rm vula-tmp
-	podman run ${podman_args} --name vula-tmp --detach vula-deps-$(dist) ${systemd_path}
+	podman run $(podman_args) --name vula-tmp --detach vula-deps-$(dist) $(systemd_path)
 	podman exec -it vula-tmp dnf -y install make python3-click python3-cpuinfo python3-cryptography python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-systemd python3-toml python3-yaml python3-zeroconf rpm-build wireguard-tools
 	podman exec -it vula-tmp pip install pyroute2==0.5.14
 	podman exec -it vula-tmp pip install pynacl
@@ -61,7 +65,7 @@ deps-fedora34-stamp:
 	touch $@
 
 .PHONY: deps
-deps: deps-$(dist)-stamp
+deps: .deps-$(dist)-stamp
 
 .PHONY: deps-all
 deps-all:
@@ -70,26 +74,26 @@ deps-all:
 	done
 
 .PHONY: deb
-deb: ${DEB_NAME}
+deb: $(DEB_NAME)
 
-${DEB_NAME}: deps-$(dist)-stamp
-	podman run --rm ${podman_args} --network none -it vula-deps-$(dist) make deb
+$(DEB_NAME): .deps-$(dist)-stamp
+	podman run --rm $(podman_args) --network none -it vula-deps-$(dist) make deb
 
 .PHONY: rpm
 rpm:
-	make dist=fedora34 ${RPM_NAME}
+	make dist=fedora34 $(RPM_NAME)
 
-${RPM_NAME}: deps-$(dist)-stamp
-	podman run --rm ${podman_args} --network none -it vula-deps-$(dist) python3 setup.py bdist_rpm
+$(RPM_NAME): .deps-$(dist)-stamp
+	podman run --rm $(podman_args) --network none -it vula-deps-$(dist) python3 setup.py bdist_rpm
 
-dpkg-install-$(dist)-stamp: deps-$(dist)-stamp
+.dpkg-install-$(dist)-stamp: .deps-$(dist)-stamp
 	# Now going to build a new image with vula installed via dpkg.
 	# first, create new vula container:
-	podman run --name vula-tmp ${podman_args} --network none --detach vula-deps-$(dist) ${systemd_path}
+	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
 	# build the deb:
 	podman exec vula-tmp make deb
 	# install the deb:
-	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp dpkg -i deb_dist/${DEB_NAME}
+	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp dpkg -i deb_dist/$(DEB_NAME)
 	# stop container:
 	podman stop vula-tmp
 	# save container as new image, over old one if it exists:
@@ -103,14 +107,14 @@ dpkg-install-$(dist)-stamp: deps-$(dist)-stamp
 	podman rm vula-tmp
 	touch $@
 
-rpm-install-$(dist)-stamp: deps-$(dist)-stamp
+.rpm-install-$(dist)-stamp: .deps-$(dist)-stamp
 	# Now going to build a new image with vula installed via dpkg.
 	# first, create new vula container:
-	podman run --name vula-tmp ${podman_args} --network none --detach vula-deps-$(dist) ${systemd_path}
+	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
 	# build the rpm:
 	podman exec vula-tmp python3 setup.py bdist_rpm
 	# install the rpm:
-	podman exec vula-tmp rpm -i dist/${RPM_NAME}
+	podman exec vula-tmp rpm -i dist/$(RPM_NAME)
 	# stop container:
 	podman stop vula-tmp
 	# save container as new image, over old one if it exists:
@@ -126,19 +130,19 @@ rpm-install-$(dist)-stamp: deps-$(dist)-stamp
 
 .PHONY: dpkg-image
 dpkg-image:
-	rm -vf dpkg-install-$(dist)-stamp
-	make dist=$(dist) dpkg-install-$(dist)-stamp
+	@rm -vf .dpkg-install-$(dist)-stamp
+	make dist=$(dist) .dpkg-install-$(dist)-stamp
 
 .PHONY: rpm-image
 rpm-image:
-	rm -vf rpm-install-$(dist)-stamp
-	make dist=$(dist) rpm-install-$(dist)-stamp
+	@rm -vf .rpm-install-$(dist)-stamp
+	make dist=$(dist) .rpm-install-$(dist)-stamp
 
 .PHONY: editable-image
-editable-image: editable-$(dist)-image-stamp
-editable-$(dist)-image-stamp: ${installed_image_stamp}
+editable-image: .editable-$(dist)-image-stamp
+.editable-$(dist)-image-stamp: $(installed_image_stamp)
 	# create new vula container
-	podman run --name vula-tmp ${podman_args} --network none --detach vula-$(dist) ${systemd_path}
+	podman run --name vula-tmp $(podman_args) --network none --detach vula-$(dist) $(systemd_path)
 	# install debs
 	podman exec vula-tmp python3 setup.py install
 	podman exec vula-tmp python3 setup.py develop
@@ -163,36 +167,45 @@ editable-$(dist)-image-stamp: ${installed_image_stamp}
 	touch $@
 
 .PHONY: shell
-shell: ${installed_image_stamp}
-	sudo podman run ${podman_args} --rm -it vula-$(dist) bash
+shell: $(installed_image_stamp)
+	sudo podman run $(podman_args) --rm -it vula-$(dist) bash
+
+.PHONY: systemd-shell
+systemd-shell: $(installed_image_stamp)
+	-sudo podman stop vula-$(dist)-shell
+	-sudo podman rm vula-$(dist)-shell
+	sudo podman run $(podman_args) --name vula-$(dist)-shell --network podman,vula-net --hostname $(dist)-shell --detach $(add_caps) vula-$(dist) $(systemd_path)
+	sudo podman exec -it vula-$(dist)-shell bash
+	sudo podman stop vula-$(dist)-shell
 
 .PHONY: deps-shell
-deps-shell: deps-$(dist)-stamp
-	podman run ${podman_args} --rm -it vula-deps-$(dist) bash
+deps-shell: .deps-$(dist)-stamp
+	podman run $(podman_args) --rm -it vula-deps-$(dist) bash
 
 .PHONY: deps-systemd-shell
-deps-systemd-shell: deps-$(dist)-stamp
-	podman run ${podman_args} --name vula-tmp --detach vula-deps-$(dist) ${systemd_path}
-	podman exec -it vula-tmp bash
-	podman stop vula-tmp
-	podman rm vula-tmp
+deps-systemd-shell: .deps-$(dist)-stamp
+	-sudo podman stop vula-$(dist)-shell
+	-sudo podman rm vula-$(dist)-shell
+	sudo podman run $(podman_args) --name vula-$(dist)-shell --detach $(add_caps) vula-deps-$(dist) $(systemd_path)
+	sudo podman exec -it vula-$(dist)-shell bash
+	sudo podman stop vula-$(dist)-shell
 
 .PHONY: testnet-start
-testnet-start: testnet-started-stamp
-testnet-started-stamp: ${installed_image_stamp}
+testnet-start: .testnet-started-$(dist)-stamp
+.testnet-started-$(dist)-stamp: $(installed_image_stamp)
 	sudo podman network create --internal vula-net || true
-	for c in vula-test1 vula-test2; do \
-		sudo podman create ${podman_args} --name $$c --hostname $$c --network vula-net --cap-add NET_ADMIN,NET_RAW vula-$(dist); \
+	for c in $(test_hosts); do \
+		sudo podman create $(podman_args) --name $$c --hostname $$c --network vula-net $(add_caps) vula-$(dist); \
 		sudo podman start $$c; \
 	done
 	touch $@
 
 .PHONY: testnet-stop
 testnet-stop:
-	for c in vula-test1 vula-test2; do \
+	@-for c in $(test_hosts); do \
 		sudo podman stop $$c; \
-	done || true
-	rm -f testnet-started-stamp
+	done 2>&1 | grep -v 'no container with name or ID'
+	@rm -vf .testnet-started-$(dist)-stamp
 
 .PHONY: testnet-restart
 testnet-restart: testnet-stop testnet-start
@@ -202,13 +215,17 @@ retest: testnet-restart test
 
 .PHONY: testnet-clean
 testnet-clean: testnet-stop
-	for c in vula-test1 vula-test2; do \
+
+
+.PHONY: testnet-clean-all
+testnet-clean-all: testnet-stop
+	@-for c in $(test_hosts); do \
 		sudo podman rm $$c; \
-	done || true
+	done 2>&1 | grep -v 'no container with name or ID'
 
 .PHONY: testnet-shell
 testnet-shell: testnet-start
-	sudo podman exec -it vula-test1 bash
+	sudo podman exec -it $(test1) bash
 
 .PHONY: test
 test: testnet-start
@@ -217,13 +234,13 @@ test: testnet-start
 	# note: run "make testnet-stop" to stop these containers,
 	# 		 or "make testnet-clean" to delete them.
 	#
-	sudo podman exec -it vula-test1 pytest-3
-	sudo podman exec -it vula-test1 vula start
-	sudo podman exec -it vula-test2 vula start
-	sudo podman exec -it vula-test2 ping -c 1 vula-test1.local.
-	sudo podman exec -it vula-test1 vula peer
+	sudo podman exec -it $(test1) pytest-3
+	sudo podman exec -it $(test1) vula start
+	sudo podman exec -it $(test2) vula start
+	sudo podman exec -it $(test2) ping -c 1 $(test1).local.
+	sudo podman exec $(test1) vula peer
 	@echo -n "test environment: "
-	@sudo podman exec -it vula-test1 cat /etc/os-release|grep VERSION_CODENAME|cut -f 2 -d=
+	@sudo podman exec -it $(test1) cat /etc/os-release|grep VERSION_CODENAME|cut -f 2 -d=
 
 .PHONY: test-all
 test-all:
@@ -238,8 +255,8 @@ test-all-clean:
 	make dist=bullseye clean test
 	make dist=impish clean test
 
-lan-container-stamp: ${installed_image_stamp}
-	sudo podman create ${podman_args} --name vula --hostname $(shell hostname) --cap-add NET_ADMIN,NET_RAW --network host vula-$(dist)
+lan-container-stamp: $(installed_image_stamp)
+	sudo podman create $(podman_args) --name vula --hostname $(shell hostname) $(add_caps) --network host vula-$(dist)
 	touch $@
 
 lan-container-started-stamp: lan-container-stamp
@@ -256,7 +273,7 @@ lan-start: lan-container-started-stamp
 .PHONY: lan-stop
 lan-stop:
 	sudo podman stop vula || true
-	rm -f lan-container-started-stamp
+	@rm -vf lan-container-started-stamp
 
 .PHONY: lan-clean
 lan-clean: lan-stop
@@ -265,7 +282,7 @@ lan-clean: lan-stop
 		read a; \
 		if [ "$$a" = "y" ]; then \
 			sudo podman rm vula || true; \
-			rm -f lan-container-stamp; \
+			rm -vf lan-container-stamp; \
 		else \
 			echo "OK, not deleting 'vula' container."; \
 		fi; \
@@ -277,23 +294,30 @@ lan-shell: lan-container-started-stamp
 
 .PHONY: clean-containers
 clean-containers: testnet-clean
-	sudo podman network rm vula-net || true
-	podman stop vula-tmp || true
-	podman rm vula-tmp || true
+	@-sudo podman network rm vula-net 	2>&1 | grep -v 'network not found'
+	@-sudo podman stop vula-tmp			2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman rm vula-tmp	 		2>&1 | grep -v 'no container with name or ID'
+	@-podman stop vula-tmp				2>&1 | grep -v 'no container with name or ID'
+	@-podman rm vula-tmp				2>&1 | grep -v 'no container with name or ID'
+	@-for dist in $(dists); do \
+		podman stop vula-$$dist-shell || true; \
+		podman rm vula-$$dist-shell || true; \
+	done 2>&1 | grep -v 'no container with name or ID'
 
 .PHONY: clean-images
 clean-images:
-	for dist in $(dists); do \
+	@-for dist in $(dists); do \
 		podman rmi vula-$$dist || true; \
 		sudo podman rmi vula-$$dist || true; \
-		rm -vf dpkg-install-$$dist-stamp; \
-		rm -vf rpm-install-$$dist-stamp; \
-		rm -vf editable-$$dist-image-stamp; \
-	done
+		rm -vf .dpkg-install-$$dist-stamp; \
+		rm -vf .rpm-install-$$dist-stamp; \
+		rm -vf .editable-$$dist-image-stamp; \
+		make dist=$(dist) testnet-clean; \
+	done 2>&1 | grep -v 'no such image'
 
 .PHONY: clean
 clean: clean-containers clean-images
-	rm -f ${DEB_NAME} ${RPM_NAME}
+	@rm -vf $(DEB_NAME) $(RPM_NAME)
 	# OK (errors are normal for this target)
 	# note that the "make clean" target doesn't clean all podman artifacts:
 	# - use "make lan-clean" to delete the "vula" container made by "make lan-start"
@@ -301,7 +325,7 @@ clean: clean-containers clean-images
 
 .PHONY: clean-all
 clean-all: clean lan-clean
-	for dist in $(dists); do \
-		podman rmi vula-deps-$$dist || true; \
-		rm -vf deps-$$dist-stamp; \
-	done
+	@-for dist in $(dists); do \
+		podman rmi vula-deps-$$dist; \
+		rm -vf .deps-$$dist-stamp; \
+	done 2>&1 | grep -v 'no such image' || true
