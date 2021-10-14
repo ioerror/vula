@@ -217,11 +217,11 @@ clean-images:
 		podman rmi vula-$$dist || true; \
 		sudo podman rmi vula-$$dist || true; \
 		rm -vf dpkg-install-$$dist-stamp; \
-		rm -vf editable-$$dist-stamp; \
+		rm -vf editable-$$dist-image-stamp; \
 	done
 
 .PHONY: clean
-clean: clean-containers clean-images testnet-clean
+clean: clean-containers clean-images
 	rm -f ${DEB_NAME}
 	# OK (errors are normal for this target)
 	# note that the "make clean" target doesn't clean all podman artifacts:
