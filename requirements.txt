@@ -9,3 +9,4 @@ pydbus>=0.6.0
 pytest
 hkdf>=0.0.3
 sibc>=0.0.1
+PyGObject
