@@ -380,7 +380,7 @@ class TestOrganizeEngine(unittest.TestCase):
 
         import schema, packaging.version as pkgv
 
-        if pkgv.parse(schema.__version__) < pkgv.parse('0.7.4'):
+        if pkgv.parse(schema.__version__) < pkgv.parse('0.7.3'):
             self.assertEqual(
                 res.error.args[0], 'conflicting peers: {[peers].conflicts}'
             )
