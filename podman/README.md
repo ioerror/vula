@@ -1,19 +1,29 @@
-This directory contains a Makefile with various targets which use podman to
+This directory contains a Makefile with various commands which use podman to
 package, test, and deploy vula. This allows developers to work on the software
 without needing to install anything on their system besides `podman`, `sudo`,
-and `make`.
+and `make`. It is also a possible way to deploy vula on systems where some
+dependencies are unavailable.
 
 Most of these make targets require sudo to obtain the `CAP_NET_ADMIN`, and will
 thus prompt for a password. The make command itself should be run as an
 unprivileged user.
 
+To use these commands, you must first git clone the repo and cd in to the
+`podman` directory:
+
+```
+git clone https://codeberg.org/vula/vula
+cd vula/podman
+make
+```
+
 ## Packaging
 
 ### `make deb`
 
-This target will use Debian bullseye to build a `.deb` package of vula in
-`../deb_dist/` using the current checkout (including any uncomitted changes).
-It does not require root to run.
+This target will build a `.deb` package of vula in `../deb_dist/` using the
+current checkout (including any uncomitted changes). It does not require root
+to run.
 
 ### Other OS packages
 

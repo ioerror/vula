@@ -67,7 +67,7 @@ make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb
 
 This option is not currently recommended, as a `pip install` of vula will place
 systemd and other configuration files in the wrong place. However, if you are
-interested in helping to get Vula working on other distributions, `pip install
+interested in helping to get vula working on other distributions, `pip install
 sibc vula_libnss vula` is a place to start.
 
 This option is available for advanced technical users - it requires manual
@@ -113,22 +113,30 @@ make lan-start
 ```
 
 After the container is started, you can spawn a shell inside of it where you
-will have access to the vula commandline tools by running `make lan-shell`. To
-shut it down or delete it, run `make lan-stop` or `make lan-clean`. See
+will have access to the vula commandline tools by running [`make
+lan-shell`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-shell).
+To shut it down or delete it, run [`make
+lan-stop`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-stop)
+or [`make
+lan-clean`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-clean).
+See
 [podman/README](https://codeberg.org/vula/vula/src/branch/main/podman/README.md)
 for more information.
 
 ## option 4: build an RPM
 
-We have only done minimal testing of Vula on RPM-based systems, but, it is
-possible to type `make rpm` in the vula repo and generate an RPM (using stdeb's
-`bdist_rpm` command). The post-installation steps mentioned in option 2 above
-currently apply here as well, as the RPM does not include a postinstall script.
+We have only done minimal testing of vula on RPM-based systems, but, it is
+possible to type `make rpm` in the vula repo and generate an RPM (using
+setuptools' `bdist_rpm` command). The post-installation steps mentioned in
+option 2 above currently apply to RPM-based systems as well, because the RPM
+does not include a postinstall script. See the `Makefile` in this directory for
+hints on how to install the dependencies on Fedora.
 
 It is also possible to build an RPM in Fedora inside of a `podman` container by
 running `make dist=fedora34 rpm` in the `podman` directory, and to launch the
 host-networking vula container described in option 3 using Fedora instead of
-Debian by running `make dist=fedora34 lan-start`.
+Debian by running [`make dist=fedora34
+lan-start`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-start).
 
 # Running vula
 
