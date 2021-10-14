@@ -25,9 +25,6 @@ from tempfile import mkstemp
 from functools import reduce
 
 from gi.repository import GLib, Gio
-import dbus
-import dbus.service
-import dbus.mainloop.glib
 
 import click
 import pydbus
