@@ -8,13 +8,10 @@ set -e
 # This script is tested and working with bullseye, hirsute, and impish.
 
 # There are also special cases here which get us closer to working again in
-# focal and buster, but they are incomplete.
+# focal and buster, but they are incomplete:
 
-# in focal, there is currently this problem:
-# systemd[44]: vula-publish.service: Failed to apply ambient capabilities (before UID change): Operation not permitted
-# systemd[44]: vula-publish.service: Failed at step CAPABILITIES spawning /usr/bin/vula: Operation not permitted
-# ... while if the caps are removed from publish's unit file, other OSes still
-# work while focal now starts without errors but sees no peers.
+# in the focal podman test, peers are not seeing eachother's announcements.
+# more investigation is needed.
 
 # in buster, the cryptography dependency is one blocker. If the version
 # constraint is removed from it in requirements.txt, then PyYAML is another.
