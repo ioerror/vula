@@ -12,7 +12,7 @@ help:
 build_args=
 
 ifeq ($(dist),buster)
-	# vula hasn't ever worked well in buster and currently is broken
+	# vula hasn't ever worked easily in buster, and is currently broken in this Makefile
 	build_args=--build-arg DISTRO=debian --build-arg VERSION=buster
 endif
 ifeq ($(dist),focal)
@@ -21,7 +21,7 @@ ifeq ($(dist),focal)
 	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=20.04
 endif
 ifeq ($(dist),hirsute)
-	# vula works well in 21.04
+	# vula works well in Ubuntu 21.04
 	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=21.04
 endif
 ifeq ($(dist),bullseye)
@@ -29,7 +29,7 @@ ifeq ($(dist),bullseye)
 	build_args=--build-arg DISTRO=debian --build-arg VERSION=bullseye
 endif
 ifeq ($(dist),impish)
-	# vula appears to work well in 21.10
+	# vula appears to work well in Ubuntu 21.10
 	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=21.10
 endif
 
