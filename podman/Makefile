@@ -2,7 +2,7 @@ VERSION := $(shell cd ..; python3 setup.py version|tail -n1)
 DEB_NAME := ../deb_dist/python3-vula_$(VERSION)-1_all.deb
 RPM_NAME := ../dist/vula-$(VERSION)-1.noarch.rpm
 dist := bullseye
-dists=buster focal hirsute bullseye impish fedora34
+dists=buster focal hirsute bullseye impish fedora34 alpine
 podman_args=--volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula
 add_caps=--cap-add NET_ADMIN,NET_RAW
 test1=vula-$(dist)-test1
@@ -39,11 +39,18 @@ endif
 
 installed_image_stamp=.dpkg-install-$(dist)-stamp
 systemd_path=/bin/systemd
+bin_sh=bash
 
 ifeq ($(dist),fedora34)
 	# fedora support is in-progress
 	installed_image_stamp=.rpm-install-$(dist)-stamp
 	systemd_path=/usr/sbin/init
+endif
+
+ifeq ($(dist),alpine)
+	# alpine support is in-progress
+	installed_image_stamp=.apk-install-$(dist)-stamp
+	bin_sh=sh
 endif
 
 .deps-buster-stamp .deps-focal-stamp .deps-hirsute-stamp .deps-bullseye-stamp .deps-impish-stamp:
@@ -55,10 +62,22 @@ endif
 	podman commit vula-tmp vula-deps-$(dist)
 	podman rm vula-tmp
 	podman run $(podman_args) --name vula-tmp --detach vula-deps-$(dist) $(systemd_path)
-	podman exec -it vula-tmp dnf -y install make python3-click python3-cpuinfo python3-cryptography python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-systemd python3-toml python3-yaml python3-zeroconf rpm-build wireguard-tools
+	podman exec -it vula-tmp dnf -y install iputils gcc make python3-click python3-cpuinfo python3-cryptography python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-systemd python3-toml python3-yaml python3-zeroconf rpm-build wireguard-tools
 	podman exec -it vula-tmp pip install pyroute2==0.5.14
 	podman exec -it vula-tmp pip install pynacl
 	podman exec -it vula-tmp pip install sibc
+	podman exec -it vula-tmp pip install vula_libnss
+	podman stop vula-tmp
+	podman commit vula-tmp vula-deps-$(dist)
+	podman rm vula-tmp
+	touch $@
+
+.deps-alpine-stamp:
+	podman run --name vula-tmp --detach alpine:latest sleep 3600
+#	podman exec -it vula-tmp dnf -y install iputils make python3-click python3-cpuinfo python3-cryptography python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-systemd python3-toml python3-yaml python3-zeroconf rpm-build wireguard-tools
+#	podman exec -it vula-tmp pip install pyroute2==0.5.14
+#	podman exec -it vula-tmp pip install pynacl
+#	podman exec -it vula-tmp pip install sibc
 	podman stop vula-tmp
 	podman commit vula-tmp vula-deps-$(dist)
 	podman rm vula-tmp
@@ -108,13 +127,14 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	touch $@
 
 .rpm-install-$(dist)-stamp: .deps-$(dist)-stamp
-	# Now going to build a new image with vula installed via dpkg.
+	# Now going to build a new image with vula installed via rpm.
 	# first, create new vula container:
 	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
 	# build the rpm:
 	podman exec vula-tmp python3 setup.py bdist_rpm
 	# install the rpm:
 	podman exec vula-tmp rpm -i dist/$(RPM_NAME)
+	podman exec vula-tmp vula configure nsswitch
 	# stop container:
 	podman stop vula-tmp
 	# save container as new image, over old one if it exists:
@@ -126,6 +146,28 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	sudo -v # unlock sudo to run podman as root
 	podman save vula-$(dist) | sudo podman load
 	podman rm vula-tmp
+	touch $@
+
+# for Alpine Linux's apk package format
+.apk-install-$(dist)-stamp: .deps-$(dist)-stamp
+#	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
+	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) sleep 3600
+	podman exec -it vula-tmp apk add \
+py3-click py3-cryptography py3-ifaddr py3-matplotlib py3-networkx \
+py3-numpy py3-packaging py3-pathtools py3-pip py3-pluggy py3-progress \
+py3-py py3-pydbus py3-pygments py3-pynacl py3-pyroute2 py3-pytest py3-pytest-runner \
+py3-qrcode py3-setuptools py3-toml py3-yaml py3-zeroconf \
+gcc make musl-dev nss-dev musl-nscd-dev
+	podman exec -it vula-tmp pip install hkdf schema sibc # cpuinfo mpmath
+	podman stop vula-tmp
+	podman commit vula-tmp vula-$(dist)
+	podman rm vula-tmp
+	#
+	# Although we can build the image as root, we can't grant it CAP_NET_ADMIN
+	# as we don't have that ourselves. So, we need to transfer the image into
+	# root's local registry to run it as root:
+	sudo -v # unlock sudo to run podman as root
+	podman save vula-$(dist) | sudo podman load
 	touch $@
 
 .PHONY: dpkg-image
@@ -168,26 +210,26 @@ editable-image: .editable-$(dist)-image-stamp
 
 .PHONY: shell
 shell: $(installed_image_stamp)
-	sudo podman run $(podman_args) --rm -it vula-$(dist) bash
+	sudo podman run $(podman_args) --rm -it vula-$(dist) $(bin_sh)
 
 .PHONY: systemd-shell
 systemd-shell: $(installed_image_stamp)
 	-sudo podman stop vula-$(dist)-shell
 	-sudo podman rm vula-$(dist)-shell
 	sudo podman run $(podman_args) --name vula-$(dist)-shell --network podman,vula-net --hostname $(dist)-shell --detach $(add_caps) vula-$(dist) $(systemd_path)
-	sudo podman exec -it vula-$(dist)-shell bash
+	sudo podman exec -it vula-$(dist)-shell $(bin_sh)
 	sudo podman stop vula-$(dist)-shell
 
 .PHONY: deps-shell
 deps-shell: .deps-$(dist)-stamp
-	podman run $(podman_args) --rm -it vula-deps-$(dist) bash
+	podman run $(podman_args) --rm -it vula-deps-$(dist) $(bin_sh)
 
 .PHONY: deps-systemd-shell
 deps-systemd-shell: .deps-$(dist)-stamp
 	-sudo podman stop vula-$(dist)-shell
 	-sudo podman rm vula-$(dist)-shell
 	sudo podman run $(podman_args) --name vula-$(dist)-shell --detach $(add_caps) vula-deps-$(dist) $(systemd_path)
-	sudo podman exec -it vula-$(dist)-shell bash
+	sudo podman exec -it vula-$(dist)-shell $(bin_sh)
 	sudo podman stop vula-$(dist)-shell
 
 .PHONY: testnet-start
@@ -215,42 +257,54 @@ retest: testnet-restart test
 
 .PHONY: testnet-clean
 testnet-clean: testnet-stop
-
-
-.PHONY: testnet-clean-all
-testnet-clean-all: testnet-stop
 	@-for c in $(test_hosts); do \
 		sudo podman rm $$c; \
 	done 2>&1 | grep -v 'no container with name or ID'
 
+.PHONY: testnet-clean-all
+testnet-clean-all: testnet-stop
+	@-for dist in $(dists); do \
+		make dist=$(dist) testnet-clean; \
+	done
+
+
 .PHONY: testnet-shell
 testnet-shell: testnet-start
-	sudo podman exec -it $(test1) bash
+	sudo podman exec -it $(test1) $(bin_sh)
 
 .PHONY: test
 test: testnet-start
 	sudo podman ps
+	-make test-pytest
+	@-for c in $(test_hosts); do \
+		sudo podman exec -it $$c vula start; \
+	done
+	make test-ping
+	sudo podman exec $(test1) vula peer
+	@echo -n "test environment: "
+	@sudo podman exec -it $(test1) cat /etc/os-release|grep VERSION_CODENAME|cut -f 2 -d=
 	#
 	# note: run "make testnet-stop" to stop these containers,
 	# 		 or "make testnet-clean" to delete them.
 	#
+
+.PHONY: test-pytest
+test-pytest: testnet-start
 	sudo podman exec -it $(test1) pytest-3
-	sudo podman exec -it $(test1) vula start
-	sudo podman exec -it $(test2) vula start
+
+.PHONY: test-ping
+test-ping: testnet-start
 	sudo podman exec -it $(test2) ping -c 1 $(test1).local.
-	sudo podman exec $(test1) vula peer
-	@echo -n "test environment: "
-	@sudo podman exec -it $(test1) cat /etc/os-release|grep VERSION_CODENAME|cut -f 2 -d=
 
 .PHONY: test-all
-test-all:
+test-3:
 	# only these three work presently
 	make dist=hirsute testnet-clean test
 	make dist=bullseye testnet-clean test
 	make dist=impish testnet-clean test
 
 .PHONY: test-all-clean
-test-all-clean:
+test-3-clean:
 	make dist=hirsute clean test
 	make dist=bullseye clean test
 	make dist=impish clean test
@@ -290,18 +344,18 @@ lan-clean: lan-stop
 
 .PHONY: lan-shell
 lan-shell: lan-container-started-stamp
-	sudo podman exec -it vula bash
+	sudo podman exec -it vula $(bin_sh)
 
 .PHONY: clean-containers
-clean-containers: testnet-clean
+clean-containers: testnet-clean-all
 	@-sudo podman network rm vula-net 	2>&1 | grep -v 'network not found'
 	@-sudo podman stop vula-tmp			2>&1 | grep -v 'no container with name or ID'
 	@-sudo podman rm vula-tmp	 		2>&1 | grep -v 'no container with name or ID'
 	@-podman stop vula-tmp				2>&1 | grep -v 'no container with name or ID'
 	@-podman rm vula-tmp				2>&1 | grep -v 'no container with name or ID'
 	@-for dist in $(dists); do \
-		podman stop vula-$$dist-shell || true; \
-		podman rm vula-$$dist-shell || true; \
+		podman stop vula-$$dist-shell; \
+		podman rm vula-$$dist-shell; \
 	done 2>&1 | grep -v 'no container with name or ID'
 
 .PHONY: clean-images
