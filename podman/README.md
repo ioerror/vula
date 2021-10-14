@@ -50,9 +50,9 @@ This will stop and delete the testnet containers.
 
 This will currently run these commands:
 ```
-    make dist=hirsute testnet-clean test
-    make dist=bullseye testnet-clean test
-    make dist=impish testnet-clean test
+make dist=hirsute testnet-clean test
+make dist=bullseye testnet-clean test
+make dist=impish testnet-clean test
 ```
 ..which will run the test network with each of the three distributions where
 tests currently pass. `dist=buster` and `dist=focal` are also supported, but

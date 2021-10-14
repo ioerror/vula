@@ -50,13 +50,15 @@ In addition to the dependencies in the `apt` command above, you will also need
 `[sibc](https://github.com/JJChiDguez/sibc)`. It can be installed using
 `pypi-install`, as shown above, or other ways as described in its README.
 
-* `git clone --recurse-submodules https://codeberg.org/vula/vula_libnss`
-* `cd vula_libnss`
-* `make deb && sudo dpkg -i deb_dist/python3-vula-libnss_*.deb`
-* `cd ../`
-* `git clone https://codeberg.org/vula/vula`
-* `cd vula`
-* `make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb`
+```
+git clone --recurse-submodules https://codeberg.org/vula/vula_libnss
+cd vula_libnss
+make deb && sudo dpkg -i deb_dist/python3-vula-libnss_*.deb
+cd ../
+git clone https://codeberg.org/vula/vula
+cd vula
+make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb
+```
 
 ## option 2: build a wheel and install with pip
 
@@ -73,17 +75,21 @@ installed by building a Debian package or by installing `vula_libnss` with pip
 and manually copying the `libnss_vula.so.2` file from inside the installed
 location to the correct location on the system.
 
-* `git clone https://codeberg.org/vula/vula`
-* `cd vula`
-* `sudo pip install .`
+```
+git clone https://codeberg.org/vula/vula
+cd vula
+sudo pip install .
+```
 
 After installing with pip, users will need to configure the system:
 
-* `sudo vula configure nsswitch`
-* `sudo systemctl daemon-reload`
-* `sudo systemctl restart systemd-sysusers`
-* `sudo systemctl reload dbus`
-* `sudo systemctl enable --now vula-organize`
+```
+sudo vula configure nsswitch
+sudo systemctl daemon-reload
+sudo systemctl restart systemd-sysusers
+sudo systemctl reload dbus
+sudo systemctl enable --now vula-organize
+```
 
 These are steps which are automatically performed by the Debian package's
 [postinstall
@@ -97,9 +103,11 @@ your host's network namespace. Root access is required to grant the
 `CAP_NET_ADMIN` capability, but after that privleges are dropped inside the
 container.
 
-* `git clone https://codeberg.org/vula/vula`
-* `cd vula/podman`
-* `make lan-start`
+```
+git clone https://codeberg.org/vula/vula
+cd vula/podman
+make lan-start
+```
 
 After the container is started, you can spawn a shell where you will have
 access to the vula commandline tools by running `make lan-shell`. To shut it
