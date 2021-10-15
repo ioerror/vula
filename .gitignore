@@ -12,6 +12,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
+deb_dist/
 dist/
 downloads/
 eggs/
@@ -28,6 +29,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+*.tar.gz
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -143,3 +145,6 @@ paper/paper.bbl
 paper/paper.blg
 paper/paper.out
 paper/comment.cut
+
+# JetBrains IDE
+.idea/
