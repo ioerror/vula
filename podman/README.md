@@ -35,7 +35,7 @@ clean` target.
 |--------------|------------------|--------|-----------|-------------------------------------------------------------|---------------------------------------------------------------------------------|
 | buster       | Debian 10        | ❌     | ❌        | sibc, vula\_libnss, stdeb, zeroconf, pyroute2, cryptography | conflicts with python3-cryptography, pyyaml, etc are not easily solved with pip |
 | focal        | Ubuntu 20.04 LTS | ✅     | ❌        | sibc, vula\_libnss, stdeb                                   | No multicast connectivity in podman containers                                  |
-| hirsute      | Ubuntu 21.04     | ✅     | ✅        | sibc, vula\_libnss                                          | installing out-of-dist packages with dpkg using pypi-install                    |
+| hirsute      | Ubuntu 21.04     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
 | **bullseye** | Debian 11        | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
 | **impish**   | Ubuntu 21.10     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
 | **fedora34** | Fedora 34        | ✅     | ✅        | sibc, vula\_libnss, pyroute2==0.5.14, pynacl                | manual setup required                                                           |
