@@ -76,7 +76,7 @@ endif
 	podman commit vula-tmp vula-deps-$(dist)
 	podman rm vula-tmp
 	podman run $(podman_args) --name vula-tmp --detach vula-deps-$(dist) $(systemd_path)
-	podman exec -it vula-tmp dnf -y install iputils gcc make python3-click python3-cpuinfo python3-cryptography python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-systemd python3-toml python3-yaml python3-zeroconf rpm-build wireguard-tools
+	podman exec -it vula-tmp dnf -y install iputils gcc make python3-click python3-cryptography python3-hkdf python3-ifaddr python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-systemd python3-toml python3-yaml python3-zeroconf rpm-build wireguard-tools
 	# note: pinned pyroute may not be necessary anymore FIXME
 	podman exec -it vula-tmp pip install pyroute2==0.5.14 pynacl sibc vula_libnss
 	podman stop vula-tmp
@@ -89,7 +89,7 @@ endif
 	#podman exec -it vula-tmp apk add gcc py3-setuptools
 	#
 	podman exec -it vula-tmp apk add \
-		py3-click py3-cryptography py3-ifaddr py3-matplotlib py3-networkx \
+		py3-click py3-cryptography py3-ifaddr \
 		py3-numpy py3-packaging py3-pathtools py3-pip py3-pluggy py3-progress \
 		py3-py py3-pydbus py3-pygments py3-pynacl py3-pyroute2 py3-pytest py3-pytest-runner \
 		py3-qrcode py3-setuptools py3-toml py3-yaml py3-zeroconf \
@@ -97,7 +97,7 @@ endif
 		apkbuild-pypi
 		# libressl-dev musl-dev libffi-dev
 	# note: pinned pyroute may not be necessary anymore FIXME
-	podman exec -it vula-tmp pip install sibc vula_libnss hkdf schema pyroute2==0.5.14 # cpuinfo mpmath
+	podman exec -it vula-tmp pip install sibc vula_libnss hkdf schema pyroute2==0.5.14
 	podman stop vula-tmp
 	podman commit vula-tmp vula-deps-$(dist)
 	podman rm vula-tmp
