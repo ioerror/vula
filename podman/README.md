@@ -25,7 +25,7 @@ variables.
 This Makefile accepts a `dist` argument specifying which Linux distribution to
 use. Distributions listed in **bold** in the table below are "enabled" by
 default; that is, they are in the default value of the `dists` argument.
-Therefore, they will be operated on my make targets with `-all` in their name.
+Therefore, they will be operated on by make targets with `-all` in their name.
 If you use a different distribution which is not in the default `dists` list,
 you can cleanup afterwards by specify it as the `dists` argument to the `make
 clean` target.
