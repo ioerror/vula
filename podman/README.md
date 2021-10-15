@@ -47,7 +47,7 @@ clean` target.
 
 This target will build a `.deb` package of vula in `../deb_dist/` using the
 current checkout (including any uncomitted changes). It does not require root
-to run. By default, it will build using Ubuntu `bullseye`; to build a deb using
+to run. By default, it will build using Debian `bullseye`; to build a deb using
 Ubuntu `impish` instead you can run `make clean deb dist=impish`.
 
 ### `make rpm`
