@@ -174,6 +174,16 @@ recreate, nor will it delete the `vula` container which is created by the
 
 ### `make clean-all`
 
-This will delete all vula-related podman containers, including `vula`, and all
-images, including `vula-deps-$dist`, as well as the `vula-net` podman network
-and the `.deb` package in `../deb_dist/`.
+This will delete all vula-related podman containers for the current set of
+`dists`, including the `vula` image for LAN use, and all images, including
+`vula-deps-$dist`, as well as the `vula-net` podman network and the `.deb`
+package in `../deb_dist/`.
+
+If you have run `make` commands using `dist` arguments which are not in the
+default `dists` list, you can also specify them here to clean up after them,
+like this:
+
+```
+make "dists=buster focal hirsute bullseye impish fedora34 alpine" clean-all
+```
+

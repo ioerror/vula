@@ -20,8 +20,7 @@ help:
 	@echo "dists: $(dists)"
 	@echo "test hosts: $(test_hosts)"
 	@echo "selected dist: $(dist)"
-	@echo "current stamps:"
-	@ls -l .*stamp
+	@ls -l .*stamp 2>/dev/null || true
 
 build_args=
 
