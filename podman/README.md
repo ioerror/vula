@@ -23,22 +23,23 @@ variables.
 ## Distributions
 
 This Makefile accepts a `dist` argument specifying which Linux distribution to
-use. The currently supported values of dist are `buster` (Debian 10), `focal`
-(Ubuntu 20.04), `hirsute` (Ubuntu 21.03), `bullseye` (Debian 11), `impish`
-(Ubuntu 21.10), `fedora34` (Fedora 34), and `alpine` (alpine:latest). The
-`-all` make targets operate on all distributions in the `dists` list, which can
-be specified as another argument and currently defaults to `bullseye impish
-fedora34`
+use. Distributions listed in **bold** in the table below are "enabled" by
+default; that is, they are in the default value of the `dists` argument.
+Therefore, they will be operated on my make targets with `-all` in their name.
+If you use a different distribution which is not in the default `dists` list,
+you can cleanup afterwards by specify it as the `dists` argument to the `make
+clean` target.
 
-| dist     | name             | pytest | ping test | PyPI packages required                                      | notes                                                                           |
-|----------|------------------|--------|-----------|-------------------------------------------------------------|---------------------------------------------------------------------------------|
-| buster   | Debian 10        | ❌     | ❌        | sibc, vula\_libnss, stdeb, zeroconf, pyroute2, cryptography | conflicts with python3-cryptography, pyyaml, etc are not easily solved with pip |
-| focal    | Ubuntu 20.04 LTS | ✅     | ❌        | sibc, vula\_libnss, stdeb                                   | No multicast connectivity in podman containers                                  |
-| hirsute  | Ubuntu 21.04     | ✅     | ✅        | sibc, vula\_libnss                                          | installing out-of-dist packages with dpkg using pypi-install                    |
-| bullseye | Debian 11        | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
-| impish   | Ubuntu 21.10     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
-| fedora34 | Fedora 34        | ✅     | ✅        | sibc, vula\_libnss, pyroute2==0.5.14, pynacl                | manual setup required                                                           |
-| alpine   | alpine:latest    | ✅     | ❌        | sibc, vula\_libnss, pyroute2==0.5.14                        | TODO                                                                            |
+
+| dist         | name             | pytest | ping test | PyPI packages required                                      | notes                                                                           |
+|--------------|------------------|--------|-----------|-------------------------------------------------------------|---------------------------------------------------------------------------------|
+| buster       | Debian 10        | ❌     | ❌        | sibc, vula\_libnss, stdeb, zeroconf, pyroute2, cryptography | conflicts with python3-cryptography, pyyaml, etc are not easily solved with pip |
+| focal        | Ubuntu 20.04 LTS | ✅     | ❌        | sibc, vula\_libnss, stdeb                                   | No multicast connectivity in podman containers                                  |
+| hirsute      | Ubuntu 21.04     | ✅     | ✅        | sibc, vula\_libnss                                          | installing out-of-dist packages with dpkg using pypi-install                    |
+| **bullseye** | Debian 11        | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
+| **impish**   | Ubuntu 21.10     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
+| **fedora34** | Fedora 34        | ✅     | ✅        | sibc, vula\_libnss, pyroute2==0.5.14, pynacl                | manual setup required                                                           |
+| alpine       | alpine:latest    | ✅     | ❌        | sibc, vula\_libnss, pyroute2==0.5.14                        | TODO                                                                            |
 
 ## Packaging
 
