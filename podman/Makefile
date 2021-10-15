@@ -3,16 +3,25 @@ DEB_NAME := ../deb_dist/python3-vula_$(VERSION)-1_all.deb
 RPM_NAME := ../dist/vula-$(VERSION)-1.noarch.rpm
 NET_NAME := vula-net
 dist := bullseye
-dists=buster focal hirsute bullseye impish fedora34 alpine
-podman_args=--volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula
-add_caps=--cap-add NET_ADMIN,NET_RAW
-test1=vula-$(dist)-test1
-test2=vula-$(dist)-test2
-test_hosts=$(test1) $(test2)
+#dists := buster focal hirsute bullseye impish fedora34 alpine
+dists := bullseye impish fedora34
+podman_args := --volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula
+add_caps := --cap-add NET_ADMIN,NET_RAW
+test1 := vula-$(dist)-test1
+test2 := vula-$(dist)-test2
+test_hosts := $(test1) $(test2)
 
 .PHONY: help
 help:
 	@cat README.md
+	@echo
+	@echo "---------------"
+	@echo "version: $(VERSION)"
+	@echo "dists: $(dists)"
+	@echo "test hosts: $(test_hosts)"
+	@echo "selected dist: $(dist)"
+	@echo "current stamps:"
+	@ls -l .*stamp
 
 build_args=
 
@@ -70,10 +79,7 @@ endif
 	podman run $(podman_args) --name vula-tmp --detach vula-deps-$(dist) $(systemd_path)
 	podman exec -it vula-tmp dnf -y install iputils gcc make python3-click python3-cpuinfo python3-cryptography python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-systemd python3-toml python3-yaml python3-zeroconf rpm-build wireguard-tools
 	# note: pinned pyroute may not be necessary anymore FIXME
-	podman exec -it vula-tmp pip install pyroute2==0.5.14
-	podman exec -it vula-tmp pip install pynacl
-	podman exec -it vula-tmp pip install sibc
-	podman exec -it vula-tmp pip install vula_libnss
+	podman exec -it vula-tmp pip install pyroute2==0.5.14 pynacl sibc vula_libnss
 	podman stop vula-tmp
 	podman commit vula-tmp vula-deps-$(dist)
 	podman rm vula-tmp
@@ -92,7 +98,7 @@ endif
 		apkbuild-pypi
 		# libressl-dev musl-dev libffi-dev
 	# note: pinned pyroute may not be necessary anymore FIXME
-	podman exec -it vula-tmp pip install hkdf schema sibc pyroute2==0.5.14 # cpuinfo mpmath
+	podman exec -it vula-tmp pip install sibc vula_libnss hkdf schema pyroute2==0.5.14 # cpuinfo mpmath
 	podman stop vula-tmp
 	podman commit vula-tmp vula-deps-$(dist)
 	podman rm vula-tmp
@@ -152,7 +158,7 @@ $(RPM_NAME): .deps-$(dist)-stamp
 
 # for Alpine Linux's apk package format
 .apk-install-$(dist)-stamp: .deps-$(dist)-stamp
-	# we currently install on apk systems... using pip.
+	# we currently install on apk systems... using setup.py install.
 	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) sleep 86400
 	podman exec -it vula-tmp python3 setup.py install
 	podman stop vula-tmp
@@ -257,7 +263,7 @@ testnet-clean: testnet-stop
 .PHONY: testnet-clean-all
 testnet-clean-all: testnet-stop
 	@-for dist in $(dists); do \
-		make dist=$(dist) testnet-clean; \
+		make dist=$$dist testnet-clean; \
 	done
 
 
@@ -289,20 +295,17 @@ test-pytest: testnet-start
 test-ping: testnet-start
 	sudo podman exec -it $(test2) ping -c 1 $(test1).local.
 
-.PHONY: test-4
-test-4:
-	# only these three work presently
-	make dist=hirsute test
-	make dist=bullseye test
-	make dist=impish test
-	make dist=fedora34 test
+.PHONY: test-all
+test-all:
+	for dist in $(dists); do \
+		make dist=$$dist test; \
+	done
 
-.PHONY: test-4-clean
-test-4-clean:
-	make dist=hirsute test testnet-clean
-	make dist=bullseye test testnet-clean
-	make dist=impish test testnet-clean
-	make dist=fedora34 test testnet-clean
+.PHONY: test-all-separate
+test-all-separate:
+	for dist in $(dists); do \
+		make dist=$$dist test testnet-clean; \
+	done
 
 .lan-container-stamp: $(installed_image_stamp)
 	sudo podman create $(podman_args) --name vula --hostname $(shell hostname) $(add_caps) --network host vula-$(dist)
@@ -321,7 +324,7 @@ lan-start: .lan-container-started-stamp
 
 .PHONY: lan-stop
 lan-stop:
-	sudo podman stop vula || true
+	-sudo podman stop vula 2>&1 | grep -v 'no container with name or ID'
 	@rm -vf .lan-container-started-stamp
 
 .PHONY: lan-clean
@@ -330,9 +333,8 @@ lan-clean: lan-stop
 		echo -n "Really delete 'vula' container created by lan-start? [yN]"; \
 		read a; \
 		if [ "$$a" = "y" ]; then \
-			sudo podman rm vula || true; \
+			sudo podman rm vula 2>&1 | grep -v 'no container with name or ID'; \
 			rm -vf .lan-container-stamp; \
-			rm -vf .lan-container-started-stamp; \
 		else \
 			echo "OK, not deleting 'vula' container."; \
 		fi; \

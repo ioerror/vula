@@ -17,32 +17,59 @@ cd vula/podman
 make
 ```
 
+Running `make` with no arguments will print this README and some configuration
+variables.
+
+## Distributions
+
+This Makefile accepts a `dist` argument specifying which Linux distribution to
+use. The currently supported values of dist are `buster` (Debian 10), `focal`
+(Ubuntu 20.04), `hirsute` (Ubuntu 21.03), `bullseye` (Debian 11), `impish`
+(Ubuntu 21.10), `fedora34` (Fedora 34), and `alpine` (alpine:latest). The
+`-all` make targets operate on all distributions in the `dists` list, which can
+be specified as another argument and currently defaults to `bullseye impish
+fedora34`
+
+| dist     | name             | pytest | ping test | PyPI packages required                                      | notes                                                                           |
+|----------|------------------|--------|-----------|-------------------------------------------------------------|---------------------------------------------------------------------------------|
+| buster   | Debian 10        | ❌     | ❌        | sibc, vula\_libnss, stdeb, zeroconf, pyroute2, cryptography | conflicts with python3-cryptography, pyyaml, etc are not easily solved with pip |
+| focal    | Ubuntu 20.04 LTS | ✅     | ❌        | sibc, vula\_libnss, stdeb                                   | No multicast connectivity in podman containers                                  |
+| hirsute  | Ubuntu 21.04     | ✅     | ✅        | sibc, vula\_libnss                                          | installing out-of-dist packages with dpkg using pypi-install                    |
+| bullseye | Debian 11        | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
+| impish   | Ubuntu 21.10     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
+| fedora34 | Fedora 34        | ✅     | ✅        | sibc, vula\_libnss, pyroute2==0.5.14, pynacl                | manual setup required                                                           |
+| alpine   | alpine:latest    | ✅     | ❌        | sibc, vula\_libnss, pyroute2==0.5.14                        | TODO                                                                            |
+
 ## Packaging
 
 ### `make deb`
 
 This target will build a `.deb` package of vula in `../deb_dist/` using the
 current checkout (including any uncomitted changes). It does not require root
-to run.
+to run. By default, it will build using Ubuntu `bullseye`; to build a deb using
+Ubuntu `impish` instead you can run `make clean deb dist=impish`.
 
-### Other OS packages
+### `make rpm`
 
-It would be nice to have make targets for creating packages for other operating
-systems here.
+This target will build an RPM using Fedora 34. Note that this package is only
+minally tested and does not yet automatically configure the system; see
+[`INSTALL.md`](https://codeberg.org/vula/vula/src/branch/main/podman/INSTALL.md)
+for details.
 
 ## Test network
 
-### `make test`
+### `make dist=bullseye test`
 
-This will create a `vula-net` podman internal network, run
-vula in two containers connected to that network, and send a ping between them.
-It will also run the pytest test suite in one of them. Running it again will
-re-run the pytest and ping, but will not restart the services in the
-containers.
+This will create a `vula-net` podman internal network, run vula in two
+containers connected to that network, and send a ping between them.  It will
+also run the pytest test suite in one of them. Running it again will re-run the
+pytest and ping, but will not restart the services in the containers.
 
 More advanced integration tests using podman should be implemented here,
 such as creating a router container which is in the internal network and also
 internet connected to test default route encryption functionality.
+
+The `dist=bullseye` argument can be omitted; `bullseye` is the default dist.
 
 ### `make retest`
 
@@ -54,28 +81,35 @@ This will launch a shell in the first testnet container.
 
 ### `make testnet-clean`
 
-This will stop and delete the testnet containers.
+This will stop and delete the testnet containers for the default distribution
+(`bullseye`), or another if specified with `dist=`.
 
-### `make test-all`
+### `make testnet-clean-all`
 
-This will currently run these commands:
+This will stop and delete the testnet containers for all of the configured
+distributions. This is called by `make clean`.
+
+### `make test-all-separate`
+
+This will currently run these four commands:
 ```
-make dist=hirsute testnet-clean test
-make dist=bullseye testnet-clean test
-make dist=impish testnet-clean test
+make dist=hirsute test testnet-clean
+make dist=bullseye test testnet-clean
+make dist=impish test testnet-clean
+make dist=fedora34 test testnet-clean
 ```
-..which will run the test network with each of the three distributions where
-tests currently pass. `dist=buster` and `dist=focal` are also supported, but
-are not currently working.
+..which will run the test network with each of the four distributions where
+tests currently pass. `dist=buster`, `dist=focal`, and `dist=alpine` are also
+supported, but are not currently working.
 
 ### `make systemd-shell`
 
 This will create a new container which, unlike the test hosts created by the
 test target, is connected to both the normal `podman` network (online behind
-NAT) *and* the `vula-net` internal network which test hosts are connected to.
-Shells and tests for different dists can be run concurrently and communicate
-with eachother; if a clean test network is desired one can run `make clean` or
-`make testnet-clean` prior to running `make test`.
+NAT) *and* to the `vula-net` internal network which test hosts are connected
+to. Shells and tests for different dists can be run concurrently and
+communicate with eachother; if a clean test network is desired one can run
+`make clean` or `make testnet-clean` prior to running `make test`.
 
 This example will create two test containers for each of three dists, and then
 spawn a shell from which six peers should (eventually) be visible when running
