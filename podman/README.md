@@ -92,16 +92,14 @@ distributions. This is called by `make clean`.
 
 ### `make test-all-separate`
 
-This will currently run these four commands:
-```
-make dist=hirsute test testnet-clean
-make dist=bullseye test testnet-clean
-make dist=impish test testnet-clean
-make dist=fedora34 test testnet-clean
-```
-..which will run the test network with each of the four distributions where
-tests currently pass. `dist=buster`, `dist=focal`, and `dist=alpine` are also
-supported, but are not currently working.
+This will run the `test` command followed by `testnet-clean` for each `dist` in
+`dists`.
+
+### `make test-all`
+
+This will run `make test` for each `dist` in `dists`, but without stopping in
+between. Therefore, if you run `make testnet-shell` afterwards, you will be
+able to run `vula peer` and see many peers.
 
 ### `make systemd-shell`
 
