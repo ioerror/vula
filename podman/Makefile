@@ -184,16 +184,12 @@ $(pkgmgr)-image:
 editable-image: .editable-$(dist)-image-stamp
 .editable-$(dist)-image-stamp: $(installed_image_stamp)
 	# create new vula container
-	podman run --name vula-tmp $(podman_args) --network none --detach vula-$(dist) $(systemd_path)
-	# install debs
+	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
+	# install in editable mode
 	podman exec vula-tmp python3 setup.py install
 	podman exec vula-tmp python3 setup.py develop
-#
-# 	if we built the editable image from vula-debian-deps instead of vula-debian, we
-#   would now run this:
-#	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp ./misc/python3-vula.postinst
-#   ... but that isn't actually working, we we build editable on top of the
-#   dpkg image for now. FIXME.
+	podman exec vula-tmp chmod 755 .. # so that systemd users can read it
+	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp ./misc/python3-vula.postinst
 #
 	# stop container
 	podman stop vula-tmp
