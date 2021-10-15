@@ -124,11 +124,13 @@ make dist=bullseye systemd-shell
 
 ### `make lan-start`
 
-This will create a new podman container (as root) called `vula` with `host`
-networking, meaning that it will operate in the default network namespace. This
-is a convenient way that one can run vula to communicate with other hosts on
-their physical LAN, without needing to install any dependencies besides
-`wireguard`, `podman`, `make`, and `sudo`.
+This will create a new podman container (as root) called `vula` with
+`--network=host`, meaning that it will operate in the host system's default
+network namespace. This is a convenient way that one can run vula to
+communicate with other hosts on a physical LAN, without needing to install any
+dependencies besides `wireguard`, `podman`, `make`, and `sudo`. The `dist=`
+argument may be specified to use a different distribution than the default
+(`bullseye`) inside of the container.
 
 ### `make lan-shell`
 
