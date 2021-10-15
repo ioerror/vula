@@ -25,24 +25,18 @@ help:
 build_args=
 
 ifeq ($(dist),buster)
-	# vula hasn't ever worked easily in buster, and is currently broken in this Makefile
 	build_args=--build-arg DISTRO=debian --build-arg VERSION=buster
 endif
 ifeq ($(dist),focal)
-	# 20.04 was once our most supported target, but now is broken (maybe just
-	# in podman, though?)
 	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=20.04
 endif
 ifeq ($(dist),hirsute)
-	# vula works well in Ubuntu 21.04
 	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=21.04
 endif
 ifeq ($(dist),bullseye)
-	# vula works well in Debian 11
 	build_args=--build-arg DISTRO=debian --build-arg VERSION=bullseye
 endif
 ifeq ($(dist),impish)
-	# vula appears to work well in Ubuntu 21.10
 	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=21.10
 endif
 
@@ -52,7 +46,6 @@ bin_sh=bash
 pkgmgr=dpkg
 
 ifeq ($(dist),fedora34)
-	# Fedora support is in-progress. Ping test has connectivity. Pytest fails.
 	installed_image_stamp=.rpm-install-$(dist)-stamp
 	systemd_path=/usr/sbin/init
 	pkgmgr=rpm
