@@ -23,7 +23,7 @@ echo "Installing on '$dist'"
 
 # FIXME: some of these probably aren't needed anymore
 
-sibc_deps="dh-python python3-click python3-progress python3-numpy python3-setuptools-scm python3-setuptools python3-all build-essential fakeroot"
+sibc_deps="dh-python python3-click python3-progress python3-numpy python3-matplotlib python3-networkx python3-setuptools-scm python3-setuptools python3-all build-essential fakeroot"
 
 vula_deps="wireguard-tools python3-yaml python3-click python3-nacl python3-schema python3-pip python3-pathtools make gcc python3-pydbus python3-pyroute2 python3-pytest-runner python3-pytest python3-toml python3-py python3-packaging python3-pluggy python3-hkdf python3-ifaddr python3-cryptography python3-dbus python3-pygments python3-systemd python3-qrcode python3-all python-all fakeroot build-essential dh-python debhelper python3-dev python3-zeroconf python3-stdeb python3-all-dev"
 
