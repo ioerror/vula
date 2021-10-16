@@ -496,6 +496,12 @@ class Peers(yamlrepr, queryable, schemadict):
         else:
             return None
 
+def _ac_get_peer_ids(ctx, args, incomplete):
+    organize = (
+            ctx.meta.get('Organize', {}).get('magic_instance')
+            or organize_dbus_if_active()
+        )
+    return organize.peer_ids('all')
 
 @DualUse.object(
     short_help="View and modify peer information",
@@ -663,7 +669,7 @@ class PeerCommands(object):
             click.echo(Result.from_yaml(self.organize.peer_addr_del(vk, ip)))
 
     @DualUse.method(short_help="Set arbitrary peer properties")
-    @click.argument('vk', type=str)
+    @click.argument('vk', type=str, autocompletion=_ac_get_peer_ids)
     @click.argument('path', type=str, nargs=-1)
     @click.argument('value', type=str)
     def set(self, vk, path, value):
