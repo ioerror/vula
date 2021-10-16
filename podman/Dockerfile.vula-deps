@@ -1,0 +1,20 @@
+ARG DISTRO
+ARG VERSION
+
+FROM $DISTRO:$VERSION
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# the impish image has a problem with this file; presumably will be fixed soon,
+# but for now:
+RUN rm -f /etc/apt/apt.conf.d/docker-clean
+
+RUN apt update && apt upgrade -y && \
+    apt install -y --no-install-recommends \
+    procps vim less git iproute2 iputils-ping dbus systemd
+
+COPY /misc/install-debian-deps.sh /install-debian-deps.sh
+
+RUN bash install-debian-deps.sh
+
+CMD /bin/systemd

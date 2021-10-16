@@ -2,6 +2,8 @@ import setuptools
 from setuptools.command.build_ext import build_ext as hookBuild_ext
 from subprocess import check_output
 import os
+import time
+from shutil import copy2
 from sys import platform
 from os import system
 from glob import glob
@@ -10,17 +12,29 @@ from platform import machine
 try:
     from stdeb.command.sdist_dsc import sdist_dsc
     from stdeb.command.bdist_deb import bdist_deb
+
+    class sdist_dsc_with_postinst(sdist_dsc):
+        def run(self):
+            res = super(sdist_dsc_with_postinst, self).run()
+            print("Installing vula postinst")
+            copy2('misc/python3-vula.postinst', self.dist_dir+'/vula-{}/debian/'.format(version))
+            return res
+
 except ImportError:
     sdist_dsc = None
+    sdist_dsc_with_postinst = None
     bdist_deb = None
 try:
     from click_man.commands.man_pages import man_pages
 except ImportError:
     man_pages = None
 
-os.environ['SOURCE_DATE_EPOCH'] = (
-    check_output("git log -1 --pretty=%ct", shell=True).decode().strip()
-)
+try:
+    os.environ['SOURCE_DATE_EPOCH'] = (
+        check_output("git log -1 --pretty=%ct", shell=True).decode().strip()
+    )
+except:
+    os.environ['SOURCE_DATE_EPOCH'] = str(int(time.time()))
 
 if os.path.exists('vula/__version__.py'):
     with open("vula/__version__.py", "r") as obj:
@@ -60,9 +74,9 @@ linux_data_files = [
         # "/etc/dbus-1/system-services/",
         "/usr/share/dbus-1/system-services/",
         [
-            'configs/dbus/vula-organize.service',
-            'configs/dbus/vula-publish.service',
-            'configs/dbus/vula-discover.service',
+            'configs/dbus/local.vula.organize.service',
+            'configs/dbus/local.vula.publish.service',
+            'configs/dbus/local.vula.discover.service',
         ],
     ),
     (
@@ -73,6 +87,10 @@ linux_data_files = [
     (
         "/usr/share/man/man1/",
         glob('man/vula*1'),
+    ),
+    (
+        "",
+        ["misc/python3-vula.postinst"],
     ),
 ]
 
@@ -85,7 +103,6 @@ if platform.startswith("openbsd"):
 class print_version(hookBuild_ext):
     def run(self):
         print(version)
-
 
 setuptools.setup(
     name="vula",
@@ -117,7 +134,7 @@ setuptools.setup(
     tests_require=["pytest"],
     cmdclass=dict(
         bdist_deb=bdist_deb,
-        sdist_dsc=sdist_dsc,
+        sdist_dsc=sdist_dsc_with_postinst,
         man_pages=man_pages,
         version=print_version,
     ),

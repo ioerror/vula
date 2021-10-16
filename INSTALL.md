@@ -3,45 +3,72 @@
 Currently, GNU/Linux is the only supported operating system. We plan to port
 the software to other operating systems in the future.
 
-The software has been developed and tested on Debian (bullseye), Mobian, and
-Ubuntu (20.04 and 20.10). It is likely to work on other modern systemd-based
-distributions.
+The software has been developed and tested on Debian 11 (bullseye), Mobian, and
+Ubuntu (21.04 and 21.10). It previously was working on Ubuntu 20.04 but the
+installation instructions have not been successfully tested there recently. It
+is likely to work on other modern systemd-based distributions.
 
 Vula can also be run without systemd, and/or in a single monolithic process,
 but how to do so is not yet documented.
 
-We do not yet offer packages for download, but you can build your own deb or
-wheel from a git checkout.
+We do not yet offer Debian packages for download directly, but you can install
+a debianized version of our Python package using the `pypi-install` tool.
+
+To install the dependencies required for building vula packages yourself, or
+for installing a debian package via `pypi-install`, run this command:
+
+* `sudo apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot gcc make python3-all python3-all-dev python3-click python3-cpuinfo python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-setuptools-scm python3-stdeb python3-systemd python3-toml python3-yaml python3-zeroconf python-all wireguard-tools`
 
 # Install
 
-## option 0: quick install
+## option 0: dpkg installation via PyPI
 
-For a simple technology demonstration we offer an insecure quick install (eg: a dangerous [curl
-pipe sudo
-bash](https://www.idontplaydarts.com/2016/04/detecting-curl-pipe-bash-server-side/))
-process:
+The
+[`pypi-install`](https://pypi.org/project/stdeb/#pypi-install-command-line-command)
+command, provided by the `python3-stdeb` package, can create and install `.deb`
+packages from many packages available on the Python Package Index. This is
+currently our recommended way for users of Debian and Ubuntu to install vula
+and any Python dependencies which are not included with your distribution. On
+Debian 11 or Ubuntu 21.x, after running the above `apt` command, simply run
+these three commands:
 
-* `cd /dev/shm && wget https://codeberg.org/vula/vula/raw/branch/main/misc/quick-install.sh`
-* `bash quick-install.sh`
-
-## option 1: manually build and install Debian Packages
-
-* `sudo apt install --no-install-recommends wireguard wireguard-tools python3-yaml python3-click python3-nacl python3-schema python3-pip python3-pydbus python3-pyroute2 python3-pytest-runner python3-pytest python3-toml python3-py python3-packaging python3-pluggy python3-hkdf python3-ifaddr python3-cryptography python3-dbus python3-pygments python3-systemd python3-qrcode python3-all python-all fakeroot build-essential dh-python debhelper make gcc python3-all-dev python3-zeroconf`
-* `sudo pip3 install stdeb sibc` (note: unfortunately this step still requires installing stdeb, sibc, and its dependencies with pip as root - you can alternately build a deb of `sibc` but this procedure is not yet documented here. the stdeb version from Debian stable and Ubuntu 20.10 is insufficient, however.)
-* `git clone --recurse-submodules https://codeberg.org/vula/vula_libnss`
-* `cd vula_libnss`
-* `make deb && sudo dpkg -i deb_dist/python3-vula-libnss_*.deb`
-* `cd ../`
-* `git clone https://codeberg.org/vula/vula`
-* `cd vula`
-* `make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb`
+```
+sudo pypi-install sibc
+sudo pypi-install vula_libnss
+sudo pypi-install vula
+```
 
 Installing the deb will automatically configure `nsswitch`, restart
 `systemd-sysusers`, reload `dbus`, etc, and will tell `systemd` to enable and
 start the `vula-organize` service.
 
+On older distributions it may be necessary to `pypi-install` some other
+packages such as `zeroconf` and `pyroute2`. Accurate installation instructions
+for Ubuntu 20.04 should be restored here soon.
+
+## option 1: build and install Debian Packages from a git checkout
+
+In addition to the dependencies in the `apt` command above, you will also need
+the [`sibc`](https://github.com/JJChiDguez/sibc) module. It can be installed
+using `pypi-install` as shown above, or other ways as described in its
+[`README`](https://github.com/JJChiDguez/sibc#for-development).
+
+```
+git clone --recurse-submodules https://codeberg.org/vula/vula_libnss
+cd vula_libnss
+make deb && sudo dpkg -i deb_dist/python3-vula-libnss_*.deb
+cd ../
+git clone https://codeberg.org/vula/vula
+cd vula
+make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb
+```
+
 ## option 2: build a wheel and install with pip
+
+This option is not currently recommended, as a `pip install` of vula will place
+systemd and other configuration files in the wrong place. However, if you are
+interested in helping to get vula working on other distributions, `pip install
+sibc vula_libnss vula` is a place to start.
 
 This option is available for advanced technical users - it requires manual
 setup of `[vula_libnss](https://codeberg.org/vula/vula_libnss)` after
@@ -51,18 +78,65 @@ installed by building a Debian package or by installing `vula_libnss` with pip
 and manually copying the `libnss_vula.so.2` file from inside the installed
 location to the correct location on the system.
 
-If you don't mind installing many things using `sudo pip`, the software can be installed this way:
-
-* `git clone --recurse-submodules https://codeberg.org/vula/vula`
-* `cd vula`
-* `sudo pip install .`
+```
+git clone https://codeberg.org/vula/vula
+cd vula
+sudo pip install .
+```
 
 After installing with pip, users will need to configure the system:
-* `sudo vula configure nsswitch`
-* `sudo systemctl daemon-reload`
-* `sudo systemctl restart systemd-sysusers`
-* `sudo systemctl reload dbus`
-* `sudo systemctl enable --now vula-organize`
+
+```
+sudo vula configure nsswitch
+sudo systemctl daemon-reload
+sudo systemctl restart systemd-sysusers
+sudo systemctl reload dbus
+sudo systemctl enable --now vula-organize
+```
+
+These are steps which are automatically performed by the Debian package's
+[postinstall
+script](https://codeberg.org/vula/vula/src/branch/main/misc/python3-vula.postinst).
+
+## option 3: run vula in a podman container
+
+If you are using a Linux distribution that supports
+[`podman`](https://podman.io/), and can run it as root, you can run vula under
+Debian GNU/systemd in a container with access to your host's network namespace.
+Root access is required to grant the `CAP_NET_ADMIN` capability, but after that
+privleges are dropped inside the container.
+
+```
+git clone https://codeberg.org/vula/vula
+cd vula/podman
+make lan-start
+```
+
+After the container is started, you can spawn a shell inside of it where you
+will have access to the vula commandline tools by running [`make
+lan-shell`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-shell).
+To shut it down or delete it, run [`make
+lan-stop`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-stop)
+or [`make
+lan-clean`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-clean).
+See
+[podman/README](https://codeberg.org/vula/vula/src/branch/main/podman/README.md)
+for more information.
+
+## option 4: build an RPM
+
+We have only done minimal testing of vula on RPM-based systems, but, it is
+possible to type `make rpm` in the vula repo and generate an RPM (using
+setuptools' `bdist_rpm` command). The post-installation steps mentioned in
+option 2 above currently apply to RPM-based systems as well, because the RPM
+does not include a postinstall script. See the `Makefile` in this directory for
+hints on how to install the dependencies on Fedora.
+
+It is also possible to build an RPM in Fedora inside of a `podman` container by
+running `make dist=fedora34 rpm` in the `podman` directory, and to launch the
+host-networking vula container described in option 3 using Fedora instead of
+Debian by running [`make dist=fedora34
+lan-start`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-start).
 
 # Running vula
 
@@ -94,5 +168,7 @@ To see the preferences:
 To see commands for editing preferences:
 * `vula prefs --help`
 
-More documentation is coming soon.
+More documentation is coming soon. See
+[STATUS.md](https://codeberg.org/vula/vula/src/branch/main/STATUS.md) for more
+information about what currently works and doesn't.
 

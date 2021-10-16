@@ -485,7 +485,7 @@ class b64_bytes(bytes):
         >>> import schema, packaging.version as pkgv
         >>> assert type(e) is schema.SchemaError
         >>> msg = "'123' is not 10 bytes or a 16-char base64 string which decodes to 10 bytes"
-        >>> if pkgv.parse(schema.__version__) < pkgv.parse('0.7.4'):
+        >>> if pkgv.parse(schema.__version__) < pkgv.parse('0.7.3'):
         ...     msg += "\\n{!r} is not 10 bytes or a 16-char base64 string which decodes to 10 bytes"
         >>> assert e.args == (msg,), (e.args, msg)
 

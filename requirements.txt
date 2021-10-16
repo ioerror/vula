@@ -9,3 +9,13 @@ pydbus>=0.6.0
 pytest
 hkdf>=0.0.3
 sibc>=0.0.1
+# PyGObject
+# FIXME: we need pygobject (python3-gi in debuntu) but having it here makes
+# setuptools try to build cairo too, which has more build deps... there are
+# instructions here for how to pip install pygobject without cairo, but it is
+# unclear how we can apply that to make vula pip installable:
+#   https://gitlab.gnome.org/GNOME/pygobject/-/issues/395
+# Having python3-gi installed while having PyGObject in the requirements file
+# makes the PYGOBJECT_WITHOUT_PYCAIRO approach documented above not work -
+# setup.py install will try to compile pycairo even though python3-gi is
+# already installed. So, for now, we leave PyGObject commented out here.

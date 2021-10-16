@@ -215,16 +215,6 @@
   that machine.
 -- post paper deadline
 
-- audit multipass
--- multipass downloads images as root:
-   multipass 1783324            root   42u  IPv4 11237035      0t0  TCP 192.168.2.129:56044->91.189.88.89:https (ESTABLISHED)
--- fun, easy
--- post paper deadline
-
-- make multipass-tests work with systemd nspawn
--- not fun, annoying
--- post paper deadline
-
 ---
 
 Enable Click (bash) tab completion (!)
