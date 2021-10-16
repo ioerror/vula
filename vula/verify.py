@@ -148,13 +148,14 @@ class VerifyCommands(object):
         if sub_type == "desc":
             res = self.organize.process_descriptor_string(data)
             res = Result(yaml.safe_load(res))
+            click.echo(res)
         elif sub_type == "vk":
             vk = self.organize.get_vk_by_name(hostname)
             if vk == data:
                 res = self.organize.verify_and_pin_peer(vk, hostname)
                 res = Result(yaml.safe_load(res))
+                click.echo(res)
                 if res.error != None:
-                    click.echo(res)
                     raise Exception(res.error)
             else:
                 click.echo("keys are for the wrong DeLorean")
