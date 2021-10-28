@@ -649,6 +649,12 @@ class chunkable_values(dict):
 
 
 def addrs_in_subnets(addrs, subnets):
+    """
+    >>> current_subnets={'10.0.0.0/24': ['10.0.0.9', '10.0.0.51','10.0.0.17'], '10.0.1.0/24': ['10.0.1.22', '10.0.1.73'], '10.0.5.0/24': ['10.0.5.21', '10.0.5.63']}
+    >>> addrs = ['10.0.0.0/24','10.0.14.0/24', '10.0.5.0/24']
+    >>> addrs_in_subnets(addrs,current_subnets)
+    ['10.0.0.0/24', '10.0.5.0/24']
+    """
     return [
         addr for addr in addrs if any(addr in subnet for subnet in subnets)
     ]
