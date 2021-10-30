@@ -124,6 +124,16 @@ class SystemState(schemattrdict):
 
     @property
     def current_ips(self):
+        """
+        Currently assigned IP addresses of the system.
+
+        >>> SystemState().current_ips
+        []
+        >>> SystemState(current_subnets={'10.0.0.0/24': ['10.0.0.1', '10.0.0.2']}).current_ips
+        "[IPv4Address('10.0.0.1'), IPv4Address('10.0.0.2')]"
+        >>> SystemState(current_subnets={'10.0.0.0/24': ['10.0.0.1'], '192.168.0.0/24': ['192.168.1.1']}).current_ips
+        "[IPv4Address('10.0.0.1'), IPv4Address('192.168.1.1')]"
+        """
         return [
             ip for subnet in self.current_subnets.values() for ip in subnet
         ]
