@@ -373,19 +373,43 @@ class constraint(object):
 
 
 class Length(constraint):
+    """
+    Constraint to check if a string length is equal to, min or max a given value.
+    """
     @staticmethod
     def constraint(value, length=None, min=None, max=None):
+        """
+        Validates min and max length of a given string.
+        Returns the value of constraints are met else an error is raised.
+
+        >>> Length.constraint("Test", min = 3, max = 5)
+        'Test'
+        >>> Length.constraint("Vula is cool", length = 12)
+        'Vula is cool'
+        >>> Length.constraint("Test", length = 3)
+        Traceback (most recent call last):
+            ...
+        ValueError: length is 4, should be 3: 'Test'
+        >>> Length.constraint("Test", max = 3)
+        Traceback (most recent call last):
+            ...
+        ValueError: length is 4, should be <=3: 'Test'
+        >>> Length.constraint("Test", min = 5)
+        Traceback (most recent call last):
+            ...
+        ValueError: length is 4, should be >=5: 'Test'
+        """
         if length is not None and len(value) != length:
             raise ValueError(
                 "length is %s, should be %s: %r" % (len(value), length, value)
             )
         if max is not None and len(value) > max:
             raise ValueError(
-                "length is %s, should be >=%s: %r" % (len(value), max, value)
+                "length is %s, should be <=%s: %r" % (len(value), max, value)
             )
         if min is not None and len(value) < min:
             raise ValueError(
-                "length is %s, should be <=%s: %r" % (len(value), max, value)
+                "length is %s, should be >=%s: %r" % (len(value), min, value)
             )
         return value
 
