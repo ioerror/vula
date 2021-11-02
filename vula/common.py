@@ -110,6 +110,18 @@ class attrdict(dict):
     """
 
     def __getattr__(self, key):
+        """
+        get value of key
+
+        >>> a = attrdict({1:2})
+        >>> a.__getattr__(1)
+        2
+
+        >>> a.__getattr__(2)
+        Traceback (most recent call last):
+            ...
+        AttributeError: 'attrdict' object has no attribute 2
+        """
         if key in self:
             return self[key]
         else:
