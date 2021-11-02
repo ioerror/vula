@@ -139,7 +139,19 @@ class Descriptor(schemattrdict, serializable):
             "%s=%s;" % (k, v) for k, v in sorted(self.items()) if k != 's'
         ).encode()
 
+    
     def __str__(self):
+        """
+        Return the number or IP as a string
+
+        >>> my_num = 12
+        >>> my_num.__str__()
+        '12'
+
+        >>> ip = comma_separated_IPs('192.168.13.37')
+        >>> ip.__str__()
+        '192.168.13.37'
+        """
         return " ".join("%s=%s;" % kv for kv in sorted(self.items()))
 
     @property
