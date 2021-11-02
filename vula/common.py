@@ -451,6 +451,14 @@ class b64_bytes(bytes):
         return b64encode(self).decode()
 
     def __repr__(self):
+        """
+        Function to return a base64 representation of entered bytes
+
+        >>> string = "Vula is cool."
+        >>> arr = bytearray(string, 'utf-8')
+        >>> b64_bytes(arr).__repr__()
+        '<b64:VnVsYS...(13)>'
+        """
         return "<b64:%s...(%s)>" % (str(self)[:6], len(self))
 
     @classmethod
