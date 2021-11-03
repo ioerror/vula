@@ -13,13 +13,13 @@ cache:
     - ~/.cache/pipenv
 
 before_script:
+  - PATH=$PATH:~/.local/bin
   - apt update
   - apt install -y python3-gi
   - python -V
   - python -m pip install --user pipx
   - python -m pip install --user pylint
   - python -m pipx ensurepath
-  - PATH=$PATH:~/.local/bin
   - pipx install pipenv
   - pipenv install --dev --skip-lock
 
