@@ -1,0 +1,22 @@
+image: python:3.8.12-slim-bullseye
+
+variables:
+  PIPENV_VERBOSITY: -1
+
+cache:
+  paths:
+    - ~/.cache/pip
+    - ~/.cache/pipenv
+
+before_script:
+  - python -V
+  - python -m pip install --user pipx
+  - python -m pipx ensurepath
+  - PATH=$PATH:~/.local/bin
+  - pipx install pipenv
+  - pipenv install --dev --skip-lock
+
+pytest:
+  stage: test
+  script:
+    - pipenv run pytest
