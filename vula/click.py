@@ -1,6 +1,7 @@
 import os
 import sys
 import click
+import shutil
 import inspect
 from functools import reduce, wraps
 from schema import Optional, Schema
@@ -356,7 +357,7 @@ bold = lambda s: click.style(s, bold=True)
 
 
 def echo_maybepager(s):
-    if s.count("\n") < click.get_terminal_size()[1]:
+    if s.count("\n") < shutil.get_terminal_size()[1]:
         click.echo(s)
     else:
         click.echo_via_pager(s)
