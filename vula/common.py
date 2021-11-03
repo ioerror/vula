@@ -347,6 +347,16 @@ class comma_separated_IPs(object):
         return iter(self._items)
 
     def __getitem__(self, idx):
+        """
+        get item at index
+
+        :param idx: int
+        :return: IPv4Address
+
+        >>> test_list = comma_separated_IPs("127.0.0.2,127.0.0.3,127.0.0.4")
+        >>> test_list.__getitem__(1)
+        IPv4Address('127.0.0.3')
+        """
         return list(self)[idx]
 
     def __repr__(self):
