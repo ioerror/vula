@@ -156,6 +156,19 @@ class ro_dict(dict):
     and because we don't need the feature frozendict provides which we don't
     (hashability). Perhaps in the future we'll decide to use frozendict
     instead.
+
+    >>> ro = ro_dict({'a':1,'b':2,'c':3})
+    >>> ro['a'] = 2
+    Traceback (most recent call last):
+         ...
+    ValueError: Attempt to set key 'a' in read-only dictionary
+
+    >>> ro = ro_dict({'a':1})
+    >>> ro.update({'a':2})
+    Traceback (most recent call last):
+         ...
+    ValueError: Attempt to update read-only dictionary (...)
+
     """
 
     def __setitem__(self, key, value):
