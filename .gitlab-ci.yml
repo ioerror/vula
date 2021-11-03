@@ -13,6 +13,7 @@ cache:
     - ~/.cache/pipenv
 
 before_script:
+  - apt update
   - apt install -y python3-gi
   - python -V
   - python -m pip install --user pipx
