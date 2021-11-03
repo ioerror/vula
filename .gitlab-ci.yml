@@ -15,6 +15,7 @@ cache:
 before_script:
   - python -V
   - python -m pip install --user pipx
+  - python -m pip install --user pylint
   - python -m pipx ensurepath
   - PATH=$PATH:~/.local/bin
   - pipx install pipenv
