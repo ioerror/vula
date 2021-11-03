@@ -454,6 +454,13 @@ class colon_hex_bytes(bytes):
         return ":".join("%x" % byte for byte in self)
 
     def __repr__(self):
+        """
+        Return the canonical string representation of the colon_hex_bytes object.
+
+        >>> hex_bytes = colon_hex_bytes.with_len(3).validate(b'ABC')
+        >>> hex_bytes.__repr__()
+        "'41:42:43'"
+        """
         return repr(str(self))
 
     @classmethod
