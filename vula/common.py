@@ -286,6 +286,13 @@ class yamlrepr(serializable):
 
 class jsonrepr_pp(serializable):
     def __repr__(self):
+        r"""
+        Function to return a json representation of a Serializable in human readable format
+        >>> myObj = serializable(("ab", "cd"))
+        >>> myJson = jsonrepr_pp(myObj)
+        >>> myJson.__repr__()
+        '{\n    "a": "b",\n    "c": "d"\n}'
+        """
         return json.dumps(self._dict(), indent=4)
 
 
