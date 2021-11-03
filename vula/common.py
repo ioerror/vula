@@ -434,6 +434,13 @@ class int_range(constraint):
 
 class colon_hex_bytes(bytes):
     def __str__(self):
+        """
+        Return the hex representation as a string.
+        
+        >>> a = colon_hex_bytes.with_len(3).validate(b'ABC')
+        >>> a.__str__()
+        '41:42:43'
+        """
         return ":".join("%x" % byte for byte in self)
 
     def __repr__(self):
