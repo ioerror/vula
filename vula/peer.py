@@ -23,6 +23,7 @@ from nacl.exceptions import BadSignatureError
 
 from base64 import b64encode
 from schema import Schema, And, Or, Regex, Use, Optional
+from typing import List
 
 import codecs
 from hkdf import Hkdf
