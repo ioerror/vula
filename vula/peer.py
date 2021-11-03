@@ -681,7 +681,7 @@ class PeerCommands(object):
             click.echo(Result.from_yaml(self.organize.peer_addr_del(vk, ip)))
 
     @DualUse.method(short_help="Set arbitrary peer properties")
-    @click.argument('vk', type=str, autocompletion=_ac_get_peer_ids)
+    @click.argument('vk', type=str, shell_complete=_ac_get_peer_ids)
     @click.argument('path', type=str, nargs=-1)
     @click.argument('value', type=str)
     def set(self, vk, path, value):
