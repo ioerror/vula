@@ -120,6 +120,37 @@ class Descriptor(schemattrdict, serializable):
         Parse the *descriptor* string line into a dictionary-like object. Carefully.
 
         This relies on the schema to coerce values into the right types.
+        >>> addrs = "192.168.6.9"
+        >>> c = "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ=="
+        >>> dt = "86400"
+        >>> e = "0"
+        >>> hostname = "alice.local"
+        >>> pk = "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="
+        >>> port = "5354"
+        >>> vf = "1601388653"
+        >>> vk = "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="
+        >>> desc_s = f"addrs={addrs};c={c};dt={dt};e={e};hostname={hostname};pk={pk};port={port};vf={vf};vk={vk}"
+        >>> d = Descriptor.parse(desc_s)
+        >>> type(d)
+        <class 'vula.peer.Descriptor'>
+        >>> d['addrs']
+        <comma_separated_IPs('192.168.6.9')>
+        >>> d['c']
+        <b64:QUFBQU...(64)>
+        >>> d['dt']
+        86400
+        >>> d['e']
+        0
+        >>> d['hostname']
+        'alice.local'
+        >>> d['pk']
+        <b64:QUFBQU...(32)>
+        >>> d['port']
+        5354
+        >>> d['vf']
+        1601388653
+        >>> d['vk']
+        <b64:QUFBQU...(32)>
         """
         try:
             split_desc: List = desc.split(";")
