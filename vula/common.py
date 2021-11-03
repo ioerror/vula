@@ -290,7 +290,15 @@ class jsonrepr_pp(serializable):
 
 
 class jsonrepr(serializable):
+
     def __repr__(self):
+        """
+        Function to return a json representation of a Serializable.
+        >>> mySerializable = serializable(("ab", "cd"))
+        >>> myJsonRepr = jsonrepr(mySerializable)
+        >>> myJsonRepr.__repr__()
+        '{"a": "b", "c": "d"}'
+        """
         return json.dumps(self._dict())
 
 
