@@ -21,6 +21,7 @@ before_script:
   - python -m pip install --user pylint
   - python -m pipx ensurepath
   - pipx install pipenv
+  - pipx install pygobject
   - pipenv install --dev --skip-lock
 
 pylint:
