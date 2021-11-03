@@ -6,11 +6,13 @@ stages:
 
 variables:
   PIPENV_VERBOSITY: -1
+  PIPENV_CACHE_DIR: .cache/pipenv
+  PIP_CACHE_DIR: .cache/pip
 
 cache:
   paths:
-    - ~/.cache/pip
-    - ~/.cache/pipenv
+    - .cache/pip
+    - .cache/pipenv
 
 before_script:
   - PATH=$PATH:~/.local/bin
