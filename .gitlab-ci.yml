@@ -1,7 +1,6 @@
 image: python:3.8.12-slim-bullseye
 
 stages:
-  - Lint
   - Test
 
 variables:
@@ -21,12 +20,6 @@ before_script:
   - python -m pipx ensurepath
   - pipx install pipenv
   - pipenv install --dev --skip-lock
-
-pylint:
-  stage: Lint
-  allow_failure: true
-  script:
-    - pipenv run pylint vula/
 
 pytest:
   stage: Test
