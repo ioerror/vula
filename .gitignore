@@ -148,3 +148,6 @@ paper/comment.cut
 
 # JetBrains IDE
 .idea/
+
+# stampfiles used by podman makefile
+podman/.*-stamp
