@@ -1,7 +1,7 @@
 import os
 import sys
 import pydbus
-from logging import DEBUG, INFO, WARN, Logger, basicConfig, getLogger
+from logging import DEBUG, INFO, WARN, basicConfig, getLogger
 
 import click
 from . import (
