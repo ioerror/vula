@@ -28,5 +28,6 @@ pylint:
 
 pytest:
   stage: Test
+  allow_failure: false
   script:
     - pipenv run pytest
