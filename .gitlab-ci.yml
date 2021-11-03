@@ -1,5 +1,9 @@
 image: python:3.8.12-slim-bullseye
 
+stages:
+  - Lint
+  - Test
+
 variables:
   PIPENV_VERBOSITY: -1
 
@@ -16,7 +20,13 @@ before_script:
   - pipx install pipenv
   - pipenv install --dev --skip-lock
 
+pylint:
+  stage: Lint
+  allow_failure: true
+  script:
+    - pipenv run pylint vula/
+
 pytest:
-  stage: test
+  stage: Test
   script:
     - pipenv run pytest
