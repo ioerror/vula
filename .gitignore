@@ -149,5 +149,8 @@ paper/comment.cut
 # JetBrains IDE
 .idea/
 
+# Visual Studio Code
+.vscode
+
 # stampfiles used by podman makefile
 podman/.*-stamp
