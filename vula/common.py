@@ -501,6 +501,16 @@ class Length(constraint):
 class int_range(constraint):
     @staticmethod
     def constraint(value, min, max):
+        """
+        Checks if a value is within a range (min, max).
+
+        >>> int_range.constraint(10, 5, 20)
+        10
+        >>> int_range.constraint(5, 10, 20)
+        False
+        >>> int_range.constraint(20, 5, 10)
+        False
+        """
         return min <= int(value) <= max and int(value)
 
 
