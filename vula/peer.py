@@ -23,6 +23,7 @@ from nacl.exceptions import BadSignatureError
 
 from base64 import b64encode
 from schema import Schema, And, Or, Regex, Use, Optional
+from typing import List
 
 import codecs
 from hkdf import Hkdf
@@ -116,23 +117,54 @@ class Descriptor(schemattrdict, serializable):
     @classmethod
     def parse(cls, desc: str) -> Descriptor:
         """
-        Parse the *descriptor* line into a dictionary. Carefully.
+        Parse the *descriptor* string line into a dictionary-like object. Carefully.
 
         This relies on the schema to coerce values into the right types.
+        >>> addrs = "192.168.6.9"
+        >>> c = "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ=="
+        >>> dt = "86400"
+        >>> e = "0"
+        >>> hostname = "alice.local"
+        >>> pk = "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="
+        >>> port = "5354"
+        >>> vf = "1601388653"
+        >>> vk = "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="
+        >>> desc_s = f"addrs={addrs};c={c};dt={dt};e={e};hostname={hostname};pk={pk};port={port};vf={vf};vk={vk}"
+        >>> d = Descriptor.parse(desc_s)
+        >>> type(d)
+        <class 'vula.peer.Descriptor'>
+        >>> d['addrs']
+        <comma_separated_IPs('192.168.6.9')>
+        >>> d['c']
+        <b64:QUFBQU...(64)>
+        >>> d['dt']
+        86400
+        >>> d['e']
+        0
+        >>> d['hostname']
+        'alice.local'
+        >>> d['pk']
+        <b64:QUFBQU...(32)>
+        >>> d['port']
+        5354
+        >>> d['vf']
+        1601388653
+        >>> d['vk']
+        <b64:QUFBQU...(32)>
         """
         try:
-            split: List = desc.split(";")
-            desc: dict = dict(
+            split_desc: List = desc.split(";")
+            dir_desc: dict = dict(
                 val.split("=", maxsplit=1)
-                for val in [kv.strip() for kv in split]
+                for val in [kv.strip() for kv in split_desc]
                 if len(val) > 1
             )
-            desc = cls(desc)
+            descriptor: Descriptor = cls(dir_desc)
         except ValueError as error:
             raise
             # log.info("Unable to parse descriptor: %s (%r)", error, descriptor)
             return None
-        return desc
+        return descriptor
 
     def _build_sig_buf(self: Descriptor) -> bytes:
         return " ".join(
