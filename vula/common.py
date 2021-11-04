@@ -147,11 +147,45 @@ class ro_dict(dict):
     """
 
     def __setitem__(self, key, value):
+        """
+        raises a ValueError exception when trying to set a key in a ro_dict
+
+        test adding a non-existing key to ro_dict:
+        >>> test_ro_dict = ro_dict({"key": "value"})
+        >>> test_ro_dict["different_key"] = "other_value"
+        Traceback (most recent call last):
+        ...
+        ValueError: Attempt to set key 'different_key' in read-only dictionary
+
+        test setting an existing key:
+        >>> test_ro_dict = ro_dict({"key": "value"})
+        >>> test_ro_dict["key"] = "other_value"
+        Traceback (most recent call last):
+        ...
+        ValueError: Attempt to set key 'key' in read-only dictionary
+        """
         raise ValueError(
             "Attempt to set key %r in read-only dictionary" % (key,)
         )
 
     def update(self, *a, **kw):
+        """
+        raises a ValueError exception when trying to change a ro_dict using the update() method
+
+        test updating an existing key:
+        >>> test_ro_dict = ro_dict({"key": "value"})
+        >>> test_ro_dict.update({"key": "other_value"})
+        Traceback (most recent call last):
+        ...
+        ValueError: Attempt to update read-only dictionary (*({'key': 'other_value'},), **{})
+
+        test updating a non-existing key:
+        >>> test_ro_dict = ro_dict({"key": "value"})
+        >>> test_ro_dict.update({"different_key": "other_value"})
+        Traceback (most recent call last):
+        ...
+        ValueError: Attempt to update read-only dictionary (*({'different_key': 'other_value'},), **{})
+        """
         raise ValueError(
             "Attempt to update read-only dictionary (*%s, **%s)"
             % (
