@@ -17,8 +17,12 @@ try:
         def run(self):
             res = super(sdist_dsc_with_postinst, self).run()
             print("Installing vula postinst")
-            copy2('misc/python3-vula.postinst', self.dist_dir+'/vula-{}/debian/'.format(version))
+            copy2(
+                'misc/python3-vula.postinst',
+                self.dist_dir + '/vula-{}/debian/'.format(version),
+            )
             return res
+
 
 except ImportError:
     sdist_dsc = None
@@ -103,6 +107,7 @@ if platform.startswith("openbsd"):
 class print_version(hookBuild_ext):
     def run(self):
         print(version)
+
 
 setuptools.setup(
     name="vula",

@@ -120,37 +120,35 @@ class Descriptor(schemattrdict, serializable):
         Parse the *descriptor* string line into a dictionary-like object. Carefully.
 
         This relies on the schema to coerce values into the right types.
-        >>> addrs = "192.168.6.9"
-        >>> c = "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ=="
-        >>> dt = "86400"
-        >>> e = "0"
-        >>> hostname = "alice.local"
-        >>> pk = "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="
-        >>> port = "5354"
-        >>> vf = "1601388653"
-        >>> vk = "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="
-        >>> desc_s = f"addrs={addrs};c={c};dt={dt};e={e};hostname={hostname};pk={pk};port={port};vf={vf};vk={vk}"
-        >>> d = Descriptor.parse(desc_s)
-        >>> type(d)
-        <class 'vula.peer.Descriptor'>
-        >>> d['addrs']
-        <comma_separated_IPs('192.168.6.9')>
-        >>> d['c']
-        <b64:QUFBQU...(64)>
-        >>> d['dt']
-        86400
-        >>> d['e']
-        0
-        >>> d['hostname']
-        'alice.local'
-        >>> d['pk']
-        <b64:QUFBQU...(32)>
-        >>> d['port']
+        >>> d = Descriptor.parse("addrs=192.168.2.106;"
+        ...            "pk=/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg=;"
+        ...            "c=SbS/v8aTX2Ti3E1jp4T7d8lHoW4v5iRcBcdQ6tSv5bzCuYg9h56A4YFjkKv9aFA+A7u0yrqYhTdpuAWuBgL2BQ==;"
+        ...            "hostname=bubu.local;"
+        ...            "port=5354;"
+        ...            "vk=/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg=;"
+        ...            "dt=86400;"
+        ...            "vf=1636045801;"
+        ...            "e=false")
+        >>> d
+        {'r': <comma_separated_Nets('')>, 'addrs': <comma_separated_IPs('192.168.2.106')>, 'pk': <b64:/O6SlK...(32)>, 'c': <b64:SbS/v8...(64)>, 'hostname': 'bubu.local', 'port': 5354, 'vk': <b64:/O6SlK...(32)>, 'dt': 86400, 'vf': 1636045801, 'e': 0}
+        >>> str(d.addrs)
+        '192.168.2.106'
+        >>> str(d.pk)
+        '/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg='
+        >>> str(d.c)
+        'SbS/v8aTX2Ti3E1jp4T7d8lHoW4v5iRcBcdQ6tSv5bzCuYg9h56A4YFjkKv9aFA+A7u0yrqYhTdpuAWuBgL2BQ=='
+        >>> d.hostname
+        'bubu.local'
+        >>> d.port
         5354
-        >>> d['vf']
-        1601388653
-        >>> d['vk']
-        <b64:QUFBQU...(32)>
+        >>> str(d.vk)
+        '/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg='
+        >>> d.dt
+        86400
+        >>> d.vf
+        1636045801
+        >>> d.e
+        0
         """
         try:
             split_desc: List = desc.split(";")
@@ -171,7 +169,6 @@ class Descriptor(schemattrdict, serializable):
             "%s=%s;" % (k, v) for k, v in sorted(self.items()) if k != 's'
         ).encode()
 
-    
     def __str__(self):
         """
         Return the number or IP as a string
@@ -548,12 +545,14 @@ class Peers(yamlrepr, queryable, schemadict):
         else:
             return None
 
+
 def _ac_get_peer_ids(ctx, args, incomplete):
     organize = (
-            ctx.meta.get('Organize', {}).get('magic_instance')
-            or organize_dbus_if_active()
-        )
+        ctx.meta.get('Organize', {}).get('magic_instance')
+        or organize_dbus_if_active()
+    )
     return organize.peer_ids('all')
+
 
 @DualUse.object(
     short_help="View and modify peer information",
