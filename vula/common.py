@@ -446,11 +446,24 @@ class comma_separated_IPs(object):
         return list(self)[idx]
 
     def __repr__(self):
+        """
+        Return the type of the class with his IP
+
+        >>> ip = comma_separated_IPs('192.168.0.1')
+        >>> ip.__repr__()
+        <comma_separated_IPs('192.168.0.1')>
+        """
         return "<%s(%r)>" % (type(self).__name__, self._str)
 
     def __str__(self):
-        return self._str
+        """
+        Return the IP as a string
 
+        >>> ip = comma_separated_IPs('192.168.0.1')
+        >>> ip.__str__()
+        192.168.0.1
+        """
+        return self._str
 
 class comma_separated_Nets(comma_separated_IPs):
     def __init__(self, _str):
