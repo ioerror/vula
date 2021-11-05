@@ -1,6 +1,10 @@
 """
  vula-publish is a program that announces a WireGuard mDNS service as
  informed by Organize over dbus or as controlled by organize in monolith mode.
+
+>>> p = Publish()
+>>> type(p.zeroconfs)
+<class 'dict'>
 """
 
 from logging import Logger, getLogger
@@ -18,7 +22,6 @@ from .constants import (
     _PUBLISH_DBUS_NAME,
 )
 from .common import comma_separated_IPs
-
 
 class Publish(object):
 
