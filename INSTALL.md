@@ -138,6 +138,23 @@ host-networking vula container described in option 3 using Fedora instead of
 Debian by running [`make dist=fedora34
 lan-start`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-start).
 
+## option 5: install from AUR (only for arch based systems)
+
+Same as above only rudimentary testing of the functionality has been done on arch / manjaro.
+
+The current installation process requires packages from [AUR](https://aur.archlinux.org/).
+Currently one of the vula dependencies `python-sibc-git` is also available from AUR.
+Installing packages from AUR is inherently dangerous, always check the PKGBUILD files.
+
+The simplest installation is using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers) like `yay`.
+
+```
+yay -S python-sibc-git python-vula-git
+```
+
+In order to run `vula` commands as user you must be in a group called `sudo`. 
+On arch systems this is not a default group, you must add it manually.
+
 # Running vula
 
 To see the current status:
