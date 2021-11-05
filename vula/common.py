@@ -451,7 +451,7 @@ class comma_separated_IPs(object):
 
         >>> ip = comma_separated_IPs('192.168.0.1')
         >>> ip.__repr__()
-        <comma_separated_IPs('192.168.0.1')>
+        "<comma_separated_IPs('192.168.0.1')>"
         """
         return "<%s(%r)>" % (type(self).__name__, self._str)
 
@@ -461,7 +461,7 @@ class comma_separated_IPs(object):
 
         >>> ip = comma_separated_IPs('192.168.0.1')
         >>> ip.__str__()
-        192.168.0.1
+        '192.168.0.1'
         """
         return self._str
 
