@@ -35,13 +35,6 @@ class Sys(object):
         self._stop_monitor = False
 
     def start_monitor(self):
-        """
-        Starts the monitor
-
-        >>> s = Sys(None)
-        >>> s.start_monitor() is None
-        True
-        """
         self._stop_monitor = False
         if self._monitor_thread is None:
             self._monitor_thread = threading.Thread(
@@ -94,6 +87,7 @@ class Sys(object):
         ip.close()
 
     def _get_system_state(self):
+
         "WIP"
 
         addrs = self.ipr.get_addr()
@@ -196,10 +190,10 @@ class Sys(object):
             existing_rule = [
                 rule
                 for rule in self.ipr.get_rules(family=family)
-                if dict(rule['attrs'])['FRA_TABLE'] == routing_table and
-                dict(rule['attrs'])['FRA_FWMARK'] == mark and
-                dict(rule['attrs'])['FRA_PRIORITY'] == priority and
-                rule['header']['flags'] == not_flag
+                if dict(rule['attrs'])['FRA_TABLE'] == routing_table
+                and dict(rule['attrs'])['FRA_FWMARK'] == mark
+                and dict(rule['attrs'])['FRA_PRIORITY'] == priority
+                and rule['header']['flags'] == not_flag
             ]
             if existing_rule:
                 self.log.debug(
@@ -281,10 +275,10 @@ class Sys(object):
                 scope=r['scope'],
             )
             for r in current_routes
-            if 'dst' in r and
-            (dests is None or r['dst'] in dests) and
-            (table is None or r['attrs']['RTA_TABLE'] == table) and
-            (dev is None or r['attrs']['RTA_OIF'] == oif)
+            if 'dst' in r
+            and (dests is None or r['dst'] in dests)
+            and (table is None or r['attrs']['RTA_TABLE'] == table)
+            and (dev is None or r['attrs']['RTA_OIF'] == oif)
         ]
         return res
 
@@ -349,9 +343,9 @@ class Sys(object):
             default_routes = [
                 r
                 for r in current_routes
-                if r['attrs'].get('RTA_TABLE') == _LINUX_MAIN_ROUTING_TABLE and
-                r['attrs'].get('RTA_DST') in ('0.0.0.0', '128.0.0.0') and
-                r['attrs'].get('RTA_DST')
+                if r['attrs'].get('RTA_TABLE') == _LINUX_MAIN_ROUTING_TABLE
+                and r['attrs'].get('RTA_DST') in ('0.0.0.0', '128.0.0.0')
+                and r['attrs'].get('RTA_DST')
             ]
             for route in default_routes:
                 dst = route['attrs']['RTA_DST'] + "/" + str(route['dst_len'])
