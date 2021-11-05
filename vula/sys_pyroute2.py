@@ -35,13 +35,6 @@ class Sys(object):
         self._stop_monitor = False
 
     def start_monitor(self):
-        """
-        Starts the monitor
-
-        >>> s = Sys(None)
-        >>> s.start_monitor() is None
-        True
-        """
         self._stop_monitor = False
         if self._monitor_thread is None:
             self._monitor_thread = threading.Thread(
@@ -50,6 +43,13 @@ class Sys(object):
             self._monitor_thread.start()
 
     def get_stats(self):
+        """
+        Get the statistics
+
+        >>> s = Sys(None)
+        >>> type(s.get_stats())
+        <class 'dict'>
+        """
         self.wgi.query()
         stats = {peer.public_key: peer['stats'] for peer in self.wgi.peers}
         return stats
