@@ -250,6 +250,14 @@ class Peer(schemattrdict):
 
         It is either the petname, or the last name announced, or, if the last
         name announced is disabled, another enabled name.
+        >>> desc_string = f"addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M="
+        >>> descriptor = Descriptor.parse(desc_string)
+        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,verified=False,nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name
+        'george'
+        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name
+        'george.local'
+        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,nicknames={descriptor.hostname: False, "schnubbi": True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name
+        'schnubbi'
         """
         latest = self.descriptor.hostname
         return self.get('petname') or (
