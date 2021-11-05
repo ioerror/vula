@@ -113,7 +113,6 @@ class Debuggable(OrderedGroup):
                 raise ex
 
     def get_command(self, ctx, command):
-
         if command in self.commands:
             return super(Debuggable, self).get_command(ctx, command)
 
