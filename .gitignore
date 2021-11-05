@@ -154,3 +154,10 @@ paper/comment.cut
 
 # stampfiles used by podman makefile
 podman/.*-stamp
+
+# macOS generated files
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+*.DS_Store
