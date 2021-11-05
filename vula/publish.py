@@ -23,6 +23,7 @@ from .constants import (
 )
 from .common import comma_separated_IPs
 
+
 class Publish(object):
 
     dbus = '''

@@ -355,7 +355,6 @@ class jsonrepr_pp(serializable):
 
 
 class jsonrepr(serializable):
-
     def __repr__(self):
         """
         Function to return a json representation of a Serializable.
@@ -465,6 +464,7 @@ class comma_separated_IPs(object):
         """
         return self._str
 
+
 class comma_separated_Nets(comma_separated_IPs):
     def __init__(self, _str):
         self._str = str(_str)
@@ -497,6 +497,7 @@ class Length(constraint):
     """
     Constraint to check if a string length is equal to, min or max a given value.
     """
+
     @staticmethod
     def constraint(value, length=None, min=None, max=None):
         """
@@ -555,7 +556,7 @@ class colon_hex_bytes(bytes):
     def __str__(self):
         """
         Return the hex representation as a string.
-        
+
         >>> a = colon_hex_bytes.with_len(3).validate(b'ABC')
         >>> a.__str__()
         '41:42:43'
