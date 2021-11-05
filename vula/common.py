@@ -227,6 +227,30 @@ def raw(value):
     This tries to return the original unmodified object whenever possible, to
     avoid precluding the possibility of having automatic YAML object references
     when a sub-object occurs multiple times within a parent object.
+
+    >>> raw(3)
+    3
+    >>> raw("vula")
+    'vula'
+    >>> raw(True)
+    True
+    >>> raw(2.8)
+    2.8
+
+    >>> intBool = IntBool(1)
+    >>> raw(intBool)
+    True
+
+    >>> raw(["one", "two", "three"])
+    ['one', 'two', 'three']
+    >>> raw(("one", "two", "three"))
+    ['one', 'two', 'three']
+    >>> sorted(raw({"one", "two", "three"}))
+    ['one', 'three', 'two']
+
+    >>> raw({"number" : 1, "letter" : "a"})
+    {'number': 1, 'letter': 'a'}
+
     """
     if type(value) in (int, str, bool, float):
         return value
