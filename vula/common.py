@@ -3,20 +3,14 @@
 """
 from __future__ import annotations
 import os
-import sys
-import inspect
-import codecs
 import pdb
 from logging import Logger, getLogger
 from typing import Any, Dict, Optional
-from functools import reduce
 from schema import (
     Schema,
     And,
     Use,
-    Optional as Optional_,
     Or,
-    Regex,
     SchemaError,
 )
 from base64 import b64decode, b64encode
@@ -24,17 +18,13 @@ import yaml
 import json
 import copy
 from ipaddress import (
-    IPv4Network,
-    IPv4Address,
-    IPv6Address,
-    IPv6Network,
     ip_address,
     ip_network,
 )
 from pathlib import Path
 import pydbus
 import click
-from .click import DualUse, red, green, yellow, bold, Exit
+from .click import DualUse, Exit
 from .constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
 
 try:
