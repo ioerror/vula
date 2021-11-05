@@ -27,3 +27,15 @@ pytest:
   allow_failure: false
   script:
     - pipenv run pytest
+
+flake8-vula:
+  stage: Test
+  allow_failure: true # TODO set to false once code is clean enough
+  script:
+    - pipenv run flake8 vula/
+
+flake8-test:
+  stage: Test
+  allow_failure: true # TODO set to false once code is clean enough
+  script:
+    - pipenv run flake8 test/
