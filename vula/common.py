@@ -456,11 +456,14 @@ class comma_separated_IPs(object):
 
     def __str__(self):
         """
-        Return the IP as a string
+        Return the comma separated IP addresses as a string
 
         >>> ip = comma_separated_IPs('192.168.0.1')
         >>> ip.__str__()
         '192.168.0.1'
+        >>> ip_multiple = comma_separated_IPs('192.168.29.32,127.0.0.1,149.132.22.70')
+        >>> ip_multiple.__str__()
+        '192.168.29.32,127.0.0.1,149.132.22.70'
         """
         return self._str
 
