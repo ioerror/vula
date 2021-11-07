@@ -876,9 +876,12 @@ class chunkable_values(dict):
     def unchunk(self):
         res = {}
         for k, v in list(sorted(self.items())):
+            rk = k[:-2]
             try:
-                rk, c = k[:-2], int(k[-2:])
-            except Exception as ex:
+                int(k[-2:])
+            except ValueError:
+                # Expects a ValueError: invalid literal for int() ...
+                # if the last two digits are not a number it is not a chunked key
                 res[k] = v
                 continue
             res[rk] = res.get(rk, '') + v
