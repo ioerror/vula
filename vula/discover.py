@@ -54,25 +54,21 @@ class WireGuardServiceListener(ServiceListener):
         self.log: Logger = getLogger()
         self.callback = callback
 
-    # pylint: disable=R0201
-    # disable=no-self-use
     def remove_service(
         self, zeroconf: Zeroconf, s_type: str, name: str
     ) -> None:
         """
         *remove_service* does nothing.
         """
-        log: Logger = getLogger()
-        log.debug("remove_service called: %s, %s, %s", zeroconf, s_type, name)
+        self.log.debug(
+            "remove_service called: %s, %s, %s", zeroconf, s_type, name
+        )
 
-    # pylint: disable=R0201
-    # disable=no-self-use
     def add_service(self, zeroconf: Zeroconf, s_type: str, name: str) -> None:
         """
         When zeroconf discovers a new WireGuard service it calls *add_service*
         which produces a peer descriptor on *stdout*.
         """
-        log: Logger = getLogger()
         # Typing note:
         # 'Any' works here and while 'Optional[ServiceInfo]' should, it does
         # not unless mypy is called with --no-strict-optional like so:
