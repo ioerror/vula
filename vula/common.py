@@ -132,7 +132,10 @@ class attrdict(dict):
     def __setattr__(self, key, value):
         if key in self:
             raise ValueError(
-                "Programmer error: attempt to set an attribute (%s=%r) of an instance of %r (which is an attrdict, which provides read-only access to keys through the attribute interface). Attributes which are dictionary keys are not allowed to be set through the attrdict attribute interface."
+                "Programmer error: attempt to set an attribute (%s=%r) of an instance of %r ("
+                "which is an attrdict, which provides read-only access to keys through the "
+                "attribute interface). Attributes which are dictionary keys are not allowed to be "
+                "set through the attrdict attribute interface. "
                 % (
                     key,
                     value,
@@ -209,7 +212,8 @@ class ro_dict(dict):
         >>> test_ro_dict.update({"different_key": "other_value"})
         Traceback (most recent call last):
         ...
-        ValueError: Attempt to update read-only dictionary (*({'different_key': 'other_value'},), **{})
+        ValueError: Attempt to update read-only dictionary \
+(*({'different_key': 'other_value'},), **{})
         """
         raise ValueError(
             "Attempt to update read-only dictionary (*%s, **%s)"
@@ -601,8 +605,8 @@ class colon_hex_bytes(bytes):
                 Use(cls),
             ),
             And(bytes, Length(length), Use(cls)),
-            error="{!r} is not %s bytes or a %s-char colon-separated hex string representing %s bytes"
-            % (length, str_len, length),
+            error=f"{{!r}} is not {length} bytes or a {str_len}-char colon-separated hex string "
+            f"representing {length} bytes",
         )
 
 
@@ -664,7 +668,8 @@ class b64_bytes(bytes):
         >>> assert type(e) is schema.SchemaError
         >>> msg = "'123' is not 10 bytes or a 16-char base64 string which decodes to 10 bytes"
         >>> if pkgv.parse(schema.__version__) < pkgv.parse('0.7.3'):
-        ...     msg += "\\n{!r} is not 10 bytes or a 16-char base64 string which decodes to 10 bytes"
+        ...     msg += "\\n{!r} is not 10 bytes or a 16-char "
+        ...     msg += "base64 string which decodes to 10 bytes"
         >>> assert e.args == (msg,), (e.args, msg)
 
         """
@@ -684,7 +689,7 @@ class b64_bytes(bytes):
             ),
             error="{!r} is not %s bytes or a %s-char base64 string which decodes to %s bytes"
             % (length, b64_length, length),
-            # name = '%s bytes base64-encoded' % (length,), # when we upgrade to the newer schema lib
+            # name = '%s bytes base64-encoded' % (length,), #when we upgrade to the newer schema lib
         )
 
 
@@ -828,7 +833,8 @@ class chunkable_values(dict):
 
 def addrs_in_subnets(addrs, subnets):
     """
-    >>> current_subnets={'10.0.0.0/24': ['10.0.0.9', '10.0.0.51','10.0.0.17'], '10.0.1.0/24': ['10.0.1.22', '10.0.1.73'], '10.0.5.0/24': ['10.0.5.21', '10.0.5.63']}
+    >>> current_subnets={'10.0.0.0/24': ['10.0.0.9', '10.0.0.51','10.0.0.17'], '10.0.1.0/24':
+    ... ['10.0.1.22', '10.0.1.73'], '10.0.5.0/24': ['10.0.5.21', '10.0.5.63']}
     >>> addrs = ['10.0.0.0/24','10.0.14.0/24', '10.0.5.0/24']
     >>> addrs_in_subnets(addrs,current_subnets)
     ['10.0.0.0/24', '10.0.5.0/24']

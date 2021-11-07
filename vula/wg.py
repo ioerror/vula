@@ -559,7 +559,10 @@ class wg(object):
         """
         Change the current configuration, add peers, remove peers, or change peers.
 
-        Usage: wg set <interface> [listen-port <port>] [fwmark <mark>] [private-key <base64 private key>] [peer <base64 public key> [remove] [preshared-key <base64 preshared key>] [endpoint <ip>:<port>] [persistent-keepalive <interval seconds>] [allowed-ips <ip1>/<cidr1>[,<ip2>/<cidr2>]...] ]...
+        Usage: wg set <interface> [listen-port <port>] [fwmark <mark>] [private-key <base64
+        private key>] [peer <base64 public key> [remove] [preshared-key <base64 preshared key>] [
+        endpoint <ip>:<port>] [persistent-keepalive <interval seconds>] [allowed-ips
+        <ip1>/<cidr1>[,<ip2>/<cidr2>]...] ]...
 
         This is intended to behave very similarly to the normal wg tool, except
         it takes private keys on the commandline (and does not yet support

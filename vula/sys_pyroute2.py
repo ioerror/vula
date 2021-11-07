@@ -331,7 +331,8 @@ class Sys(object):
                         'del', table=routing_table, dst=str(dst), scope=scope
                     )
                 if scope in SCOPES:
-                    # this is strictly cosmetic; the printed "ip route" command is runnable with the scope as an integer too
+                    # this is strictly cosmetic
+                    # the printed "ip route" command is runnable with the scope as an integer too
                     scope = SCOPES[scope]
                 res.append(
                     "ip route del {dst} table {table} scope {scope}".format(
@@ -359,7 +360,8 @@ class Sys(object):
                         scope=scope,
                     )
                 if scope in SCOPES:
-                    # this is strictly cosmetic; the printed "ip route" command is runnable with the scope as an integer too
+                    # this is strictly cosmetic
+                    # the printed "ip route" command is runnable with the scope as an integer too
                     scope = SCOPES[scope]
                 res.append(
                     "ip route del {dst} table {table} scope {scope}".format(
@@ -402,7 +404,8 @@ class Sys(object):
                         # doesn't belong here at all; will refactor
                         # this into system state soon.
                 res.append(
-                    f"ip route add {dest} dev {self.wg_name} proto static scope link%s table {table}"
+                    f"ip route add {dest} dev {self.wg_name} proto "
+                    f"static scope link%s table {table}"
                     % (f" src {src}" if src else "")
                 )
                 if not dryrun:

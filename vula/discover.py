@@ -237,7 +237,8 @@ class Discover(object):
     #    "-i",
     "--interface",
     type=str,
-    help="bind to the primary IP address for the given interface, automatically choosing which IP to announce",
+    help="bind to the primary IP address for the given interface, automatically choosing which IP "
+    "to announce",
 )
 def main(**kwargs):
     Discover.daemon(**kwargs)
