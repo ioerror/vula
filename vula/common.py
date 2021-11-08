@@ -560,8 +560,19 @@ class int_range(constraint):
     @staticmethod
     def constraint(value, min, max):
         """
-        Checks if a value is within a range (min, max).
+        Validates value, which must be an integer between min and max.
+        Returns the value if constraints are met, false otherwise.
 
+        >>> int_range.constraint(5, min = 2, max = 10)
+        5
+        >>> int_range.constraint(5, min = 7, max = 10)
+        False
+        >>> int_range.constraint(5, min = 2, max = 4)
+        False
+        >>> int_range.constraint("abc", min = 2, max = 10)
+        Traceback (most recent call last):
+        ...
+        ValueError: invalid literal for int() with base 10: 'abc'
         >>> int_range.constraint(10, 5, 20)
         10
         >>> int_range.constraint(5, 10, 20)
