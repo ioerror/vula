@@ -30,6 +30,14 @@ pytest:
   script:
     - pytest
 
+pytest-coverage:
+  stage: Test
+  script:
+    - make pytest-coverage
+  artifacts:
+    reports:
+      cobertura: coverage.xml
+
 flake8-vula:
   stage: Test
   allow_failure: true # TODO set to false once code is clean enough

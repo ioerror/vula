@@ -25,6 +25,9 @@ rpm: ${RPM_NAME}
 
 ${RPM_NAME}: vula vula/*py configs configs/* configs/*/* setup.py
 	python3 setup.py --command-packages=stdeb.command bdist_rpm
+.PHONY: pytest-coverage
+pytest-coverage:
+	pipenv run pytest --cov --cov-report xml --cov-report html
 
 .PHONY: clean
 clean:
