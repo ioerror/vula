@@ -4,6 +4,7 @@ import click
 import shutil
 import inspect
 from functools import reduce, wraps
+import packaging.version as pkgv
 from schema import Optional, Schema
 from click.exceptions import Exit
 
@@ -365,3 +366,14 @@ def echo_maybepager(s):
         click.echo(s)
     else:
         click.echo_via_pager(s)
+
+def shell_complete_helper(fn):
+    """
+    This is a helper to maintain compatibility with both click 7.x and 8.x.
+
+    We could pass the old "autocompletion" argument to click 7.x but instead we
+    pass nothing because autocompletion didn't work there anyway.
+    """
+    if pkgv.parse(click.__version__) >= pkgv.parse('8.0.0'):
+        return dict(shell_complete=fn)
+    return {}
