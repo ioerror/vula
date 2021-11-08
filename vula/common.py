@@ -629,7 +629,7 @@ class b64_bytes(bytes):
     def __str__(self):
         """
         Function to return a string representation of entered bytes.
-        
+
         >>> string = "Test"
         >>> arr = bytearray(string, 'utf-8')
         >>> test = b64_bytes(arr)

@@ -17,35 +17,40 @@ cache:
 before_script:
   - PATH=$PATH:~/.local/bin
   - apt update
-  - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev
+  - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev make
   - python -m pip install --user pipx
   - python -m pipx ensurepath
   - pipx install pipenv
   - pipenv install --dev --skip-lock
-  - . $(pipenv --venv)/bin/activate
 
 pytest:
   stage: Test
   allow_failure: false
   script:
-    - pytest
+    - make pytest
+
+check-format:
+  stage: Test
+  script:
+    - make check-format
 
 flake8-vula:
   stage: Test
   allow_failure: true # TODO set to false once code is clean enough
   script:
-    - flake8 vula/
+    - make FOLDER=vula flake8
 
 flake8-test:
   stage: Test
   allow_failure: true # TODO set to false once code is clean enough
   script:
-    - flake8 test/
+    - make FOLDER=test flake8
 
 build:
   stage: Build
   allow_failure: false
   script:
+    - . $(pipenv --venv)/bin/activate
     - apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot git make python3-setuptools
     - make deb
     - dpkg -I deb_dist/*.deb
@@ -53,3 +58,4 @@ build:
     name: deb
     paths:
       - deb_dist/*.deb
+
