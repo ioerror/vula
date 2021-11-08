@@ -323,15 +323,6 @@ class yamlfile(serializable):
 
     @classmethod
     def from_yaml_file(cls, path):
-        """
-        >>> from os import getcwd
-        >>> yamlfile.from_yaml_file(getcwd()+'/.gitlab-ci.yml')
-        {'image': 'python:3.8.12-slim-bullseye', 'stages': ['Test', 'Build'], 'variables': {'PIPENV_VERBOSITY': -1, 'PIPENV_CACHE_DIR': '.cache/pipenv', 'PIP_CACHE_DIR': '.cache/pip'}, 'cache': {'paths': ['.cache/pip', '.cache/pipenv']}, 'before_script': ['PATH=$PATH:~/.local/bin', 'apt update', 'apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev', 'python -m pip install --user pipx', 'python -m pipx ensurepath', 'pipx install pipenv', 'pipenv install --dev --skip-lock', '. $(pipenv --venv)/bin/activate'], 'pytest': {'stage': 'Test', 'allow_failure': False, 'script': ['pytest']}, 'flake8-vula': {'stage': 'Test', 'allow_failure': True, 'script': ['flake8 vula/']}, 'flake8-test': {'stage': 'Test', 'allow_failure': True, 'script': ['flake8 test/']}, 'build': {'stage': 'Build', 'allow_failure': False, 'script': ['apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot git make python3-setuptools', 'make deb', 'dpkg -I deb_dist/*.deb'], 'artifacts': {'name': 'deb', 'paths': ['deb_dist/*.deb']}}}
-        >>> yamlfile.from_yaml_file("/yaml_file.yaml")
-        Traceback (most recent call last):
-        ...
-        FileNotFoundError: [Errno 2] No such file or directory: '/yaml_file.yaml'
-        """
         with click.open_file(path, mode='r', encoding='utf-8') as fh:
             return cls(yaml.safe_load(fh))
 
@@ -645,7 +636,7 @@ class b64_bytes(bytes):
     def __str__(self):
         """
         Function to return a string representation of entered bytes.
-        
+
         >>> string = "Test"
         >>> arr = bytearray(string, 'utf-8')
         >>> test = b64_bytes(arr)
