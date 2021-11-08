@@ -874,6 +874,11 @@ class chunkable_values(dict):
         return type(self)(res)
 
     def unchunk(self):
+        """Combines chunks of this dictionary.
+
+        >>> chunkable_values({'a01':'23','a00':'01','a02':'45'}).unchunk()
+        {'a': '012345'}
+        """
         res = {}
         for k, v in list(sorted(self.items())):
             rk = k[:-2]
