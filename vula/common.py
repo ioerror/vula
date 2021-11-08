@@ -335,6 +335,7 @@ class yamlrepr(serializable):
     >>> myYaml.__repr__()
     'a: b\nc: d\n'
     """
+
     def __repr__(self):
         return yaml.safe_dump(self._dict(), default_style='', sort_keys=False)
 
