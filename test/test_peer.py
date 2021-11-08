@@ -1,10 +1,7 @@
 import unittest
-import copy
 import schema
-import click
 from ipaddress import IPv6Address, IPv4Address
 from base64 import b64encode, b64decode
-import time
 
 from vula.common import yamlrepr
 from vula.peer import Descriptor
@@ -71,16 +68,18 @@ class TestDescriptor(unittest.TestCase):
             """\
 r: ''
 addrs: 10.215.167.50
-c: KNDxDMgmkH8Poa7TJBlIZrvTnQBN5w10gYlyY5MfvkA7Eu12IhpheCdJzWIwap4PE5Ryv3PzvU4ikrEY6oXJNw==
+c: KNDxDMgmkH8Poa7TJBlIZrvTnQBN5w10gYlyY5Mfvk"""
+            + """A7Eu12IhpheCdJzWIwap4PE5Ryv3PzvU4ikrEY6oXJNw==
 dt: 86400
 e: false
 hostname: wg-mdns-test1.local.
 pk: y9bQa4DAj4NT5lh8PffyAbXNbYCkxczMKLk/rtP4CVY=
 port: 5354
-s: YJqLUPrI8G/IfA1wIbW2z5p0EtYcDFh4gxCjP5czMK2wiGRgZdeBibs6shDoRusfHtSy+4m/Z9Jfhul+amQYAQ==
+s: YJqLUPrI8G/IfA1wIbW2z5p0EtYcDFh4gxCjP5czMK"""
+            + """2wiGRgZdeBibs6shDoRusfHtSy+4m/Z9Jfhul+amQYAQ==
 vf: 1605737957
 vk: XGQErb1NJmg4dMLZK7hXfhRahgZ6ix/oP3+BTq2+Dy8=
-""",
+""",  # noqa: E261
         )
 
     def test_verify_signature(self):
@@ -94,14 +93,18 @@ vk: XGQErb1NJmg4dMLZK7hXfhRahgZ6ix/oP3+BTq2+Dy8=
 
 class TestPeerShow(unittest.TestCase):
     """
-    This is a doctest-style test so that we can use click.echo to strip the ansi escapes.
+    This is a doctest-style test so that we can use click.echo to strip the
+    ansi escapes.
 
     The .replace() in the test is to handle the condition where the clock rolls
     over to the next second while the test is running.
 
+    >>> import click
+    >>> import time
     >>> peer = desc(
-    ... hostname='alice.local', vk=mkk('Alice'), vf=time.time(), addrs='10.0.0.1'
-    ... ).make_peer(pinned=True, _allow_unsigned_descriptor=True)
+    ... hostname='alice.local', vk=mkk('Alice'), vf=time.time(),
+    ... addrs='10.0.0.1').make_peer(pinned=True,
+    ... _allow_unsigned_descriptor=True)
 
     >>> click.echo(peer.show().replace('1 ago', '0 ago'))
     peer: alice.local
@@ -113,7 +116,8 @@ class TestPeerShow(unittest.TestCase):
       latest signature: 0:00:00 ago
       latest handshake: none
       wg pubkey: pubkey////////////////////////////////////8=
-    >>> stats = dict(rx_bytes=1, tx_bytes=50_500_000_000, latest_handshake=int(time.time()))
+    >>> stats = dict(rx_bytes=1, tx_bytes=50_500_000_000,
+    ... latest_handshake=int(time.time()))
     >>> click.echo(peer.show(stats).replace('1 ago', '0 ago'))
     peer: alice.local
       id: Alice/////////////////////////////////////8=
@@ -128,7 +132,6 @@ class TestPeerShow(unittest.TestCase):
 
 
 # fmt: off
- 
 class TestDescriptor_qrcode(unittest.TestCase):
     """
     >>> print(

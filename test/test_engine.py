@@ -1,11 +1,8 @@
 import unittest
-import copy
 import schema
-from ipaddress import IPv6Address, IPv4Address
-from base64 import b64encode
 
 from vula.organize import OrganizeState, SystemState
-from vula.common import jsonrepr, yamlrepr, raw, bp
+from vula.common import raw
 
 from .test_peer import desc, mkk
 
@@ -15,7 +12,7 @@ class TestOrganizeEngine(unittest.TestCase):
         self.maxDiff = 20000
         self.state = OrganizeState()
         # self.state.debug_log = lambda s: print(s)
-        res = self._assert_res_no_error(
+        _ = self._assert_res_no_error(
             self.state.event_NEW_SYSTEM_STATE(
                 SystemState(current_subnets={'10.0.0.0/24': ['10.0.0.9']})
             )
@@ -32,7 +29,8 @@ class TestOrganizeEngine(unittest.TestCase):
     def _assert_res_actions(self, result, actions):
         if actions != [a[0] for a in result.actions]:
             raise Exception(
-                "Unexpected result: \n\nExpected: %r\n\nGot: %r\n\nFull result:\n%r"
+                "Unexpected result: \n\nExpected: %r\n\n"
+                "Got: %r\n\nFull result:\n%r"
                 % (
                     actions,
                     ["%s (%s)" % (a[0], a[1]) for a in result.actions],
@@ -233,7 +231,7 @@ class TestOrganizeEngine(unittest.TestCase):
 
     def test_name_change_and_disable(self):
         s = self.state
-        res = self.state.event_USER_EDIT('SET', 'prefs.pin_new_peers', True)
+        _ = self.state.event_USER_EDIT('SET', 'prefs.pin_new_peers', True)
         self.assertEqual(s.prefs.pin_new_peers, True)
         self._proc_desc(
             hostname='alice.local', vk=mkk('alice'), vf=1, addrs='10.0.0.1'
@@ -285,7 +283,7 @@ class TestOrganizeEngine(unittest.TestCase):
         )
 
     def test_ignore_replay_pinned(self):
-        res = self.state.event_USER_EDIT('SET', 'prefs.pin_new_peers', True)
+        _ = self.state.event_USER_EDIT('SET', 'prefs.pin_new_peers', True)
         self._proc_desc(
             hostname='alice.local', vk=mkk(1), vf=2, addrs='10.0.0.2'
         )
@@ -344,7 +342,8 @@ class TestOrganizeEngine(unittest.TestCase):
             self.state._dict(),
         )
 
-        # create another invalid state, where two peers are both set as the gateway
+        # create another invalid state,
+        # where two peers are both set as the gateway
         sd['peers'][peers.with_hostname('alice.local').id][
             'use_as_gateway'
         ] = True
@@ -362,7 +361,7 @@ class TestOrganizeEngine(unittest.TestCase):
 
     def test_remove_nonlocal_unpinned(self):
         self._add_alice_ok()
-        res = self._assert_res_actions(
+        _ = self._assert_res_actions(
             self.state.event_NEW_SYSTEM_STATE(
                 SystemState(self.state.system_state, current_subnets={})
             ),
@@ -378,7 +377,8 @@ class TestOrganizeEngine(unittest.TestCase):
             'SET', ['peers', mkk('bobvk'), 'petname'], 'alice.local'
         )
 
-        import schema, packaging.version as pkgv
+        import schema
+        import packaging.version as pkgv
 
         if pkgv.parse(schema.__version__) < pkgv.parse('0.7.3'):
             self.assertEqual(
