@@ -538,6 +538,10 @@ class int_range(constraint):
         False
         >>> int_range.constraint(20, 5, 10)
         False
+        >>> int_range.constraint(5, 5, 5)
+        5
+        >>> int_range.constraint(5, 6, 4)
+        False
         """
         return min <= int(value) <= max and int(value)
 
