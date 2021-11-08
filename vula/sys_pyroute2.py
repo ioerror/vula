@@ -43,6 +43,13 @@ class Sys(object):
             self._monitor_thread.start()
 
     def get_stats(self):
+        """
+        Get the statistics
+
+        >>> s = Sys(None)
+        >>> type(s.get_stats())
+        <class 'dict'>
+        """
         self.wgi.query()
         stats = {peer.public_key: peer['stats'] for peer in self.wgi.peers}
         return stats
