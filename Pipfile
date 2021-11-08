@@ -23,10 +23,13 @@ black = "*"
 isort = "*"
 flake8 = "*"
 mypy = "*"
+packaging = "*"
 pylint = "*"
 pytest = "*"
 pytest-cov = "*"
 pygobject-stubs= "*"
+setuptools = "*"
+stdeb = "*"
 
 [requires]
 python_version = "3"
