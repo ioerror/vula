@@ -48,13 +48,14 @@ def _wg_interface_list():
     >>> type(_wg_interface_list())
     <class 'list'>
     """
-    links = [dict(link['attrs']) for link in IPRoute().get_links()]
-    return [
-        link['IFLA_IFNAME']
-        for link in links
-        if link.get('IFLA_LINKINFO', {}).get('attrs', [[0, 0]])[0][1]
-        == "wireguard"
-    ]
+    interfaces = []
+    links = IPRoute().get_links()
+    for link in links:
+        linkinfo = link.get_attr('IFLA_LINKINFO')
+        if linkinfo is not None:
+            if linkinfo.get_attr('IFLA_INFO_KIND') == "wireguard":
+                interfaces.append(link.get_attr('IFLA_IFNAME'))
+    return interfaces
 
 
 class PeerConfig(schemattrdict, serializable):
@@ -89,7 +90,7 @@ class PeerConfig(schemattrdict, serializable):
         (plus the extra key 'stats' with two keys)
 
         >>> p = PeerConfig.from_netlink({'attrs': dict(
-        ...     public_key=b64encode(b'A'*32), 
+        ...     public_key=b64encode(b'A'*32),
         ...     preshared_key=b64encode(b'A'*32),
         ...     persistent_keepalive_interval=666,
         ...     rx_bytes=2,
