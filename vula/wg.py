@@ -41,11 +41,12 @@ from .common import bp
 
 
 def _wg_interface_list():
-
     """
     This returns a list of the current wireguard interfaces' names.
 
     There must be a better way to do this!
+    >>> type(_wg_interface_list())
+    <class 'list'>
     """
     links = [dict(link['attrs']) for link in IPRoute().get_links()]
     return [
