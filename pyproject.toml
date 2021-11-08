@@ -5,7 +5,7 @@ requires= ["click", "cryptography", "hkdf", "nacl", "pydbus", "pyroute2", "qrcod
 line-length = 79
 skip-string-normalization = true
 target-version = ['py38']
-include = 'vula/\.pyi?$'
+include = '\.pyi?$'
 exclude = '''
 /(
     \.eggs
