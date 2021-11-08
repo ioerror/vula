@@ -337,6 +337,13 @@ class yamlfile(serializable):
 
 
 class yamlrepr(serializable):
+    r"""
+    Function to return a YAML representation of a Serializable in human readable format
+    >>> myObj = serializable(("ab", "cd"))
+    >>> myYaml = yamlrepr(myObj)
+    >>> myYaml.__repr__()
+    'a: b\nc: d\n'
+    """
     def __repr__(self):
         return yaml.safe_dump(self._dict(), default_style='', sort_keys=False)
 
