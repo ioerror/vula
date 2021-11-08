@@ -54,7 +54,10 @@ class Sys(object):
         stats = {peer.public_key: peer['stats'] for peer in self.wgi.peers}
         return stats
 
-    def stop_monitor(self):
+    def stop_monitor(self) -> None:
+        """
+        Stops the monitor
+        """
         self._stop_monitor = True
 
     def _monitor(self):
