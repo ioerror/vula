@@ -72,7 +72,7 @@ pytest:
 dev-deps-apt:
 	export PATH=$$PATH:~/.local/bin
 	apt update
-	apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-dev
+	apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-dev git
 	python -m pip install --user pipx
 	python -m pip install --user pylint
 	python -m pipx ensurepath
