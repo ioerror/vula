@@ -19,5 +19,7 @@ class Testyamlfile:
         with patch("builtins.open", m):
             with patch("io.open", m):
                 print(vula.common.yamlfile)
-                yaml = vula.common.yamlfile.from_yaml_file("some_yaml_file.yml")
+                yaml = vula.common.yamlfile.from_yaml_file(
+                    "some_yaml_file.yml"
+                )
                 assert yaml == {"bla": {"foo": 2}}

@@ -367,6 +367,7 @@ def echo_maybepager(s):
     else:
         click.echo_via_pager(s)
 
+
 def shell_complete_helper(fn):
     """
     This is a helper to maintain compatibility with both click 7.x and 8.x.
