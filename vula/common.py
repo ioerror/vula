@@ -456,6 +456,21 @@ class comma_separated_IPs(object):
 
 
 class comma_separated_Nets(comma_separated_IPs):
+    """
+    Instantiate a list of networks
+
+    >>> comma_separated_Nets("blabla")
+    Traceback (most recent call last):
+       ...
+    ValueError: 'blabla' does not appear to be an IPv4 or IPv6 network
+    >>> comma_separated_Nets("192.168.0.0/28,192.168.0.1/28")
+    Traceback (most recent call last):
+       ...
+    ValueError: 192.168.0.1/28 has host bits set
+    >>> comma_separated_Nets("192.168.0.0/28,192.168.1.0/25")
+    <comma_separated_Nets('192.168.0.0/28,192.168.1.0/25')>
+    """
+
     def __init__(self, _str):
         self._str = str(_str)
         self._items = tuple(
