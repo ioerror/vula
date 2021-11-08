@@ -228,11 +228,11 @@ class Interface(attrdict, yamlrepr_hl):
     Because this is a DualUse.object, you can see the data on the commandline
     with commands like these:
 
-    sudo vula wg Interface autoclique query
+    sudo vula wg Interface vula query
 
-    sudo vula wg Interface autoclique peers
+    sudo vula wg Interface vula peers
 
-    sudo vula wg Interface autoclique _is_up
+    sudo vula wg Interface vula _is_up
 
     etc.
     """
