@@ -323,6 +323,15 @@ class yamlfile(serializable):
 
     @classmethod
     def from_yaml_file(cls, path):
+        """
+        >>> from os import getcwd
+        >>> yamlfile.from_yaml_file(getcwd()+'/.gitlab-ci.yml')
+        {'image': 'python:3.8.12-slim-bullseye', 'stages': ['Test'], 'variables': {'PIPENV_VERBOSITY': -1, 'PIPENV_CACHE_DIR': '.cache/pipenv', 'PIP_CACHE_DIR': '.cache/pip'}, 'cache': {'paths': ['.cache/pip', '.cache/pipenv']}, 'before_script': ['PATH=$PATH:~/.local/bin', 'apt update', 'apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-dev', 'python -m pip install --user pipx', 'python -m pipx ensurepath', 'pipx install pipenv', 'pipenv install --dev --skip-lock'], 'pytest': {'stage': 'Test', 'allow_failure': False, 'script': ['pipenv run pytest']}, 'flake8-vula': {'stage': 'Test', 'allow_failure': True, 'script': ['pipenv run flake8 vula/']}, 'flake8-test': {'stage': 'Test', 'allow_failure': True, 'script': ['pipenv run flake8 test/']}}
+        >>> yamlfile.from_yaml_file("/yaml_file.yaml")
+        Traceback (most recent call last):
+        ...
+        FileNotFoundError: [Errno 2] No such file or directory: '/yaml_file.yaml'
+        """
         with click.open_file(path, mode='r', encoding='utf-8') as fh:
             return cls(yaml.safe_load(fh))
 
