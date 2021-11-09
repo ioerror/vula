@@ -874,11 +874,19 @@ class chunkable_values(dict):
         return type(self)(res)
 
     def unchunk(self):
+        """Combines chunks of this dictionary.
+
+        >>> chunkable_values({'a01':'23','a00':'01','a02':'45'}).unchunk()
+        {'a': '012345'}
+        """
         res = {}
         for k, v in list(sorted(self.items())):
+            rk = k[:-2]
             try:
-                rk, c = k[:-2], int(k[-2:])
-            except Exception as ex:
+                int(k[-2:])
+            except ValueError:
+                # Expects a ValueError: invalid literal for int() ...
+                # if the last two digits are not a number it is not a chunked key
                 res[k] = v
                 continue
             res[rk] = res.get(rk, '') + v
