@@ -132,7 +132,6 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	# save container as new image, over old one if it exists:
 	podman commit vula-tmp vula-$(dist)
 	podman rm vula-tmp
-	make dist=$(dist) .transfer-image-to-root
 	touch $@
 
 .rpm-install-$(dist)-stamp: .deps-$(dist)-stamp $(RPM_NAME)
@@ -147,7 +146,6 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	# save container as new image, over old one if it exists:
 	podman commit vula-tmp vula-$(dist)
 	podman rm vula-tmp
-	make dist=$(dist) .transfer-image-to-root
 	touch $@
 
 # for Alpine Linux's apk package format
@@ -158,7 +156,6 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	podman stop vula-tmp
 	podman commit vula-tmp vula-$(dist)
 	podman rm vula-tmp
-	make dist=$(dist) .transfer-image-to-root
 	touch $@
 
 
@@ -192,7 +189,7 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	# Although we can build the image as root, we can't grant it CAP_NET_ADMIN
 	# as we don't have that ourselves. So, we need to transfer the image into
 	# root's local registry to run it as root:
-	sudo -v # unlock sudo to run podman as root
+	#sudo -v # unlock sudo to run podman as root
 	podman save vula-$(dist) | sudo podman load
 
 .PHONY: .transfer-mallory-image-to-root
@@ -224,24 +221,23 @@ editable-image: .editable-$(dist)-image-stamp
 	podman stop vula-tmp
 	# save container as new image
 	podman commit vula-tmp vula-$(dist)
-	make dist=$(dist) .transfer-image-to-root
 
 .PHONY: .create-network
 .create-network:
-	-sudo podman network create --internal $(NET_NAME)
+	-podman network create --internal $(NET_NAME)
 
 .PHONY: shell
 shell: $(installed_image_stamp)
-	sudo podman run $(podman_args) --rm -it vula-$(dist) $(bin_sh)
+	podman run $(podman_args) --rm -it vula-$(dist) $(bin_sh)
 
 .PHONY: systemd-shell
 systemd-shell: $(installed_image_stamp)
-	-sudo podman stop vula-$(dist)-shell
-	-sudo podman rm vula-$(dist)-shell
+	-podman stop vula-$(dist)-shell
+	-podman rm vula-$(dist)-shell
 	-make NET_NAME=$(NET_NAME) .create-network
-	sudo podman run $(podman_args) --name vula-$(dist)-shell --network podman,$(NET_NAME) --hostname $(dist)-shell --detach $(add_caps) vula-$(dist) $(systemd_path)
-	sudo podman exec -it vula-$(dist)-shell $(bin_sh)
-	sudo podman stop vula-$(dist)-shell
+	podman run $(podman_args) --name vula-$(dist)-shell --network podman,$(NET_NAME) --hostname $(dist)-shell --detach $(add_caps) vula-$(dist) $(systemd_path)
+	podman exec -it vula-$(dist)-shell $(bin_sh)
+	podman stop vula-$(dist)-shell
 
 .PHONY: deps-shell
 deps-shell: .deps-$(dist)-stamp
@@ -249,26 +245,26 @@ deps-shell: .deps-$(dist)-stamp
 
 .PHONY: deps-systemd-shell
 deps-systemd-shell: .deps-$(dist)-stamp
-	-sudo podman stop vula-$(dist)-shell
-	-sudo podman rm vula-$(dist)-shell
-	sudo podman run $(podman_args) --name vula-$(dist)-shell --detach $(add_caps) vula-deps-$(dist) $(systemd_path)
-	sudo podman exec -it vula-$(dist)-shell $(bin_sh)
-	sudo podman stop vula-$(dist)-shell
+	-podman stop vula-$(dist)-shell
+	-podman rm vula-$(dist)-shell
+	podman run $(podman_args) --name vula-$(dist)-shell --detach $(add_caps) vula-deps-$(dist) $(systemd_path)
+	podman exec -it vula-$(dist)-shell $(bin_sh)
+	podman stop vula-$(dist)-shell
 
 .PHONY: testnet-start
 testnet-start: .testnet-started-$(dist)-stamp
 .testnet-started-$(dist)-stamp: $(installed_image_stamp)
 	-make NET_NAME=$(NET_NAME) .create-network
 	for c in $(test_hosts); do \
-		sudo podman create $(podman_args) --name $$c --hostname $$c --network $(NET_NAME) $(add_caps) vula-$(dist); \
-		sudo podman start $$c; \
+		podman create $(podman_args) --name $$c --hostname $$c --network $(NET_NAME) $(add_caps) vula-$(dist); \
+		podman start $$c; \
 	done
 	touch $@
 
 .PHONY: testnet-stop
 testnet-stop:
 	@-for c in $(test_hosts); do \
-		sudo podman stop $$c; \
+		podman stop $$c; \
 	done 2>&1 | grep -v 'no container with name or ID'
 	@rm -vf .testnet-started-$(dist)-stamp
 
@@ -281,7 +277,7 @@ retest: testnet-restart test
 .PHONY: testnet-clean
 testnet-clean: testnet-stop
 	@-for c in $(test_hosts); do \
-		sudo podman rm $$c; \
+		podman rm $$c; \
 	done 2>&1 | grep -v 'no container with name or ID'
 
 .PHONY: testnet-clean-all
@@ -293,19 +289,19 @@ testnet-clean-all: testnet-stop
 
 .PHONY: testnet-shell
 testnet-shell: testnet-start
-	sudo podman exec -it $(test1) $(bin_sh)
+	podman exec -it $(test1) $(bin_sh)
 
 .PHONY: test
 test: testnet-start
-	sudo podman ps
+	podman ps
 	-make test-pytest
 	@-for c in $(test_hosts); do \
-		sudo podman exec -it $$c vula start; \
+		podman exec -it $$c vula start; \
 	done
 	make test-ping
-	sudo podman exec $(test1) vula peer
+	podman exec $(test1) vula peer
 	@echo -n "test environment: "
-	@sudo podman exec -it $(test1) cat /etc/os-release|grep VERSION_CODENAME|cut -f 2 -d=
+	@podman exec -it $(test1) cat /etc/os-release|grep VERSION_CODENAME|cut -f 2 -d=
 	#
 	# note: run "make testnet-stop" to stop these containers,
 	# 		 or "make testnet-clean" to delete them.
@@ -326,32 +322,32 @@ mallory-stop:
 
 .PHONY: mallory-clean
 mallory-clean: mallory-stop
-	sudo podman rm mallory
-	sudo podman image rm vula-mallory-$(dist)
+	podman rm mallory
+	podman image rm vula-mallory-$(dist)
 	@rm -vf .deps-bullseye-mitm
 	@rm -vf ./podman/mitm/capture.pcap
 
 .PHONY: test-passive-adversary
 test-passive-adversary: testnet-start mallory-start
-	sudo podman exec -itd mallory tcpdump -w ./podman/mitm/capture.pcap
-	sudo podman ps
+	podman exec -itd mallory tcpdump -w ./podman/mitm/capture.pcap
+	podman ps
 	make test-ping
 
 .PHONY: test-active-adversary
 test-active-adversary: testnet-start mallory-start
-	sudo podman exec -it mallory python3 ./podman/mitm/squirrel.py
-	sudo podman ps
+	podman exec -it mallory python3 ./podman/mitm/squirrel.py
+	podman ps
 	make test-ping
 
 .PHONY: test-pytest
 test-pytest: testnet-start
-	sudo podman exec -it $(test1) pytest-3
+	podman exec -it $(test1) pytest-3
 
 .PHONY: test-ping
 test-ping: testnet-start
-	sudo podman exec -it $(test1) vula status
-	sudo podman exec -it $(test2) vula status
-	sudo podman exec -it $(test2) ping -c 1 $(test1).local.
+	podman exec -it $(test1) vula status
+	podman exec -it $(test2) vula status
+	podman exec -it $(test2) ping -c 1 $(test1).local.
 
 .PHONY: test-all
 test-all:
@@ -365,61 +361,20 @@ test-all-separate:
 		make dist=$$dist test testnet-clean; \
 	done
 
-.lan-container-stamp: $(installed_image_stamp)
-	sudo podman create $(podman_args) --name vula --hostname $(shell hostname) $(add_caps) --network host vula-$(dist)
-	touch $@
-
-.lan-container-started-stamp: .lan-container-stamp
-	sudo podman start vula
-	sleep 1
-	touch $@
-
-.PHONY: lan-start
-lan-start: .lan-container-started-stamp
-	sudo podman exec vula vula status --only-systemd
-	# podman should now have a "vula" container in the host network namespace.
-	# to get a shell in it, run "make lan-shell"
-
-.PHONY: lan-stop
-lan-stop:
-	-sudo podman stop vula 2>&1 | grep -v 'no container with name or ID'
-	@rm -vf .lan-container-started-stamp
-
-.PHONY: lan-clean
-lan-clean: lan-stop
-	@if [ -e .lan-container-stamp ]; then \
-		echo -n "Really delete 'vula' container created by lan-start? [yN]"; \
-		read a; \
-		if [ "$$a" = "y" ]; then \
-			sudo podman rm vula 2>&1 | grep -v 'no container with name or ID'; \
-			rm -vf .lan-container-stamp; \
-		else \
-			echo "OK, not deleting 'vula' container."; \
-		fi; \
-	fi
-
-.PHONY: lan-shell
-lan-shell: .lan-container-started-stamp
-	sudo podman exec -it vula $(bin_sh)
-
 .PHONY: clean-containers
 clean-containers: testnet-clean-all
-	@-sudo podman network rm $(NET_NAME) 	2>&1 | grep -v 'network not found'
-	@-sudo podman stop vula-tmp				2>&1 | grep -v 'no container with name or ID'
-	@-sudo podman rm vula-tmp	 			2>&1 | grep -v 'no container with name or ID'
+	@-podman network rm $(NET_NAME) 	2>&1 | grep -v 'network not found'
 	@-podman stop vula-tmp					2>&1 | grep -v 'no container with name or ID'
 	@-podman rm vula-tmp					2>&1 | grep -v 'no container with name or ID'
 	@-podman stop vula-mitm-tmp				2>&1 | grep -v 'no container with name or ID'
-	@-sudo podman stop vula-mitm-tmp		2>&1 | grep -v 'no container with name or ID'
-	@-sudo podman rm vula-mitm-tmp			2>&1 | grep -v 'no container with name or ID'
+	@-podman stop vula-mitm-tmp		2>&1 | grep -v 'no container with name or ID'
+	@-podman rm vula-mitm-tmp			2>&1 | grep -v 'no container with name or ID'
 	@-podman rm vula-mitm-tmp				2>&1 | grep -v 'no container with name or ID'
-	@-sudo podman stop mallory				2>&1 | grep -v 'no container with name or ID'
-	@-sudo podman rm mallory	 			2>&1 | grep -v 'no container with name or ID'
+	@-podman stop mallory				2>&1 | grep -v 'no container with name or ID'
+	@-podman rm mallory	 			2>&1 | grep -v 'no container with name or ID'
 	@-podman stop mallory					2>&1 | grep -v 'no container with name or ID'
 	@-podman rm mallory						2>&1 | grep -v 'no container with name or ID'
 	@-for dist in $(dists); do \
-		sudo podman stop vula-$$dist-shell; \
-		sudo podman rm vula-$$dist-shell; \
 		podman stop vula-$$dist-shell; \
 		podman rm vula-$$dist-shell; \
 	done 2>&1 | grep -v 'no container with name or ID'
@@ -429,8 +384,6 @@ clean-images:
 	@-for dist in $(dists); do \
 		podman rmi vula-$$dist; \
 		podman rmi vula-mallory-$$dist; \
-		sudo podman rmi vula-$$dist; \
-		sudo podman rmi vula-mallory-$$dist; \
 		rm -vf .dpkg-install-$$dist-stamp; \
 		rm -vf .dpkg-install-mitm-$$dist-stamp; \
 		rm -vf .rpm-install-$$dist-stamp; \
@@ -448,11 +401,10 @@ clean-packages:
 clean: clean-packages clean-containers clean-images
 	# OK (errors are normal for this target)
 	# note that the "make clean" target doesn't clean all podman artifacts:
-	# - use "make lan-clean" to delete the "vula" container made by "make lan-start"
 	# - use "make clean-all" to also delete the "vula-debian-deps" image
 
 .PHONY: clean-all
-clean-all: clean lan-clean
+clean-all: clean
 	@-for dist in $(dists); do \
 		podman rmi vula-deps-$$dist; \
 		rm -vf .deps-$$dist-stamp; \

@@ -120,35 +120,11 @@ make dist=impish test
 make dist=bullseye systemd-shell
 ```
 
-## Running vula on the host's LAN
-
-### `make lan-start`
-
-This will create a new podman container (as root) called `vula` with
-`--network=host`, meaning that it will operate in the host system's default
-network namespace. This is a convenient way that one can run vula to
-communicate with other hosts on a physical LAN, without needing to install any
-dependencies besides `wireguard`, `podman`, `make`, and `sudo`. The `dist=`
-argument may be specified to use a different distribution than the default
-(`bullseye`) inside of the container.
-
-### `make lan-shell`
-
-This will spawn a shell in the `vula` container started by `lan-start`.
-
-### `make lan-stop`
-
-This will stop the `vula` container started by `lan-start`.
-
-### `make lan-clean`
-
-This will delete the `vula` container started by `lan-start`.
-
 ## Development mode
 
-The `test-*` and `lan-*` make targets both have the side effect of creating a
-podman image called `vula-$dist` (bullseye, by default), which by default
-contains a dpkg installation of vula. This image can be modified or replaced.
+The `test-*` make targets have the side effect of creating a podman image
+called `vula-$dist` (bullseye, by default), which by default contains a dpkg
+installation of vula. This image can be modified or replaced.
 
 ### `make editable-image`
 
@@ -166,8 +142,7 @@ clean rpm-image`.
 This will delete the `.deb` package built in `../deb_dist`, the `vula-$dist`
 podman images, the test containers, and any stray intermediate containers. It
 will *not* delete the `vula-deps-$dist` images, which require network access to
-recreate, nor will it delete the `vula` container which is created by the
-`lan-start` target.
+recreate.
 
 ### `make clean-all`
 

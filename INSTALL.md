@@ -98,32 +98,7 @@ These are steps which are automatically performed by the Debian package's
 [postinstall
 script](https://codeberg.org/vula/vula/src/branch/main/misc/python3-vula.postinst).
 
-## option 3: run vula in a podman container
-
-If you are using a Linux distribution that supports
-[`podman`](https://podman.io/), and can run it as root, you can run vula under
-Debian GNU/systemd in a container with access to your host's network namespace.
-Root access is required to grant the `CAP_NET_ADMIN` capability, but after that
-privleges are dropped inside the container.
-
-```
-git clone https://codeberg.org/vula/vula
-cd vula/podman
-make lan-start
-```
-
-After the container is started, you can spawn a shell inside of it where you
-will have access to the vula commandline tools by running [`make
-lan-shell`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-shell).
-To shut it down or delete it, run [`make
-lan-stop`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-stop)
-or [`make
-lan-clean`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-clean).
-See
-[podman/README](https://codeberg.org/vula/vula/src/branch/main/podman/README.md)
-for more information.
-
-## option 4: build an RPM
+## option 3: build an RPM
 
 We have only done minimal testing of vula on RPM-based systems, but, it is
 possible to type `make rpm` in the vula repo and generate an RPM (using
@@ -133,12 +108,9 @@ does not include a postinstall script. See the `Makefile` in this directory for
 hints on how to install the dependencies on Fedora.
 
 It is also possible to build an RPM in Fedora inside of a `podman` container by
-running `make dist=fedora34 rpm` in the `podman` directory, and to launch the
-host-networking vula container described in option 3 using Fedora instead of
-Debian by running [`make dist=fedora34
-lan-start`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-start).
+running `make dist=fedora34 rpm` in the `podman` directory.
 
-## option 5: install from AUR (only for arch based systems)
+## option 4: install from AUR (only for arch based systems)
 
 Same as above only rudimentary testing of the functionality has been done on arch / manjaro.
 
