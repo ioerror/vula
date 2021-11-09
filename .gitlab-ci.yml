@@ -50,7 +50,7 @@ flake8-vula:
 
 flake8-test:
   stage: Test
-  allow_failure: true # TODO set to false once code is clean enough
+  allow_failure: false
   script:
     - make FOLDER=test flake8
 
@@ -59,11 +59,14 @@ build:
   allow_failure: false
   script:
     - . $(pipenv --venv)/bin/activate
-    - apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot git make python3-setuptools
+    - apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot git make python3-setuptools rpm
     - make deb
     - dpkg -I deb_dist/*.deb
+    - make rpm
+    - rpm -qpl dist/*.rpm
   artifacts:
-    name: deb
+    name: deb+rpm
     paths:
       - deb_dist/*.deb
+      - dist/*.rpm
 
