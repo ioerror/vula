@@ -159,6 +159,31 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	make dist=$(dist) .transfer-image-to-root
 	touch $@
 
+
+.dpkg-install-mitm-$(dist)-stamp: 
+	# Now going to build a new image from the already built image
+	# first, create new vula container from the existing image:
+	podman run --name vula-mitm-deps-tmp $(podman_args) --detach vula-deps-$(dist) $(systemd_path)
+	# Install new attacker dependencies
+	podman exec vula-mitm-deps-tmp ./misc/install-mitm-deps.sh
+	podman commit vula-mitm-deps-tmp vula-mitm-deps-$(dist)
+	podman run --name vula-mitm-tmp $(podman_args) --network none --detach vula-mitm-deps-$(dist) $(systemd_path)
+	# install the deb:
+	podman exec -e VULA_POSTINST_DONT_START=1 vula-mitm-tmp dpkg -i deb_dist/$(DEB_NAME)
+	# Disable the running vula services
+	podman exec vula-mitm-tmp systemctl disable vula-organize
+	podman exec vula-mitm-tmp systemctl disable vula-publish
+	podman exec vula-mitm-tmp systemctl disable vula-discover
+	# stop container:
+	podman stop vula-mitm-tmp
+	# save container as new image, over old one if it exists:
+	podman commit vula-mitm-tmp vula-mallory-$(dist)
+	podman rm vula-mitm-tmp
+	podman rm -f vula-mitm-deps-tmp
+	podman image rm vula-mitm-deps-$(dist)
+	make dist=$(dist) .transfer-mallory-image-to-root
+	touch $@
+
 .PHONY: .transfer-image-to-root
 .transfer-image-to-root:
 	#
@@ -167,6 +192,15 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	# root's local registry to run it as root:
 	sudo -v # unlock sudo to run podman as root
 	podman save vula-$(dist) | sudo podman load
+
+.PHONY: .transfer-mallory-image-to-root
+.transfer-mallory-image-to-root:
+	#
+	# Although we can build the image as root, we can't grant it CAP_NET_ADMIN
+	# as we don't have that ourselves. So, we need to transfer the image into
+	# root's local registry to run it as root:
+	sudo -v # unlock sudo to run podman as root
+	podman save vula-mallory-$(dist) | sudo podman load
 
 .PHONY: $(pkgmgr)-image
 $(pkgmgr)-image:
@@ -275,6 +309,38 @@ test: testnet-start
 	# 		 or "make testnet-clean" to delete them.
 	#
 
+
+.PHONY: mallory-start
+mallory-start: .mallory-started-stamp
+.mallory-started-stamp: .dpkg-install-mitm-$(dist)-stamp
+	sudo podman create $(podman_args) --name mallory --hostname mallory $(add_caps) --network $(NET_NAME) $(add_caps) vula-mallory-$(dist)
+	sudo podman start mallory
+	touch $@
+
+.PHONY: mallory-stop
+mallory-stop: 
+	sudo podman stop mallory
+	@rm -vf .mallory-started-stamp
+
+.PHONY: mallory-clean
+mallory-clean: mallory-stop
+	sudo podman rm mallory
+	sudo podman image rm vula-mallory-$(dist)
+	@rm -vf .deps-bullseye-mitm
+	@rm -vf ./podman/mitm/capture.pcap
+
+.PHONY: test-passive-adversary
+test-passive-adversary: testnet-start mallory-start
+	sudo podman exec -itd mallory tcpdump -w ./podman/mitm/capture.pcap
+	sudo podman ps
+	make test-ping
+
+.PHONY: test-active-adversary
+test-active-adversary: testnet-start mallory-start
+	sudo podman exec -it mallory python3 ./podman/mitm/squirrel.py
+	sudo podman ps
+	make test-ping
+
 .PHONY: test-pytest
 test-pytest: testnet-start
 	sudo podman exec -it $(test1) pytest-3
@@ -339,6 +405,14 @@ clean-containers: testnet-clean-all
 	@-sudo podman rm vula-tmp	 			2>&1 | grep -v 'no container with name or ID'
 	@-podman stop vula-tmp					2>&1 | grep -v 'no container with name or ID'
 	@-podman rm vula-tmp					2>&1 | grep -v 'no container with name or ID'
+	@-podman stop vula-mitm-tmp				2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman stop vula-mitm-tmp		2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman rm vula-mitm-tmp			2>&1 | grep -v 'no container with name or ID'
+	@-podman rm vula-mitm-tmp				2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman stop mallory				2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman rm mallory	 			2>&1 | grep -v 'no container with name or ID'
+	@-podman stop mallory					2>&1 | grep -v 'no container with name or ID'
+	@-podman rm mallory						2>&1 | grep -v 'no container with name or ID'
 	@-for dist in $(dists); do \
 		sudo podman stop vula-$$dist-shell; \
 		sudo podman rm vula-$$dist-shell; \
@@ -350,11 +424,15 @@ clean-containers: testnet-clean-all
 clean-images:
 	@-for dist in $(dists); do \
 		podman rmi vula-$$dist; \
+		podman rmi vula-mallory-$$dist; \
 		sudo podman rmi vula-$$dist; \
+		sudo podman rmi vula-mallory-$$dist; \
 		rm -vf .dpkg-install-$$dist-stamp; \
+		rm -vf .dpkg-install-mitm-$$dist-stamp; \
 		rm -vf .rpm-install-$$dist-stamp; \
 		rm -vf .apk-install-$$dist-stamp; \
 		rm -vf .editable-$$dist-image-stamp; \
+		rm -vf .mallory-started-stamp; \
 		make dist=$(dist) testnet-clean; \
 	done 2>&1 | grep -v 'no such image'
 
