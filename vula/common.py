@@ -720,6 +720,18 @@ Flexibool = And(
 
 class queryable(dict):
     def limit(self, **kw):
+	"""
+        >>> d = {1:{"enabled":True},2:{"enabled":False}}
+        >>> d
+        {1: {'enabled': True}, 2: {'enabled': False}}
+        >>> q = queryable(d)
+        >>> q.limit(enabled=True)
+        {1: {'enabled': True}}
+        >>> q.limit(enabled=False)
+        {2: {'enabled': False}}
+        >>> q.limit()
+        {1: {'enabled': True}, 2: {'enabled': False}}
+        """
         return type(self)(
             (name, item)
             for name, item in self.items()
