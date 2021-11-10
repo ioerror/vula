@@ -13,9 +13,6 @@
  after it has been verified.
 """
 
-from logging import INFO, DEBUG, Logger, basicConfig, getLogger
-from sys import stdout
-
 try:
     import cv2
     from pyzbar.pyzbar import decode
