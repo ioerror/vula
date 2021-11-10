@@ -13,10 +13,8 @@
  addresses for the local network segment are used as WireGuard peers.
 """
 
-from logging import INFO, DEBUG, Logger, basicConfig, getLogger
-from sys import stdout
-from time import sleep
-from typing import Optional, cast
+from logging import Logger, getLogger
+from typing import Optional
 import click
 from click.exceptions import Exit
 from pyroute2 import IPRoute
@@ -29,13 +27,9 @@ from zeroconf import ServiceBrowser, ServiceInfo, ServiceListener, Zeroconf
 from ipaddress import ip_address as ip_addr_parser
 
 from .peer import Descriptor
-from .common import attrdict
-from .click import DualUse
 
 from .constants import (
-    _DATE_FMT,
     _LABEL,
-    _LOG_FMT,
     _ORGANIZE_DBUS_NAME,
     _ORGANIZE_DBUS_PATH,
     _DISCOVER_DBUS_NAME,
