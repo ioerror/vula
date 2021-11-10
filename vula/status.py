@@ -1,6 +1,6 @@
 from logging import getLogger
 from os import geteuid
-from sys import stdout, platform
+from sys import platform
 import time
 from datetime import timedelta
 import click
