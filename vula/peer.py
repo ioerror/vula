@@ -229,6 +229,25 @@ class Descriptor(schemattrdict, serializable):
         return descriptor
 
     def verify_signature(self) -> bool:
+        """
+        Verifies the signature.
+        Returns true if valid, false if invalid.
+
+        Valid Signature:
+        >>> desc_str = (
+        ... "addrs=10.215.167.50; c=KNDxDMgmkH8Poa7TJBlIZrvTnQBN5w10gYlyY5"
+        ... "MfvkA7Eu12IhpheCdJzWIwap4PE5Ryv3PzvU4ikrEY6oXJNw==; dt=86400; e=0; "
+        ... "hostname=wg-mdns-test1.local.; pk=y9bQa4DAj4NT5lh8PffyAbXNbYCkxczMKLk/r"
+        ... "tP4CVY=; port=5354; r=; s=YJqLUPrI8G/IfA1wIbW2z5p0EtYcDFh4gxCjP5czMK2wi"
+        ... "GRgZdeBibs6shDoRusfHtSy+4m/Z9Jfhul+amQYAQ==; vf=1605737957; vk=XGQErb1N"
+        ... "Jmg4dMLZK7hXfhRahgZ6ix/oP3+BTq2+Dy8=;")
+        >>> desc = Descriptor.parse(desc_str)
+        >>> assert desc.verify_signature() is True
+
+        Invalid Signature:
+        >>> desc = Descriptor(desc, port=desc['port'] + 1)
+        >>> assert desc.verify_signature() is False
+        """
         verify_public_key = VerifyKey(self.vk)
         sig = self.s
         buf_to_verify: bytes = self._build_sig_buf()
@@ -779,3 +798,8 @@ class PeerCommands(object):
 
 
 main = PeerCommands.cli
+
+if __name__ == "__main__":
+    import doctest
+
+    print(doctest.testmod())
