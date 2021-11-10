@@ -9,50 +9,30 @@ from __future__ import annotations
 
 import os
 import pdb
-from base64 import b64decode, b64encode
 from ipaddress import (
     ip_address,
     ip_network,
 )
 from logging import Logger, getLogger
-import os
 from platform import node
-from sys import stdin, stdout
 import time
-from typing import Iterable, Dict, Generator, List, Optional, TextIO, Tuple
-from codecs import decode
-from tempfile import mkstemp
-from functools import reduce
 
-from gi.repository import GLib, Gio
+from gi.repository import GLib
 
 import click
 import pydbus
-import yaml
-from schema import Schema, And, Or, Use, Optional as Optional_
-from nacl.exceptions import BadSignatureError
-from nacl.signing import VerifyKey
+from schema import Schema, And, Use, Optional as Optional_
 from pathlib import Path
-from schema import SchemaError
 
 from .common import (
-    _safer_load,
     attrdict,
-    Bug,
     schemattrdict,
-    schemadict,
-    serializable,
-    queryable,
-    Length,
     b64_bytes,
     yamlrepr,
     yamlrepr_hl,
     jsonrepr,
-    bp,
-    Flexibool,
     addrs_in_subnets,
     raw,
-    comma_separated_IPs,
     chown_like_dir,
     memoize,
 )
@@ -63,14 +43,10 @@ from .constants import (
     _FWMARK,
     _IP_RULE_PRIORITY,
     _DOMAIN,
-    _LOG_FMT,
-    _ORGANIZE_CACHE_BASEDIR,
     _ORGANIZE_CONF_FILE,
     _ORGANIZE_HOSTS_FILE,
     _ORGANIZE_KEYS_CONF_FILE,
-    _ORGANIZE_UPDATE_TEMP,
     _ORGANIZE_DBUS_NAME,
-    _ORGANIZE_DBUS_PATH,
     _DISCOVER_DBUS_NAME,
     _DISCOVER_DBUS_PATH,
     _PUBLISH_DBUS_NAME,
@@ -78,12 +54,11 @@ from .constants import (
     _WG_PORT,
     IPv4_GW_ROUTES,
 )
-from .common import KeyFile
 from .configure import Configure
 
 from .click import DualUse
 from .csidh import hkdf, csidh_parameters, CSIDH
-from .peer import Descriptor, Peer, Peers, PeerCommands
+from .peer import Descriptor, Peers, PeerCommands
 from .prefs import Prefs
 from .discover import Discover
 from .publish import Publish
@@ -271,7 +246,8 @@ class OrganizeState(Engine, yamlrepr_hl):
                 not (set(cur_gw.enabled_ips) & set(new_system_state.gateways))
             )
         ):
-            # if a non-pinned peer had our gateway IP but no longer does, remove its gateway flag
+            # if a non-pinned peer had our gateway IP but no longer does,
+            # remove its gateway flag
             self._SET(('peers', cur_gw.id, 'use_as_gateway'), False)
             self.result.add_triggers(remove_routes=(IPv4_GW_ROUTES,))
         if not (cur_gw and cur_gw.pinned):
