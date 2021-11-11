@@ -425,6 +425,18 @@ class Bug(Exception):
 
 class comma_separated_IPs(object):
     def __init__(self, _str):
+        """
+        create a list of IP address
+
+        >>> comma_separated_IPs("127.0.0.1,15.15.15.15")
+        <comma_separated_IPs('127.0.0.1,15.15.15.15')>
+        >>> comma_separated_IPs("::1")
+        <comma_separated_IPs('::1')>
+        >>> comma_separated_IPs("invalid")
+        Traceback (most recent call last):
+        ...
+        ValueError: 'invalid' does not appear to be an IPv4 or IPv6 address
+        """
         self._str = str(_str)
         self._items = tuple(
             ip_address(ip) for ip in self._str.split(',') if ip
