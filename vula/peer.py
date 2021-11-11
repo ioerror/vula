@@ -355,6 +355,27 @@ class Peer(schemattrdict):
 
     @property
     def other_names(self):
+        """
+        Returns a sorted list of all names other than self.name
+
+        >>> desc_string = ("addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
+        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
+        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> descriptor = Descriptor.parse(desc_string)
+        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
+        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
+        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
+        []
+        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,
+        ... verified=False,nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip
+        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
+        ['george.local']
+        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,verified=False,
+        ... nicknames={descriptor.hostname: False, "schnubbi": True},IPv4addrs={ip: True for ip
+        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
+        ['george.local', 'schnubbi']
+        """
         return list(sorted(set(self.nicknames) - set([self.name])))
 
     @property
