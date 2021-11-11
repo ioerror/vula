@@ -443,6 +443,12 @@ class comma_separated_IPs(object):
         )
 
     def __iter__(self):
+        """
+        Iterate over ips
+
+        >>> [ip for ip in comma_separated_IPs("::1,126.26.17.18")]
+        [IPv6Address('::1'), IPv4Address('126.26.17.18')]
+        """
         return iter(self._items)
 
     def __getitem__(self, idx):
