@@ -1,12 +1,13 @@
-import os
-import sys
-import click
-import shutil
 import inspect
+import os
+import shutil
+import sys
 from functools import reduce, wraps
+
+import click
 import packaging.version as pkgv
-from schema import Optional, Schema
 from click.exceptions import Exit
+from schema import Optional, Schema
 
 """
 This file contains various click-related bits of vula. None of this is
@@ -103,7 +104,8 @@ class Debuggable(OrderedGroup):
             if isinstance(ex, click.exceptions.Exit):
                 raise ex
             if ctx.params.get('debug'):
-                import pdb, traceback
+                import pdb
+                import traceback
 
                 tb = sys.exc_info()[2]
                 traceback.print_tb(tb)
