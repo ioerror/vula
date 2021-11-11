@@ -16,7 +16,6 @@ from click.exceptions import Exit
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from cryptography.exceptions import UnsupportedAlgorithm
-import subprocess
 
 from .status import main as StatusCommand
 from .csidh import csidh_parameters, CSIDH
