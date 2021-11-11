@@ -1,6 +1,7 @@
 image: python:3.8.12-slim-bullseye
 
 stages:
+  - Static-Analysis
   - Test
   - Build
 
@@ -23,16 +24,32 @@ before_script:
   - pipx install pipenv
   - pipenv install --dev --skip-lock
 
+# ---------- static analysis stage
+
+check-format:
+  stage: Static-Analysis
+  script:
+    - make check-format
+
+flake8-vula:
+  stage: Static-Analysis
+  allow_failure: true # TODO set to false once code is clean enough
+  script:
+    - make FOLDER=vula flake8
+
+flake8-test:
+  stage: Static-Analysis
+  allow_failure: false
+  script:
+    - make FOLDER=test flake8
+
+# ---------- test stage
+
 pytest:
   stage: Test
   allow_failure: false
   script:
     - make pytest
-
-check-format:
-  stage: Test
-  script:
-    - make check-format
 
 pytest-coverage:
   stage: Test
@@ -42,17 +59,7 @@ pytest-coverage:
     reports:
       cobertura: coverage.xml
 
-flake8-vula:
-  stage: Test
-  allow_failure: true # TODO set to false once code is clean enough
-  script:
-    - make FOLDER=vula flake8
-
-flake8-test:
-  stage: Test
-  allow_failure: false
-  script:
-    - make FOLDER=test flake8
+# ---------- build stage
 
 build:
   stage: Build
