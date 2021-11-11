@@ -454,6 +454,14 @@ class comma_separated_IPs(object):
         >>> ip.__repr__()
         "<comma_separated_IPs('192.168.0.1')>"
         """
+
+        """
+        get IP
+
+        >>> ips = comma_separated_IPs("192.168.3.2,192.168.0.3,192.168.3.4,192.168.0.2,192.168.0.3,192.168.3.4")
+        >>> ips.__repr__()
+        "<comma_separated_IPs('192.168.3.2,192.168.0.3,192.168.3.4,192.168.0.2,192.168.0.3,192.168.3.4')>"
+        """
         return "<%s(%r)>" % (type(self).__name__, self._str)
 
     def __str__(self):
