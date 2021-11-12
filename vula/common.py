@@ -417,6 +417,8 @@ else:
 class Bug(Exception):
     pass
 
+class ConsistencyError(Exception):
+    pass
 
 class comma_separated_IPs(object):
     def __init__(self, _str):
