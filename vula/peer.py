@@ -32,6 +32,7 @@ from .click import (
 )
 from .engine import Result
 from .common import (
+    Bug,
     attrdict,
     DualUse,
     schemattrdict,
