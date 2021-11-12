@@ -111,7 +111,8 @@ def main(only_systemd):
             else:
                 printer(
                     "active",
-                    "{} enabled peers correctly configured; {} disabled".format(
+                    "{} enabled peers correctly configured; "
+                    "{} disabled".format(
                         str(len(organize.peer_ids('enabled'))),
                         str(len(organize.peer_ids('disabled'))),
                     ),
