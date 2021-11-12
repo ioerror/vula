@@ -125,9 +125,10 @@ class attrdict(dict):
     def __setattr__(self, key, value):
         if key in self:
             raise ValueError(
-                "Programmer error: attempt to set an attribute (%s=%r) of an instance of %r ("
-                "which is an attrdict, which provides read-only access to keys through the "
-                "attribute interface). Attributes which are dictionary keys are not allowed to be "
+                "Programmer error: attempt to set an attribute (%s=%r) of an"
+                "instance of %r ( which is an attrdict, which provides "
+                "read-only access to keys through the attribute interface). "
+                "Attributes which are dictionary keys are not allowed to be "
                 "set through the attrdict attribute interface. "
                 % (key, value, type(self))
             )
@@ -187,7 +188,8 @@ class ro_dict(dict):
 
     def update(self, *a, **kw):
         """
-        raises a ValueError exception when trying to change a ro_dict using the update() method
+        raises a ValueError exception when trying to change a ro_dict using the
+        update() method
 
         test updating an existing key:
         >>> test_ro_dict = ro_dict({"key": "value"})
@@ -324,7 +326,8 @@ class yamlfile(serializable):
 
 class yamlrepr(serializable):
     r"""
-    Function to return a YAML representation of a Serializable in human readable format
+    Function to return a YAML representation of a Serializable in human
+    readable format
     >>> myObj = serializable(("ab", "cd"))
     >>> myYaml = yamlrepr(myObj)
     >>> myYaml.__repr__()

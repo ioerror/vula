@@ -100,7 +100,8 @@ class VerifyCommands(object):
     @click.argument('hostname', type=str, required=True)
     def scan(self, width, height, camera, hostname, debug):
         """
-        We expect a string object that roughly looks like the following three things:
+        We expect a string object that roughly looks like the following three
+        things:
 
 
             local.vula:desc:<descriptor base64 representation>

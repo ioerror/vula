@@ -221,14 +221,15 @@ class Discover(object):
     "-I",
     "--ip-address",
     type=str,
-    help="bind this IP address instead of automatically choosing which IP to bind",
+    help="bind this IP address instead of automatically choosing which IP "
+    "to bind",
 )
 @click.option(
     #    "-i",
     "--interface",
     type=str,
-    help="bind to the primary IP address for the given interface, automatically choosing which IP "
-    "to announce",
+    help="bind to the primary IP address for the given interface, "
+    "automatically choosing which IP to announce",
 )
 def main(**kwargs):
     Discover.daemon(**kwargs)
