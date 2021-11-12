@@ -45,7 +45,8 @@ class Publish(object):
         self.zeroconfs = {}
 
     def listen(self, new_announcements):
-        # First we remove all old zeroconf listeners that are not in our new instructions
+        # First we remove all old zeroconf listeners that are not in our new
+        # instructions
         for ip, zc in list(self.zeroconfs.items()):
             if ip not in new_announcements:
                 self.log.info("Removing old service announcement for %r", ip)
