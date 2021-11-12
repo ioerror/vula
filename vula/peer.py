@@ -184,11 +184,23 @@ class Descriptor(schemattrdict, serializable):
 
     @property
     def id(self):
-        "This returns the peer ID (aka the verify key, base64-encoded)"
+        """
+        This returns the peer ID (aka the verify key, base64-encoded)
+        >>> desc_s = f"addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M="
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.id
+        'Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M='
+        """
         return str(self.vk)
 
     @property
     def ephemeral(self):
+        """
+        >>> desc_s = f"addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M="
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.ephemeral
+        0
+        """
         return self.e
 
     @property
@@ -199,10 +211,30 @@ class Descriptor(schemattrdict, serializable):
 
     @property
     def IPv4addrs(self):
+        """
+        >>> desc_s = f"addrs=2001:0db8:85a3:0000:0000:8a2e:0370:7334;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M="
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.IPv4addrs
+        []
+        >>> desc_s = f"addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M="
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.IPv4addrs
+        [IPv4Address('192.168.6.9')]
+        """
         return [ip for ip in self.addrs if isinstance(ip, IPv4Address)]
 
     @property
     def IPv6addrs(self):
+        """
+        >>> desc_s = f"addrs=2001:0db8:85a3:0000:0000:8a2e:0370:7334;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M="
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.IPv6addrs
+        [IPv6Address('2001:db8:85a3::8a2e:370:7334')]
+        >>> desc_s = f"addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M="
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.IPv6addrs
+        []
+        """
         return [ip for ip in self.addrs if isinstance(ip, IPv6Address)]
 
     def sign(self, seed) -> Descriptor:
