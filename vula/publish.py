@@ -5,6 +5,9 @@
 >>> p = Publish()
 >>> type(p.zeroconfs)
 <class 'dict'>
+>>> type(p.log)
+<class 'logging.RootLogger'>
+
 """
 
 from logging import Logger, getLogger
