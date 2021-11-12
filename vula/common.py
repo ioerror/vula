@@ -266,6 +266,14 @@ def raw(value):
 
 class serializable(dict):
     def _dict(self):
+        '''Serialize dictionary
+
+        >>> serializable({1:serializable({2:3})})._dict()
+        {1: {2: 3}}
+
+        >>> serializable({1:{2:(3,4,5)}})._dict()
+        {1: {2: [3, 4, 5]}}
+        '''
         return {raw(k): raw(v) for k, v in self.items()}
 
 
