@@ -85,7 +85,8 @@ class PeerConfig(schemattrdict, serializable):
     @classmethod
     def from_netlink(cls, peer):
         """
-        This converts approximately from what pyroute2 produces to what pyroute2 consumes
+        This converts approximately from what pyroute2 produces to what
+        pyroute2 consumes
 
         (plus the extra key 'stats' with two keys)
 
@@ -491,7 +492,8 @@ class Interface(attrdict, yamlrepr_hl):
     @property
     def wg_showconf(self) -> str:
         """
-        Shows the current configuration of a given WireGuard interface, for use with `setconf'.
+        Shows the current configuration of a given WireGuard interface, for use
+        with `setconf'.
         """
         peers = list(self.peers)
         return "[Interface]\n" + (
@@ -567,12 +569,14 @@ class wg(object):
     @click.argument('interface', type=str)
     def showconf(self, interface):
         """
-        Shows the current configuration of a given WireGuard interface, for use with `setconf'
+        Shows the current configuration of a given WireGuard interface, for use
+        with `setconf'.
         """
         return Interface(interface).query().wg_showconf
 
     @DualUse.method(
-        short_help="Change the current configuration, add peers, remove peers, or change peers."
+        short_help="Change the current configuration, add peers, remove "
+        "peers, or change peers."
     )
     @click.option('--private-key', type=str)
     @click.option('--listen-port', type=int)
@@ -582,11 +586,13 @@ class wg(object):
     @click.pass_context
     def set(ctx, self, interface, args=(), **kwargs):
         """
-        Change the current configuration, add peers, remove peers, or change peers.
+        Change the current configuration, add peers, remove peers, or change
+        peers.
 
-        Usage: wg set <interface> [listen-port <port>] [fwmark <mark>] [private-key <base64
-        private key>] [peer <base64 public key> [remove] [preshared-key <base64 preshared key>] [
-        endpoint <ip>:<port>] [persistent-keepalive <interval seconds>] [allowed-ips
+        Usage: wg set <interface> [listen-port <port>] [fwmark <mark>]
+        [private-key <base64 private key>] [peer <base64 public key> [remove]
+        [preshared-key <base64 preshared key>] [ endpoint <ip>:<port>]
+        [persistent-keepalive <interval seconds>] [allowed-ips
         <ip1>/<cidr1>[,<ip2>/<cidr2>]...] ]...
 
         This is intended to behave very similarly to the normal wg tool, except
