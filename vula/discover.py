@@ -126,7 +126,7 @@ class Discover(object):
         if ip_address:
             try:
                 ip_addr = str(ip_addr_parser(ip_address))
-            except:
+            except:  # noqa: E722
                 self.log.info("Invalid IP address argument")
                 raise Exit(3)
             ip_addr: str = ip_address
@@ -201,7 +201,7 @@ class Discover(object):
 #        try:
 #            while True:
 #                sleep(1)
-##        except KeyboardInterrupt:
+#        except KeyboardInterrupt:
 #            pass
 #        finally:
 #            discover.shutdown()
