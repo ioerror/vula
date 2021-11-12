@@ -250,8 +250,8 @@ class Configure(attrdict):
     def systemd_restart(self):
         self._ensure_root()
         if platform.startswith("linux"):
-            _reconfigure_restart_systemd_services() # noqa: F821
-            _reconfigure_restart_systemd_services(restart=True) # noqa: F821
+            _reconfigure_restart_systemd_services()  # noqa: F821
+            _reconfigure_restart_systemd_services(restart=True)  # noqa: F821
             time.sleep(1.5)
         # FIXME: this causes a non-zero exit status sometimes, if the organize
         # service is "activating" instead of "active". the sleep could be
