@@ -196,7 +196,8 @@ class ro_dict(dict):
         >>> test_ro_dict.update({"key": "other_value"})
         Traceback (most recent call last):
         ...
-        ValueError: Attempt to update read-only dictionary (*({'key': 'other_value'},), **{})
+        ValueError: Attempt to update read-only dictionary (*({'key': \
+'other_value'},), **{})
 
         test updating a non-existing key:
         >>> test_ro_dict = ro_dict({"key": "value"})
@@ -353,7 +354,8 @@ class yamlrepr(serializable):
 class jsonrepr_pp(serializable):
     def __repr__(self):
         r"""
-        Function to return a json representation of a Serializable in human readable format
+        Function to return a json representation of a Serializable in human
+        readable format
         >>> myObj = serializable(("ab", "cd"))
         >>> myJson = jsonrepr_pp(myObj)
         >>> myJson.__repr__()
@@ -486,9 +488,11 @@ class comma_separated_IPs(object):
         """
         get IP
 
-        >>> ips = comma_separated_IPs("192.168.3.2,192.168.0.3,192.168.3.4,192.168.0.2,192.168.0.3,192.168.3.4")
+        >>> ips = comma_separated_IPs("192.168.3.2,192.168.0.3,192.168.3.4,
+        ... 192.168.0.2,192.168.0.3,192.168.3.4")
         >>> ips.__repr__()
-        "<comma_separated_IPs('192.168.3.2,192.168.0.3,192.168.3.4,192.168.0.2,192.168.0.3,192.168.3.4')>"
+        "<comma_separated_IPs('192.168.3.2,192.168.0.3,192.168.3.4, \
+        192.168.0.2,192.168.0.3,192.168.3.4')>"
         """
         return "<%s(%r)>" % (type(self).__name__, self._str)
 
@@ -499,7 +503,8 @@ class comma_separated_IPs(object):
         >>> ip = comma_separated_IPs('192.168.0.1')
         >>> ip.__str__()
         '192.168.0.1'
-        >>> ip_multiple = comma_separated_IPs('192.168.29.32,127.0.0.1,149.132.22.70')
+        >>> ip_multiple = \
+        comma_separated_IPs('192.168.29.32,127.0.0.1,149.132.22.70')
         >>> ip_multiple.__str__()
         '192.168.29.32,127.0.0.1,149.132.22.70'
         """
@@ -551,7 +556,8 @@ class constraint(object):
 
 class Length(constraint):
     """
-    Constraint to check if a string length is equal to, min or max a given value.
+    Constraint to check if a string length is equal to, min or max a given
+    value.
     """
 
     @staticmethod
@@ -636,7 +642,8 @@ class colon_hex_bytes(bytes):
 
     def __repr__(self):
         """
-        Return the canonical string representation of the colon_hex_bytes object.
+        Return the canonical string representation of the colon_hex_bytes
+        object.
 
         >>> hex_bytes = colon_hex_bytes.with_len(3).validate(b'ABC')
         >>> hex_bytes.__repr__()
@@ -650,7 +657,8 @@ class colon_hex_bytes(bytes):
         >>> a = colon_hex_bytes.with_len(3).validate(b'ABC')
         >>> a
         '41:42:43'
-        >>> colon_hex_bytes.with_len(3).validate(b'ABCD') # doctest: +IGNORE_EXCEPTION_DETAIL
+        >>> colon_hex_bytes.with_len(3).validate( \
+        b'ABCD') # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         schema.SchemaError:
         >>> b = colon_hex_bytes.with_len(3).validate(str(a))
@@ -675,7 +683,8 @@ class colon_hex_bytes(bytes):
                 Use(cls),
             ),
             And(bytes, Length(length), Use(cls)),
-            error=f"{{!r}} is not {length} bytes or a {str_len}-char colon-separated hex string "
+            error=f"{{!r}} is not {length} bytes or a {str_len}-char "
+            f"colon-separated hex string "
             f"representing {length} bytes",
         )
 
@@ -747,7 +756,8 @@ class b64_bytes(bytes):
         ...     e = ex
         >>> import schema, packaging.version as pkgv
         >>> assert type(e) is schema.SchemaError
-        >>> msg = "'123' is not 10 bytes or a 16-char base64 string which decodes to 10 bytes"
+        >>> msg = "'123' is not 10 bytes or a 16-char base64 string "\
+        "which decodes to 10 bytes"
         >>> if pkgv.parse(schema.__version__) < pkgv.parse('0.7.3'):
         ...     msg += "\\n{!r} is not 10 bytes or a 16-char "
         ...     msg += "base64 string which decodes to 10 bytes"
@@ -764,9 +774,11 @@ class b64_bytes(bytes):
                 Length(length),
             ),
             And(bytes, Length(length), Use(cls)),
-            error="{!r} is not %s bytes or a %s-char base64 string which decodes to %s bytes"
+            error="{!r} is not %s bytes or a %s-char base64 string which "
+            "decodes to %s bytes"
             % (length, b64_length, length),
-            # name = '%s bytes base64-encoded' % (length,), #when we upgrade to the newer schema lib
+            # name = '%s bytes base64-encoded' % (length,), #when we upgrade to
+            # the newer schema lib
         )
 
 
@@ -796,7 +808,8 @@ Flexibool = And(
         ),
     ),
     Use(IntBool),
-    error="invalid value {!r}; must be one of <true|false|1|0|on|off|yes|no|ja|nein|nej|y|j|n>",
+    error="invalid value {!r}; must be one of "
+    "<true|false|1|0|on|off|yes|no|ja|nein|nej|y|j|n>",
 )
 
 
@@ -920,8 +933,8 @@ class chunkable_values(dict):
             try:
                 int(k[-2:])
             except ValueError:
-                # Expects a ValueError: invalid literal for int() ...
-                # if the last two digits are not a number it is not a chunked key
+                # Expects a ValueError: invalid literal for int() ...  if the
+                # last two digits are not a number it is not a chunked key
                 res[k] = v
                 continue
             res[rk] = res.get(rk, '') + v
@@ -930,7 +943,8 @@ class chunkable_values(dict):
 
 def addrs_in_subnets(addrs, subnets):
     """
-    >>> current_subnets={'10.0.0.0/24': ['10.0.0.9', '10.0.0.51','10.0.0.17'], '10.0.1.0/24':
+    >>> current_subnets={'10.0.0.0/24': ['10.0.0.9', '10.0.0.51',
+    ... '10.0.0.17'], '10.0.1.0/24':
     ... ['10.0.1.22', '10.0.1.73'], '10.0.5.0/24': ['10.0.5.21', '10.0.5.63']}
     >>> addrs = ['10.0.0.0/24','10.0.14.0/24', '10.0.5.0/24']
     >>> addrs_in_subnets(addrs,current_subnets)
@@ -970,8 +984,8 @@ def organize_dbus_if_active():
         return bus.get(_ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH)
     elif _ORGANIZE_DBUS_NAME in bus.dbus.ListActivatableNames():
         raise Exit(
-            "Organize is not running (but it is dbus-activatable; use 'vula start' to start it.)."
-        )
+            "Organize is not running (but it is dbus-activatable; use 'vula"
+            "start' to start it.).")
     else:
         raise Exit("Organize dbus service is not configured")
 
@@ -1008,15 +1022,17 @@ def sfmt(
     '1H'
     >>> sfmt(10**30)
     '1000H'
-    >>> sfmt(1023, base=1024, unit="B", infix="i", prefixes="KMG", preprefix=" ")
+    >>> sfmt(1023,base=1024,unit="B",infix="i",prefixes="KMG",preprefix=" ")
     '1023 B'
-    >>> sfmt(1024, base=1024, unit="B", infix="i", prefixes="KMG", preprefix=" ")
+    >>> sfmt(1024,base=1024,unit="B",infix="i",prefixes="KMG",preprefix=" ")
     '1 KiB'
-    >>> sfmt(100_000, base=1024, unit="B", infix="i", prefixes="KMG", preprefix=" ")
+    >>> sfmt(100_000,base=1024,unit="B",infix="i",prefixes="KMG",preprefix=" ")
     '98 KiB'
-    >>> sfmt(1_000_000, base=1024, unit="B", infix="i", prefixes="KMG", preprefix=" ")
+    >>> sfmt(1_000_000,base=1024,unit="B",infix="i",prefixes="KMG",
+    ... preprefix=" ")
     '977 KiB'
-    >>> sfmt(10_000_000, base=1024, unit="B", infix="i", prefixes="KMG", preprefix=" ", places=1)
+    >>> sfmt(10_000_000, base=1024, unit="B", infix="i", prefixes="KMG",
+    ... preprefix=" ", places=1)
     '9.5 MiB'
 
     """
