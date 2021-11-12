@@ -1,12 +1,8 @@
 from logging import getLogger
-from os import geteuid
 from sys import platform
 import time
 from datetime import timedelta
 import click
-from click.exceptions import Exit
-import yaml
-from gi.repository import GLib
 
 import pydbus
 
@@ -16,8 +12,7 @@ except ImportError:
     daemon = None
 
 from click.exceptions import Exit
-from .common import bp, yamlrepr_hl
-from .click import green, red, yellow, echo_maybepager
+from .click import green, red, yellow
 
 from .constants import (
     _ORGANIZE_DBUS_NAME,
