@@ -33,10 +33,6 @@ memoize = lambda f: (
 
 def chown_like_dir(path):
     """
-    Test on invalid directory
-    >>> chown_like_dir("+")
-    Can not set ownership of +
-
     Test on current directory
     >>> chown_like_dir("./")
 
