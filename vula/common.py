@@ -771,8 +771,7 @@ class b64_bytes(bytes):
             ),
             And(bytes, Length(length), Use(cls)),
             error="{!r} is not %s bytes or a %s-char base64 string which "
-            "decodes to %s bytes"
-            % (length, b64_length, length),
+            "decodes to %s bytes" % (length, b64_length, length),
             # name = '%s bytes base64-encoded' % (length,), #when we upgrade to
             # the newer schema lib
         )
@@ -981,7 +980,8 @@ def organize_dbus_if_active():
     elif _ORGANIZE_DBUS_NAME in bus.dbus.ListActivatableNames():
         raise Exit(
             "Organize is not running (but it is dbus-activatable; use 'vula"
-            "start' to start it.).")
+            "start' to start it.)."
+        )
     else:
         raise Exit("Organize dbus service is not configured")
 
