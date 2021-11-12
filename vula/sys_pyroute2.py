@@ -68,8 +68,8 @@ class Sys(object):
             msg = ip.get()
             if len(msg) != 1:
                 self.log.info(
-                    "BUG: got message with non-1 length %r which we didn't expect ever happens",
-                    msg,
+                    "BUG: got message with non-1 length %r which we didn't "
+                    "expect ever happens", msg,
                 )
                 continue
             event = msg[0].get('event')
@@ -220,7 +220,8 @@ class Sys(object):
                         flags=not_flag,
                     )
                 res.append(
-                    "ip -{af} rule add not from all fwmark 0x{mark:x} lookup {table}".format(
+                    "ip -{af} rule add not from all fwmark 0x{mark:x} "
+                    "lookup {table}".format(
                         af=ip_version[family], mark=mark, table=routing_table
                     )
                 )
@@ -342,7 +343,8 @@ class Sys(object):
                     )
                 if scope in SCOPES:
                     # this is strictly cosmetic
-                    # the printed "ip route" command is runnable with the scope as an integer too
+                    # the printed "ip route" command is runnable with the scope
+                    # as an integer too
                     scope = SCOPES[scope]
                 res.append(
                     "ip route del {dst} table {table} scope {scope}".format(
@@ -371,7 +373,8 @@ class Sys(object):
                     )
                 if scope in SCOPES:
                     # this is strictly cosmetic
-                    # the printed "ip route" command is runnable with the scope as an integer too
+                    # the printed "ip route" command is runnable with the scope
+                    # as an integer too
                     scope = SCOPES[scope]
                 res.append(
                     "ip route del {dst} table {table} scope {scope}".format(
