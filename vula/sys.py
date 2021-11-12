@@ -4,4 +4,4 @@ for the current operating system. Currently, only pyroute2 on Linux is
 supported.
 """
 
-from .sys_pyroute2 import Sys
+from .sys_pyroute2 import Sys  # noqa: F401
