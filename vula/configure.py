@@ -231,11 +231,11 @@ class Configure(attrdict):
             system("systemctl restart systemd-sysusers")
             system("systemctl reload dbus")
         if platform.startswith("linux"):
-            # XXX: this line is left here to ease upgrades from systems where the
-            # wg-quick@vula service is in a degraded state. it should not ever
-            # be in a degraded state anymore after this code has run once, now that
-            # we've removed the call to "wg-quick up vula". so, after all
-            # existing installs have upgraded, we should remove this line:
+            # XXX: this line is left here to ease upgrades from systems where
+            # the wg-quick@vula service is in a degraded state. it should not
+            # ever be in a degraded state anymore after this code has run once,
+            # now that we've removed the call to "wg-quick up vula". so, after
+            # all existing installs have upgraded, we should remove this line:
             system("wg-quick down vula")
 
     @DualUse.method()
@@ -243,7 +243,8 @@ class Configure(attrdict):
         self._ensure_root()
         self.log.info("configuring nsswitch to respect our petname system")
         system(
-            "perl -pi -e 'm/vula /s || s/^(hosts:\\s+)/${1}vula /' /etc/nsswitch.conf"
+            "perl -pi -e 'm/vula /s || s/^(hosts:\\s+)/${1}vula /'"
+            "/etc/nsswitch.conf"
         )
 
     @DualUse.method()
@@ -255,8 +256,8 @@ class Configure(attrdict):
             time.sleep(1.5)
         # FIXME: this causes a non-zero exit status sometimes, if the organize
         # service is "activating" instead of "active". the sleep could be
-        # increased, or we could perhaps hang around to find out what happened via
-        # some dbus event or something?
+        # increased, or we could perhaps hang around to find out what happened
+        # via some dbus event or something?
         ctx.invoke(StatusCommand)
 
 

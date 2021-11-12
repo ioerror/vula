@@ -37,10 +37,9 @@ _ORGANIZE_DBUS_NAME: str = "local.vula.organize"
 _DISCOVER_DBUS_NAME: str = "local.vula.discover"
 _PUBLISH_DBUS_NAME: str = "local.vula.publish"
 
-# FIXME: these should not have the 1 in them, but pydbus publish() puts it there.
-#       we should figure out how to make it work with the 1 removed from the
-#       object path (we want it in the interface name, but not the object
-#       path.)
+# FIXME: these should not have the 1 in them, but pydbus publish() puts it
+# there.  we should figure out how to make it work with the 1 removed from the
+# object path (we want it in the interface name, but not the object path.)
 _ORGANIZE_DBUS_PATH: str = "/local/vula/organize"
 _DISCOVER_DBUS_PATH: str = "/local/vula/discover"
 _PUBLISH_DBUS_PATH: str = "/local/vula/publish"
