@@ -30,7 +30,7 @@ For other distros use the "Installing from PyPI with pip" section from
 On ubuntu/debian the following command can be used.
 
 ```
-sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
+sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0 python3-venv
 ```
 
 After installing the `pygobject` dependencies you can install pipenv.
@@ -57,7 +57,7 @@ Full example on debian/ubuntu.
 
 ```
 sudo apt update
-sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
+sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0 python3-venv
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 pipx install pipenv
