@@ -13,7 +13,7 @@ bssid:
 >>> bytes(list(n.bssid.keys())[0])
 b'\xaa\xbb\xcc\xdd\xee\xff'
 """
-from schema import Schema, Optional as Optional_, Use
+from schema import Schema, Optional as Optional_
 from .common import schemattrdict, ESSID, BSSID, MACaddr, yamlrepr
 
 

@@ -6,7 +6,7 @@ from functools import reduce, wraps
 
 import click
 import packaging.version as pkgv
-from click.exceptions import Exit
+from click.exceptions import Exit  # noqa: F401
 from schema import Optional, Schema
 
 """

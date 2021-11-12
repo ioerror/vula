@@ -10,19 +10,15 @@ this module.
 
 from __future__ import annotations
 from logging import Logger, getLogger
-from os import geteuid
 import time
 from datetime import timedelta
 import click
-from click.exceptions import Exit
 from pyroute2 import (
     WireGuard as PyRoute2WireGuard,
     IPRoute,
-    IPDB,
-    NetlinkError,
 )
 from pyroute2.netlink import nla as netlink_atom
-from base64 import b64encode, b64decode
+from base64 import b64encode, b64decode  # noqa: F401
 from ipaddress import ip_address, ip_network
 from schema import Schema, And, Or, Use, Optional
 from .common import (
@@ -36,8 +32,6 @@ from .common import (
     yamlrepr_hl,
     format_byte_stats,
 )
-
-from .common import bp
 
 
 def _wg_interface_list():

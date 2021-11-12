@@ -1,20 +1,11 @@
-import os
 import sys
 import pydbus
-from logging import DEBUG, INFO, WARN, basicConfig, getLogger
+from logging import DEBUG, INFO, WARN, basicConfig
 
 import click
 from . import (
-    configure,
-    discover,
-    publish,
-    organize,
-    verify,
     status,
-    peer,
-    prefs,
     wg,
-    engine,
     common,
 )
 from .click import Debuggable

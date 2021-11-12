@@ -15,12 +15,12 @@ from ipaddress import ip_address, ip_network
 from pathlib import Path
 import pydbus
 import click
-from .click import DualUse, Exit
+from .click import DualUse, Exit  # noqa: F401
 from .constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
 
 try:
     import pygments
-    from pygments import highlight, lexers, formatters
+    from pygments import lexers, formatters  # noqa: F401
 except ImportError:
     pygments = None
 
