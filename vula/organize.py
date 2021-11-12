@@ -104,7 +104,8 @@ class SystemState(schemattrdict):
 
         >>> SystemState().current_ips
         []
-        >>> SystemState(current_subnets={'10.0.0.0/24': ['10.0.0.1', '10.0.0.2']}).current_ips
+        >>> SystemState(current_subnets={'10.0.0.0/24': ['10.0.0.1',
+        ... '10.0.0.2']}).current_ips
         [IPv4Address('10.0.0.1'), IPv4Address('10.0.0.2')]
         >>> SystemState(current_subnets={'10.0.0.0/24': ['10.0.0.1'],
         ... '192.168.0.0/24': ['192.168.1.1']}).current_ips
@@ -605,7 +606,7 @@ class Organize(attrdict):
                 "dt": "86400",
                 "port": str(self.port),
                 "hostname": node() + _DOMAIN,
-                "r": '',  # Later this will allow a user to announce they're a router
+                "r": '',
                 "e": False,
             }
         ).sign(self._keys.vk_Ed25519_sec_key)
@@ -641,9 +642,10 @@ class Organize(attrdict):
 
             if os.path.exists(self.state_file):
                 self.log.info(
-                    "Existing state file will be overwritten because it was malformed: %r",
+                    "Existing state file will be overwritten because it was "
+                    "malformed: %r",
                     ex
-                    # XXX we should probably move the malformed file aside here...
+                    # XXX we should probably move the malformed file aside here
                 )
             self.log.debug("Created new OrganizeState")
 
@@ -862,8 +864,8 @@ class Organize(attrdict):
             descriptor = Descriptor.parse(descriptor)
         except Exception as ex:
             self.log.info(
-                "organize failed to parse descriptor because %r (descriptor was %r)"
-                % (ex, descriptor)
+                "organize failed to parse descriptor because %r (descriptor "
+                "was %r)" % (ex, descriptor)
             )
             return
 
