@@ -415,8 +415,8 @@ if pygments is not None:
 
 
 else:
-    yamlrepr_hl = yamlrepr
-    jsonrepr_hl = jsonrepr
+    yamlrepr_hl = yamlrepr  # type: ignore
+    jsonrepr_hl = jsonrepr  # type: ignore
 
 
 class Bug(Exception):
