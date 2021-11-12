@@ -6,21 +6,12 @@ import os
 import pdb
 from logging import Logger, getLogger
 from typing import Any, Dict, Optional
-from schema import (
-    Schema,
-    And,
-    Use,
-    Or,
-    SchemaError,
-)
+from schema import Schema, And, Use, Or, SchemaError
 from base64 import b64decode, b64encode
 import yaml
 import json
 import copy
-from ipaddress import (
-    ip_address,
-    ip_network,
-)
+from ipaddress import ip_address, ip_network
 from pathlib import Path
 import pydbus
 import click
@@ -41,9 +32,17 @@ memoize = lambda f: (
 
 
 def chown_like_dir(path):
+    """
+    # Tests invalid directory name
+    >>> chown_like_dir("+")
+    Can not set ownership of +
+    """
     if os.getuid() == 0:
-        dirstat = os.stat(os.path.dirname(os.path.realpath(path)))
-        os.chown(path, dirstat.st_uid, dirstat.st_gid)
+        try:
+            dirstat = os.stat(os.path.dirname(os.path.realpath(path)))
+            os.chown(path, dirstat.st_uid, dirstat.st_gid)
+        except OSError:
+            print("Can not set ownership of " + path)
 
 
 def _safer_load(
@@ -126,11 +125,7 @@ class attrdict(dict):
                 "which is an attrdict, which provides read-only access to keys through the "
                 "attribute interface). Attributes which are dictionary keys are not allowed to be "
                 "set through the attrdict attribute interface. "
-                % (
-                    key,
-                    value,
-                    type(self),
-                )
+                % (key, value, type(self))
             )
         super(attrdict, self).__setattr__(key, value)
 
@@ -206,11 +201,7 @@ class ro_dict(dict):
 (*({'different_key': 'other_value'},), **{})
         """
         raise ValueError(
-            "Attempt to update read-only dictionary (*%s, **%s)"
-            % (
-                a,
-                kw,
-            )
+            "Attempt to update read-only dictionary (*%s, **%s)" % (a, kw)
         )
 
 
@@ -396,7 +387,7 @@ if pygments is not None:
                 pygments.lexers.YamlLexer(),
                 pygments.formatters.TerminalTrueColorFormatter(
                     #    style=MyStyle,
-                    style='paraiso-dark',
+                    style='paraiso-dark'
                 ),
             )
             return res
@@ -408,7 +399,7 @@ if pygments is not None:
                 json.dumps(self._dict(), indent=2),
                 pygments.lexers.JsonLexer(),
                 pygments.formatters.TerminalTrueColorFormatter(
-                    style='paraiso-dark',
+                    style='paraiso-dark'
                 ),
             )
             return res
@@ -750,11 +741,7 @@ class b64_bytes(bytes):
                 Use(cls),
                 Length(length),
             ),
-            And(
-                bytes,
-                Length(length),
-                Use(cls),
-            ),
+            And(bytes, Length(length), Use(cls)),
             error="{!r} is not %s bytes or a %s-char base64 string which decodes to %s bytes"
             % (length, b64_length, length),
             # name = '%s bytes base64-encoded' % (length,), #when we upgrade to the newer schema lib
@@ -782,7 +769,7 @@ Flexibool = And(
                 if v.lower() in ('true', 'yes', 'on', '1', 'y', 'j', 'ja')
                 else 0
                 if v.lower() in ('false', 'no', 'off', '0', 'n', 'nein', 'nej')
-                else 'error',
+                else 'error'
             ),
         ),
     ),
