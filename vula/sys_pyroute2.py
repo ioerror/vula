@@ -69,7 +69,8 @@ class Sys(object):
             if len(msg) != 1:
                 self.log.info(
                     "BUG: got message with non-1 length %r which we didn't "
-                    "expect ever happens", msg,
+                    "expect ever happens",
+                    msg,
                 )
                 continue
             event = msg[0].get('event')
