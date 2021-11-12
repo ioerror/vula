@@ -645,6 +645,9 @@ class colon_hex_bytes(bytes):
         [65, 66, 67]
         >>> a.decode()
         'ABC'
+        >>> c = colon_hex_bytes.with_len(4).validate(b'ABCD')
+        >>> c
+        '41:42:43:44'
         """
         str_len = length * 3 - 1
         return Or(
