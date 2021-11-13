@@ -1,13 +1,23 @@
+import os  # noqa: F401
 import sys
 import pydbus
-from logging import DEBUG, INFO, WARN, basicConfig
+from logging import DEBUG, INFO, WARN, basicConfig, getLogger  # noqa: F401
 
 import click
-from . import (
+from . import (  # noqa: F40
+    configure,
+    discover,
+    publish,
+    organize,
+    verify,
     status,
+    peer,
+    prefs,
     wg,
+    engine,
     common,
-)
+ )
+
 from .click import Debuggable
 from .constants import (
     _DATE_FMT,
@@ -102,7 +112,7 @@ def repair(dry_run):
 @main.command()
 def rediscover():
     "Tell organize to ask discover for more peers"
-    organize = common.organize_dbus_if_active()
+    organize = common.organize_dbus_if_active()  # noqa: F811
     click.echo('Discovering on ' + organize.rediscover())
 
 

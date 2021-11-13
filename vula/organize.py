@@ -357,7 +357,7 @@ class OrganizeState(Engine, yamlrepr_hl):
             self._SET(('peers', peer.id, 'nicknames', desc.hostname), True)
 
         if set(desc.addrs) & set(self.system_state.gateways):
-            self._SET(('peers', descriptor.id, 'use_as_gateway'), True)
+            self._SET(('peers', desc.id, 'use_as_gateway'), True)
 
         self.result.add_triggers(sync_peer=(peer.id,))
 

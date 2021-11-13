@@ -52,7 +52,7 @@ def main(only_systemd):
 
     if daemon is not None and daemon.booted() == 1:
         systemd = bus.get(".systemd1")
-        all_units = {str(u[0]): u for u in systemd.ListUnits()}
+        # all_units = {str(u[0]): u for u in systemd.ListUnits()}
         for service in [
             "publish",
             "discover",

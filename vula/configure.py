@@ -4,7 +4,7 @@
 """
 
 from base64 import b64encode
-from logging import getLogger
+from logging import getLogger, Logger
 import os
 from os import geteuid, mkdir, system
 from sys import platform
@@ -60,6 +60,7 @@ class Configure(attrdict):
         self.log: Logger = getLogger()
         self.log.debug("Debug level logging enabled")
         self._csidh = None
+        self._ctx = ctx
 
     def _ensure_root(self):
         if geteuid() != 0:
@@ -71,7 +72,7 @@ class Configure(attrdict):
     def _ensure_linux(self):
         if platform.startswith("linux"):
             if daemon.booted() != 1:
-                log.error("not running systemd: manual configuration required")
+                self.log.error("no systemd: manual configuration required")
                 raise Exit(2)
 
     @DualUse.method()
@@ -241,7 +242,7 @@ class Configure(attrdict):
         self.log.info("configuring nsswitch to respect our petname system")
         system(
             "perl -pi -e 'm/vula /s || s/^(hosts:\\s+)/${1}vula /'"
-            "/etc/nsswitch.conf"
+            " /etc/nsswitch.conf"
         )
 
     @DualUse.method()
@@ -255,7 +256,7 @@ class Configure(attrdict):
         # service is "activating" instead of "active". the sleep could be
         # increased, or we could perhaps hang around to find out what happened
         # via some dbus event or something?
-        ctx.invoke(StatusCommand)
+        self._ctx.invoke(StatusCommand)
 
 
 main = Configure.cli

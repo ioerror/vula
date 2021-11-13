@@ -11,6 +11,7 @@ this module.
 from __future__ import annotations
 from logging import Logger, getLogger
 import time
+from typing import Tuple
 from datetime import timedelta
 import click
 from pyroute2 import (

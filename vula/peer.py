@@ -33,6 +33,7 @@ from .click import (
 from .engine import Result
 from .common import (
     Bug,
+    ConsistencyError,
     attrdict,
     schemattrdict,
     serializable,
@@ -157,7 +158,7 @@ class Descriptor(schemattrdict, serializable):
                 if len(val) > 1
             )
             descriptor: Descriptor = cls(dir_desc)
-        except ValueError as error:
+        except ValueError:
             raise
             # log.info("Unable to parse descriptor: %s (%r)", error, descriptor)
             return None

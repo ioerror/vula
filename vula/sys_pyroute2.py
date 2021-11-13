@@ -107,12 +107,12 @@ class Sys(object):
             )
         )
 
-        system_links = {
-            dict(link['attrs'])['IFLA_IFNAME']: dict(link['attrs'])[
-                'IFLA_CARRIER'
-            ]  # unused
-            for link in self.ipr.get_links()
-        }
+        # system_links = {
+        #     dict(link['attrs'])['IFLA_IFNAME']: dict(link['attrs'])[
+        #         'IFLA_CARRIER'
+        #     ]  # unused
+        #     for link in self.ipr.get_links()
+        # }
 
         current_subnets = {}
 
