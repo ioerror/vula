@@ -20,14 +20,14 @@ from .csidh import csidh_parameters, CSIDH
 
 try:
     from dbus import Boolean, Interface, SystemBus
-except:
+except ImportError:
     pass
 from nacl.signing import SigningKey
 from nacl.encoding import Base64Encoder
 
 try:
     from systemd import daemon
-except:
+except ImportError:
     pass
 
 from .click import DualUse
