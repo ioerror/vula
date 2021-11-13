@@ -362,11 +362,24 @@ def schema2click_options(f):
     return f
 
 
-red = lambda s: click.style(s, fg="red")
-green = lambda s: click.style(s, fg="green")
-blue = lambda s: click.style(s, fg="bright_blue")
-yellow = lambda s: click.style(s, fg="yellow")
-bold = lambda s: click.style(s, bold=True)
+def red(s):
+    return click.style(s, fg="red")
+
+
+def green(s):
+    return click.style(s, fg="green")
+
+
+def blue(s):
+    return click.style(s, fg="blue")
+
+
+def yellow(s):
+    return click.style(s, fg="yellow")
+
+
+def bold(s):
+    return click.style(s, bold=True)
 
 
 def echo_maybepager(s):
