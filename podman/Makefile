@@ -349,6 +349,8 @@ test-pytest: testnet-start
 
 .PHONY: test-ping
 test-ping: testnet-start
+	sudo podman exec -it $(test1) vula status
+	sudo podman exec -it $(test2) vula status
 	sudo podman exec -it $(test2) ping -c 1 $(test1).local.
 
 .PHONY: test-all
