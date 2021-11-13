@@ -34,7 +34,6 @@ from .engine import Result
 from .common import (
     Bug,
     attrdict,
-    DualUse,
     schemattrdict,
     serializable,
     b64_bytes,
