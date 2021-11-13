@@ -1,14 +1,10 @@
 from ipaddress import ip_address, ip_network
 from pyroute2 import IPRoute
-from pyroute2.netlink.exceptions import NetlinkError
 from socket import AddressFamily
 from .wg import Interface as WgInterface
-from .peer import Peer
 from .constants import _LINUX_MAIN_ROUTING_TABLE, IPv4_GW_ROUTES
 import threading
 from pyroute2 import IPRSocket
-from pprint import pprint
-from .common import bp
 
 # FIXME: find where the larger canonical version of this table lives
 SCOPES = {0: 'global', 253: 'static'}

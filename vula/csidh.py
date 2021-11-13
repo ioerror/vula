@@ -1,11 +1,10 @@
 """
 *vula* CSIDH interface functions.
 """
-from base64 import b64encode
 from hkdf import Hkdf
 from hashlib import sha512
 
-from sibc.csidh import CSIDH
+from sibc.csidh import CSIDH  # noqa: F401
 from typing import ByteString
 
 from .common import b64_bytes

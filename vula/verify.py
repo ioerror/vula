@@ -31,13 +31,8 @@ import yaml
 import click
 from click.exceptions import Exit
 import pydbus
-from time import sleep
 
-from .common import jsonrepr
 from .constants import (
-    _DATE_FMT,
-    _LABEL,
-    _LOG_FMT,
     _ORGANIZE_DBUS_NAME,
     _ORGANIZE_DBUS_PATH,
 )

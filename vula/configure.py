@@ -4,12 +4,10 @@
 """
 
 from base64 import b64encode
-from vula.common import b64_bytes
-from logging import INFO, basicConfig, getLogger
+from logging import getLogger
 import os
-from os import chmod, chown, geteuid, mkdir, system, stat
-from pwd import getpwnam
-from sys import stdout, platform
+from os import geteuid, mkdir, system
+from sys import platform
 import time
 import click
 from click.exceptions import Exit
@@ -31,7 +29,6 @@ try:
     from systemd import daemon
 except:
     pass
-from yaml import safe_dump, safe_load
 
 from .click import DualUse
 from .constants import (
