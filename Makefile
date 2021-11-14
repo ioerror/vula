@@ -1,7 +1,7 @@
 VERSION := $(shell python3 setup.py version|tail -n1)
 DEB_NAME := ./deb_dist/python3-vula_${VERSION}-1_all.deb
 RPM_NAME := ./dist/vula-$(VERSION)-1.noarch.rpm
-FOLDER = vula test
+FOLDER = vula test podman/mitm
 
 .PHONY: test
 test:
