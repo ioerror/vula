@@ -71,6 +71,11 @@ mypy:
 pytest:
 	pipenv run pytest
 
+.PHONY: sast-analysis
+sast-analysis:
+	pipenv run bandit -r -ll -s B104 -f txt -o ./report-bandit.txt ./vula
+	pipenv run semgrep --json -o ./report-semgrep.txt --config="p/security-audit" ./vula/
+
 .PHONY: dev-deps-apt
 dev-deps-apt:
 	export PATH=$$PATH:~/.local/bin
