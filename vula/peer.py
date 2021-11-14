@@ -397,6 +397,19 @@ class Peer(schemattrdict):
 
     @property
     def name_and_id(self):
+        """
+        Returns the name and id of the peer.
+
+        >>> desc_string = ("addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
+        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
+        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> descriptor = Descriptor.parse(desc_string)
+        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
+        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
+        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name_and_id
+        'george.local (Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=)'
+        """
         return "%s (%s)" % (self.name, self.id)
 
     @property
