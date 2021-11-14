@@ -340,6 +340,13 @@ class yamlrepr(serializable):
     """
 
     def __repr__(self):
+        """
+        Function to return a YAML representation of a Serializable in human
+        readable format
+        >>> yamlrepr(serializable({2:3}))
+        2: 3
+        <BLANKLINE>
+        """
         return yaml.safe_dump(self._dict(), default_style='', sort_keys=False)
 
     @classmethod
