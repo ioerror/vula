@@ -29,6 +29,8 @@ pytest-cov = "*"
 pygobject-stubs= "*"
 setuptools = "*"
 stdeb = "*"
+semgrep = "*"
+bandit = "*"
 
 [requires]
 python_version = "3"
