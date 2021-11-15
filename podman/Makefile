@@ -180,26 +180,7 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	podman rm vula-mitm-tmp
 	podman rm -f vula-mitm-deps-tmp
 	podman image rm vula-mitm-deps-$(dist)
-	make dist=$(dist) .transfer-mallory-image-to-root
 	touch $@
-
-.PHONY: .transfer-image-to-root
-.transfer-image-to-root:
-	#
-	# Although we can build the image as root, we can't grant it CAP_NET_ADMIN
-	# as we don't have that ourselves. So, we need to transfer the image into
-	# root's local registry to run it as root:
-	#sudo -v # unlock sudo to run podman as root
-	podman save vula-$(dist) | sudo podman load
-
-.PHONY: .transfer-mallory-image-to-root
-.transfer-mallory-image-to-root:
-	#
-	# Although we can build the image as root, we can't grant it CAP_NET_ADMIN
-	# as we don't have that ourselves. So, we need to transfer the image into
-	# root's local registry to run it as root:
-	sudo -v # unlock sudo to run podman as root
-	podman save vula-mallory-$(dist) | sudo podman load
 
 .PHONY: $(pkgmgr)-image
 $(pkgmgr)-image:
@@ -311,13 +292,13 @@ test: testnet-start
 .PHONY: mallory-start
 mallory-start: .mallory-started-stamp
 .mallory-started-stamp: .dpkg-install-mitm-$(dist)-stamp
-	sudo podman create $(podman_args) --name mallory --hostname mallory $(add_caps) --network $(NET_NAME) $(add_caps) vula-mallory-$(dist)
-	sudo podman start mallory
+	podman create $(podman_args) --name mallory --hostname mallory $(add_caps) --network $(NET_NAME) $(add_caps) vula-mallory-$(dist)
+	podman start mallory
 	touch $@
 
 .PHONY: mallory-stop
 mallory-stop: 
-	sudo podman stop mallory
+	podman stop mallory
 	@rm -vf .mallory-started-stamp
 
 .PHONY: mallory-clean
