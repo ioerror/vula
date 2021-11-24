@@ -2,6 +2,7 @@ VERSION := $(shell cd ..; python3 setup.py version|tail -n1)
 DEB_NAME := ../deb_dist/python3-vula_$(VERSION)-1_all.deb
 RPM_NAME := ../dist/vula-$(VERSION)-1.noarch.rpm
 NET_NAME := vula-net
+SO_NAME := /usr/local/lib64/python3.9/site-packages/lib/libnss_vula.so.2
 dist := bullseye
 #dists := buster focal hirsute bullseye impish fedora34 alpine
 dists := bullseye impish fedora34
@@ -140,6 +141,8 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
 	# install the rpm:
 	podman exec vula-tmp rpm -i dist/$(RPM_NAME)
+	# install vula_libnss and configure it to be used
+	podman exec vula-tmp cp $(SO_NAME) /usr/lib64/
 	podman exec vula-tmp vula configure nsswitch
 	# stop container:
 	podman stop vula-tmp
