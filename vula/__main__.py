@@ -18,7 +18,7 @@ from . import (  # noqa: F40
     common,
 )
 
-from .click import Debuggable
+from .notclick import Debuggable
 from .constants import (
     _DATE_FMT,
     _LOG_FMT,

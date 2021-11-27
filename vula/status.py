@@ -12,7 +12,7 @@ except ImportError:
     daemon = None
 
 from click.exceptions import Exit
-from .click import green, red, yellow
+from .notclick import green, red, yellow
 
 from .constants import (
     _ORGANIZE_DBUS_NAME,

@@ -36,7 +36,7 @@ from .constants import (
     _ORGANIZE_DBUS_NAME,
     _ORGANIZE_DBUS_PATH,
 )
-from .click import DualUse, green, bold
+from .notclick import DualUse, green, bold
 from .peer import Descriptor
 from .engine import Result
 

@@ -30,7 +30,7 @@ try:
 except ImportError:
     pass
 
-from .click import DualUse
+from .notclick import DualUse
 from .constants import (
     _WG_SERVICES,
     _ORGANIZE_KEYS_CONF_FILE,

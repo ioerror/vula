@@ -56,7 +56,7 @@ from .constants import (
 )
 from .configure import Configure
 
-from .click import DualUse
+from .notclick import DualUse
 from .csidh import hkdf, csidh_parameters, CSIDH
 from .peer import Descriptor, Peers, PeerCommands
 from .prefs import Prefs

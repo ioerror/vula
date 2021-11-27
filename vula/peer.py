@@ -7,7 +7,7 @@ import json
 from io import StringIO
 from datetime import timedelta
 
-from .click import shell_complete_helper
+from .notclick import shell_complete_helper
 
 from ipaddress import (
     IPv4Address,
@@ -21,7 +21,7 @@ from base64 import b64encode
 from schema import Schema, And, Regex, Use, Optional
 from typing import List
 
-from .click import (
+from .notclick import (
     DualUse,
     red,
     green,
