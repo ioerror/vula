@@ -332,14 +332,9 @@ testnet-mitm-clean-all: testnet-mitm-stop
                 make dist=$$dist testnet-mitm-clean; \
 	done
 
-# TODO
-# sudo podman image rm vula-mallory-$(dist)
-# @rm -vf .deps-bullseye-mitm
-# @rm -vf ./podman/mitm/capture.pcap
-
 .PHONY: test-passive-adversary
 test-passive-adversary: testnet-mitm-start
-	sudo podman exec -itd mallory python3 podman/mitm/test_passive_adversary.py --target_ip1 10.89.0.4 --target_ip2 10.89.0.5 --capture_time 15 --capture_path podman/mitm/sniff.pcap --is_test
+	sudo podman exec -itd mallory python3 podman/mitm/test_passive_adversary.py run 10.89.0.4 10.89.0.5 15 podman/mitm/sniff.pcap True
 	sudo podman exec -it $(test2) ping -c 5 $(test1).local.
 
 .PHONY: test-active-adversary

