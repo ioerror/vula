@@ -3,23 +3,27 @@
 # TODO: Info that this is an offensive script,
 #  only use in LAN where you allowed to us such SW
 
-from scapy.all import Ether, ARP, srp, send, sniff, wrpcap
-import time
+# import time
 import os
 import sys
 import subprocess
 import platform
 import logging
 import click
-from threading import Thread
 
+# from threading import Thread
+from pyfiglet import Figlet
+from printy import printy
+from scapy.all import Ether, ARP, srp, send
 from ipaddress import IPv4Address
+import pyshark
 
-# TODO: * Get IP addresses of victims in podman setup-
-#       * Automatically analyse pcap files within the test
-#           * from scapy.utils import RawPcapReader
-#           * Pyshark (Python wrapper for tshark)
-
+# TODO issues
+#       * 1st run always fails -> network not ready?
+#       * ARP spoofing does not work always -> restore fail? other?
+#           * Current Workaround: detect error and give a specific
+#             error message
+#       * Solve Threading issues (or remove comments)
 # TODO (minor):
 #       * black, flake8, isort, mypy
 
@@ -36,6 +40,10 @@ formatter = logging.Formatter(
 )
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+TEST_PASSED_STAMP = "./podman/mitm/.test-passed-stamp"
+TEST_NOT_PASSED_STAMP = "./podman/mitm/.test-not-passed-stamp"
+NO_CAPTURE = "./podman/mitm/.test-no-capture"
 
 
 def _enable_macos_iproute():
@@ -177,26 +185,35 @@ def restore(target_ip, host_ip):
     logger.info(f"[+] Sent to {target_ip} : {host_ip} is-at {host_mac}")
 
 
-def capture(file: str, timeout: int) -> None:
+def capture(timeout: int) -> None:
     """
-    :param file: Filepath for .pcap file
     :param timeout: How long the traffic shall be captured.
     :return:
     """
-
-    """
-    Try to use tcpdump directly before using this function here.
-    Scapy is not intend/optimized for packet capturing
-    """
-    if os.path.exists(file):
-        click.echo("[+] Delete existing Capture file")
-        os.unlink(file)
+    WIREGUARD_TSHARK_STRING = "WG"
 
     click.echo("[+] Start sniffing...")
-    pkt = sniff(timeout=timeout)
+    cap = pyshark.LiveCapture(interface="eth0")
+    cap.sniff(timeout=timeout)
+    packets = [pkt for pkt in cap._packets]
+    cap.close()
+
+    wg_count = 0
+    for pkt in packets:
+        if pkt.highest_layer == WIREGUARD_TSHARK_STRING:
+            wg_count += 1
+
+    if wg_count > 0:
+        with open(TEST_PASSED_STAMP, "w") as f:
+            f.write(str(wg_count))
+    elif len(packets) == 0:
+        with open(NO_CAPTURE, "w") as f:
+            f.write(str(wg_count))
+    else:
+        with open(TEST_NOT_PASSED_STAMP, "w") as f:
+            f.write(str(wg_count))
 
     click.echo("[+] Stop sniffing")
-    wrpcap(file, pkt)
 
 
 @click.group()
@@ -205,16 +222,48 @@ def main_cli():
 
 
 @main_cli.command()
+def banner():
+    f = Figlet()
+    printy(f.renderText("It's a me Eve!"), 'o>')
+    print()
+    print("[+]", end=" ")
+    printy("Start passive attack test", 'n')
+    print()
+
+
+@main_cli.command()
+def result():
+    if os.path.exists(TEST_PASSED_STAMP):
+        os.unlink(TEST_PASSED_STAMP)
+        print()
+        print("[+]", end=" ")
+        printy("Test passed!", 'n')
+        print("Communcation is encrypted")
+        print()
+    elif os.path.exists(NO_CAPTURE):
+        os.unlink(NO_CAPTURE)
+
+        print("[!]", end=" ")
+        printy("Could not capture any traffic!", 'o>')
+        print("Please clean test setup and restart test")
+        print()
+    else:
+        os.unlink(TEST_NOT_PASSED_STAMP)
+        print("[!]", end=" ")
+        printy("Test failed!", 'r>')
+        print("Communcation is NOT encrypted")
+        print()
+
+
+@main_cli.command()
 @click.argument('target_ip1', type=str)
 @click.argument('target_ip2', type=str)
 @click.argument('capture_time', type=int)
-@click.argument('capture_path', type=str)
 @click.argument('is_test', default=False, type=bool)
 def run(
     target_ip1: str,
     target_ip2: str,
     capture_time: int,
-    capture_path: str,
     is_test: bool = False,
 ):
 
@@ -223,23 +272,34 @@ def run(
         # enable ip forwarding
         enable_ip_route()
 
-    # Run capturing in different thread since it's blocking
-    capture_thread = Thread(target=capture, args=(capture_path, capture_time))
-    capture_thread.start()
+    # Clears test stamp if present
+    if os.path.exists(TEST_PASSED_STAMP):
+        os.unlink(TEST_PASSED_STAMP)
+    if os.path.exists(TEST_NOT_PASSED_STAMP):
+        os.unlink(TEST_NOT_PASSED_STAMP)
+    if os.path.exists(NO_CAPTURE):
+        os.unlink(NO_CAPTURE)
+    # # Run capturing in different thread since it's blocking
+    # capture_thread = Thread(target=capture, args=(capture_time))
+    # capture_thread.start()
 
-    # Send malicious packages every second
+    # # Send malicious packages every second
+    # try:
+    #     while capture_thread.is_alive():
+    #         # telling the target1 that we are the target2
+    #         spoof(target_ip1, target_ip2)
+    #         # telling the target2 that we are the target1
+    #         spoof(target_ip2, target_ip1)
+
+    #         # sleep for one second
+    #         time.sleep(1)
+    # except KeyboardInterrupt:
+    #     # Restore even the user terminates the process
+    #     pass
     try:
-        while capture_thread.is_alive():
-            # telling the target1 that we are the target2
-            spoof(target_ip1, target_ip2)
-            # telling the target2 that we are the target1
-            spoof(target_ip2, target_ip1)
-
-            # sleep for one second
-            time.sleep(1)
-    except KeyboardInterrupt:
-        # Restore even the user terminates the process
-        pass
+        spoof(target_ip1, target_ip2)
+        spoof(target_ip2, target_ip1)
+        capture(timeout=capture_time)
     finally:
         # Restore the network to the legit state
         restore(target_ip1, target_ip2)
@@ -248,7 +308,7 @@ def run(
         # TODO: Force it to quit? With timeout?
         #  Keep it as it is? Before or after restore?
         # Wait for the sniffing to be completed
-        capture_thread.join()
+        # capture_thread.join()
 
 
 if __name__ == '__main__':
