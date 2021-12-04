@@ -414,6 +414,14 @@ if pygments is not None:
 
     class jsonrepr_hl(jsonrepr):
         def __repr__(self):
+            r"""
+            Function to return a raw json formatted content with syntax highlighting.
+            >>> serializableObj = serializable(("ab", "cd"))
+            >>> jsonReprObj = jsonrepr(serializableObj)
+            >>> jsonReprhlObj = jsonrepr_hl(jsonReprObj)
+            >>> jsonReprhlObj.__repr__()
+            '\x1b[38;2;231;233;219m{\x1b[39m\n\x1b[38;2;231;233;219m  \x1b[39m\x1b[38;2;91;196;191m"a"\x1b[39m\x1b[38;2;231;233;219m:\x1b[39m\x1b[38;2;231;233;219m \x1b[39m\x1b[38;2;72;182;133m"b"\x1b[39m\x1b[38;2;231;233;219m,\x1b[39m\n\x1b[38;2;231;233;219m  \x1b[39m\x1b[38;2;91;196;191m"c"\x1b[39m\x1b[38;2;231;233;219m:\x1b[39m\x1b[38;2;231;233;219m \x1b[39m\x1b[38;2;72;182;133m"d"\x1b[39m\n\x1b[38;2;231;233;219m}\x1b[39m\n'
+            """
 
             res = pygments.highlight(
                 json.dumps(self._dict(), indent=2),
