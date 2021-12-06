@@ -15,53 +15,55 @@
 
 'use strict';
 
-const { Atk, Gio, GObject, Shell, St } = imports.gi;
 const Main = imports.ui.main;
-const Mainloop = imports.mainloop;
+
 const PanelMenu = imports.ui.panelMenu;
+const PopupMenu = imports.ui.popupMenu;
+
+const St = imports.gi.St;
+
+const Lang = imports.lang;
 const Util = imports.misc.util;
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
 
-const IndicatorName = 'Vula';
-const DisabledIcon = 'my-vula-off-symbolic';
-const EnabledIcon = 'my-vula-on-symbolic';
+const Vula_Indicator = new Lang.Class({
+    Name: 'Vula.indicator',
+    Extends: PanelMenu.Button,
 
-let VulaIndicator;
+       _init: function(){
+           this.parent(0.0);
 
-const Vula = GObject.registerClass(
-class Vula extends PanelMenu.Button {
-    _init() {
-        super._init(null, IndicatorName);
+           let label = new St.Label({text: 'Vula'});
+           this.actor.add_child(label);
 
-        this._icon = new St.Icon({
-            style_class: 'system-status-icon',
-        });
-        this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/${DisabledIcon}.svg`);
+           let menuItem = new PopupMenu.PopupMenuItem('Start Vula');
+           menuItem.actor.connect('button-press-event', function() {
+                try {
+                    Util.spawn(['/usr/bin/vula', 'start']);
+                }
+                catch (error) {
+                    Main.notify('Vula Notification', `An error occured while starting Vula: ${error}`);
+                    return;
+                }
+               Main.notify('Vula Notification', 'Vula started');
+            });
 
-        this.add_actor(this._icon);
-        this.add_style_class_name('panel-status-button');
-        let onPressed = () => {
-            Util.spawn(['/usr/local/bin/vula', 'start']);
-            _sendNotification("Button pressed");
-        }
-        this.connect('open-state-changed', onPressed);
-    }
+           this.menu.addMenuItem(menuItem);
+       }
+ });
 
-    _sendNotification(message) {
-        Main.notify(message);
-    }
-});
 
-function init() {}
+function init() {
+    log ('Vula extension initalized');
+};
 
 function enable() {
-    VulaIndicator = new Vula();
-    Main.panel.addToStatusArea(IndicatorName, VulaIndicator);
-}
+     log ('Vula extension enabled');
+     let _indicator =  new Vula_Indicator();
+     Main.panel._addToPanelBox('Vula', _indicator, 1, Main.panel._rightBox);
+};
 
-function disable() {
-    VulaIndicator.destroy();
-    VulaIndicator = null;
-}
+function disable(){
+     log ('Vula extension disabled');
+     _indicator.destroy();
+};

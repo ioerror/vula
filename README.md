@@ -17,3 +17,4 @@ journalctl /usr/bin/gnome-session -f -o cat
 
 ## Useful links
 https://www.codeproject.com/Articles/5271677/How-to-Create-A-GNOME-Extension
+https://wiki.gnome.org/Projects/GnomeShell/Extensions/EcoDoc/Applet
