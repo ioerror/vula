@@ -24,6 +24,11 @@ const St = imports.gi.St;
 
 const Lang = imports.lang;
 const Util = imports.misc.util;
+const Gio = imports.gi.Gio;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+
 
 
 const Vula_Indicator = new Lang.Class({
@@ -32,21 +37,22 @@ const Vula_Indicator = new Lang.Class({
 
        _init: function(){
            this.parent(0.0);
-
-           let label = new St.Label({text: 'Vula'});
-           this.actor.add_child(label);
+           this._icon = new St.Icon({style_class: 'system-status-icon',});
+           this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
+           this.add_actor(this._icon);
 
            let menuItem = new PopupMenu.PopupMenuItem('Start Vula');
-           menuItem.actor.connect('button-press-event', function() {
+           menuItem.actor.connect('button-press-event', Lang.bind(this, function() {
                 try {
-                    Util.spawn(['/usr/bin/vula', 'start']);
+                    this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA_ACTIVE.svg`);
+                    Util.spawn(['/usr/local/bin/vula', 'start']);
                 }
                 catch (error) {
                     Main.notify('Vula Notification', `An error occured while starting Vula: ${error}`);
                     return;
                 }
                Main.notify('Vula Notification', 'Vula started');
-            });
+            }));
 
            this.menu.addMenuItem(menuItem);
        }
