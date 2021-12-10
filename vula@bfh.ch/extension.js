@@ -41,20 +41,26 @@ const Vula_Indicator = new Lang.Class({
            this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
            this.add_actor(this._icon);
 
-           let menuItem = new PopupMenu.PopupMenuItem('Start Vula');
-           menuItem.actor.connect('button-press-event', Lang.bind(this, function() {
+           let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Start Vula', false);
+            switchmenuitem.actor.connect('toggled', Lang.bind(this, function(object, value){
                 try {
-                    this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA_ACTIVE.svg`);
-                    Util.spawn(['/usr/local/bin/vula', 'start']);
+                    if(value) {
+                        this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA_ACTIVE.svg`);
+                        Util.spawn(['/usr/local/bin/vula', 'start']);
+                        Main.notify('Vula Notification', 'Vula started');
+                    } else {
+                        this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
+                        Util.spawn(['/bin/systemctl', 'stop', 'vula.slice']);
+                        Main.notify('Vula Notification', 'Vula stopped');
+                    }
                 }
                 catch (error) {
                     Main.notify('Vula Notification', `An error occured while starting Vula: ${error}`);
                     return;
                 }
-               Main.notify('Vula Notification', 'Vula started');
             }));
 
-           this.menu.addMenuItem(menuItem);
+           this.menu.addMenuItem(switchmenuitem);
        }
  });
 
