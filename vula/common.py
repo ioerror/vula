@@ -543,6 +543,11 @@ class constraint(object):
         self.kwargs = kwargs
 
     def __repr__(self):
+        """
+        Function to return constraint object.
+        >>> constraint({4:3})
+        constraint({4: 3})
+        """
         # FIXME: add kwargs to repr
         return "%s(%s)" % (
             type(self).__name__,
