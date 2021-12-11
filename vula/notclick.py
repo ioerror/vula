@@ -363,22 +363,82 @@ def schema2click_options(f):
 
 
 def red(s):
+    """
+    Formats the given string 's' to red foreground color.
+
+    >>> red_string = "This text is red"
+    >>> print(red(red_string))
+    \x1b[31mThis text is red\x1b[0m
+
+    Afterwards, the text output should be default again.
+    >>> default_string = "This text is default formatted"
+    >>> print(default_string)
+    This text is default formatted
+    """
     return click.style(s, fg="red")
 
 
 def green(s):
+    """
+    Formats the given string 's' to green foreground color.
+
+    >>> green_string = "This text is green"
+    >>> print(green(green_string))
+    \x1b[32mThis text is green\x1b[0m
+
+    Afterwards, the text output should be default again.
+    >>> default_string = "This text is default formatted"
+    >>> print(default_string)
+    This text is default formatted
+    """
     return click.style(s, fg="green")
 
 
 def blue(s):
+    """
+    Formats the given string 's' to blue foreground color.
+
+    >>> blue_string = "This text is blue"
+    >>> print(blue(blue_string))
+    \x1b[34mThis text is blue\x1b[0m
+
+    Afterwards, the text output should be default again.
+    >>> default_string = "This text is default formatted"
+    >>> print(default_string)
+    This text is default formatted
+    """
     return click.style(s, fg="blue")
 
 
 def yellow(s):
+    """
+    Formats the given string 's' to yellow foreground color.
+
+    >>> yellow_string = "This text is yellow"
+    >>> print(yellow(yellow_string))
+    \x1b[33mThis text is yellow\x1b[0m
+
+    Afterwards, the text output should be default again.
+    >>> default_string = "This text is default formatted"
+    >>> print(default_string)
+    This text is default formatted
+    """
     return click.style(s, fg="yellow")
 
 
 def bold(s):
+    """
+    Formats the given string 's' to be bold.
+
+    >>> bold_string = "This text is bold"
+    >>> print(bold(bold_string))
+    \x1b[1mThis text is bold\x1b[0m
+
+    Afterwards, the text output should be default again.
+    >>> default_string = "This text is default formatted"
+    >>> print(default_string)
+    This text is default formatted
+    """
     return click.style(s, bold=True)
 
 
