@@ -433,7 +433,6 @@ if pygments is not None:
             )
             return res
 
-
 else:
     yamlrepr_hl = yamlrepr  # type: ignore
     jsonrepr_hl = jsonrepr  # type: ignore
