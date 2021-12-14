@@ -299,7 +299,7 @@ test: testnet-start
 testnet-mitm-start: .testnet-mitm-started-$(dist)-stamp
 .testnet-mitm-started-$(dist)-stamp: $(installed_image_stamp) .dpkg-install-mitm-$(dist)-stamp
 	-sudo podman network create --internal $(NET_NAME)
-	sudo podman create $(podman_args) --name mallory --hostname mallory $(add_caps) --network $(NET_NAME) $(add_caps) vula-mallory-$(dist)
+	sudo podman create --volume $(shell readlink -f ..):/root/vula:rw --name mallory --hostname mallory $(add_caps) --network $(NET_NAME) $(add_caps) vula-mallory-$(dist)
 	sudo podman start mallory
 	for c in $(test_hosts); do \
 		sudo podman create $(podman_args) --name $$c --hostname $$c --network $(NET_NAME) $(add_caps) vula-$(dist); \
@@ -309,10 +309,11 @@ testnet-mitm-start: .testnet-mitm-started-$(dist)-stamp
 
 .PHONY: testnet-mitm-stop
 testnet-mitm-stop:
+	sudo -v
 	@-for c in $(test_hosts); do \
 		sudo podman stop $$c; \
 	done 2>&1 | grep -v 'no container with name or ID'
-	sudo podman stop mallory
+	@-sudo podman stop mallory
 	@rm -vf .testnet-mitm-started-$(dist)-stamp
 
 .PHONY: testnet-mitm-restart
@@ -320,11 +321,13 @@ testnet-mitm-restart: testnet-mitm-stop testnet-mitm-start
 
 .PHONY: testnet-mitm-clean
 testnet-mitm-clean: testnet-mitm-stop
+	sudo -vW
 	@-for c in $(test_hosts); do \
                 sudo podman rm $$c; \
 	done 2>&1 | grep -v 'no container with name or ID'
-	sudo podman rm mallory
-	sudo podman network rm $(NET_NAME)
+	@-sudo podman rm mallory
+	@-sudo podman network rm $(NET_NAME)
+
 
 .PHONY: testnet-mitm-clean-all
 testnet-mitm-clean-all: testnet-mitm-stop
@@ -332,15 +335,14 @@ testnet-mitm-clean-all: testnet-mitm-stop
                 make dist=$$dist testnet-mitm-clean; \
 	done
 
-# TODO
-# sudo podman image rm vula-mallory-$(dist)
-# @rm -vf .deps-bullseye-mitm
-# @rm -vf ./podman/mitm/capture.pcap
 
 .PHONY: test-passive-adversary
 test-passive-adversary: testnet-mitm-start
-	sudo podman exec -itd mallory python3 podman/mitm/test_passive_adversary.py --target_ip1 10.89.0.4 --target_ip2 10.89.0.5 --capture_time 15 --capture_path podman/mitm/sniff.pcap --is_test
-	sudo podman exec -it $(test2) ping -c 5 $(test1).local.
+	sudo podman exec -it mallory python3 podman/mitm/test_passive_adversary.py banner
+	sudo podman exec -itd mallory python3 podman/mitm/test_passive_adversary.py run $(shell sudo podman inspect vula-bullseye-test1 | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') $(shell sudo podman inspect vula-bullseye-test2 | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') 10 True
+	sudo podman exec -it $(test2) ping -c 7 $(test1).local.
+	sleep 10
+	sudo podman exec -it mallory python3 podman/mitm/test_passive_adversary.py result
 
 .PHONY: test-active-adversary
 test-active-adversary: testnet-mitm-start
@@ -372,7 +374,7 @@ test-all-separate:
 
 .PHONY: clean-containers
 clean-containers: testnet-clean-all
-	@-podman network rm $(NET_NAME) 	2>&1 | grep -v 'network not found'
+	@-podman network rm $(NET_NAME) 		2>&1 | grep -v 'network not found'
 	@-podman stop vula-tmp					2>&1 | grep -v 'no container with name or ID'
 	@-podman rm vula-tmp					2>&1 | grep -v 'no container with name or ID'
 	@-for dist in $(dists); do \
@@ -413,11 +415,7 @@ clean-all: clean
 clean-sudo: 
 	sudo -v # unlock sudo to run podman as root
 	make clean-all
-	make testnet-mitm-clean-all
-	@-for dist in $(dists); do \
-		sudo podman rmi vula-mallory-$$dist; \
-		rm -vf .dpkg-install-mitm-$$dist-stamp; \
-	done 2>&1 | grep -v 'no such image'
+	@-make testnet-mitm-clean
 	@-podman stop vula-mitm-deps-tmp        2>&1 | grep -v 'no container with name or ID'
 	@-podman stop vula-mitm-tmp             2>&1 | grep -v 'no container with name or ID'
 	@-podman rm vula-mitm-deps-tmp          2>&1 | grep -v 'no container with name or ID'
@@ -426,7 +424,23 @@ clean-sudo:
 	@-sudo podman rm mallory                2>&1 | grep -v 'no container with name or ID'
 	@-podman stop mallory                   2>&1 | grep -v 'no container with name or ID'
 	@-podman rm mallory                     2>&1 | grep -v 'no container with name or ID'
+	@-podman stop mallory                   2>&1 | grep -v 'no container with name or ID'
+	@-podman rm mallory                     2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman stop vula-bullseye-test1	2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman stop vula-bullseye-test2	2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman rm vula-bullseye-test1	2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman rm vula-bullseye-test2	2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman rmi vula-mallory-bullseye	2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman rmi vula-bullseye			2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman network rm vula-net
 	@rm -vf .deps-bullseye-mitm
-	@rm -vf ./podman/mitm/capture.pcap
+	@rm -vf ./podman/mitm/.test-passed-stamp
+	@-for dist in $(dists); do \
+		sudo podman rm vula-$$dist-test1 \
+		sudo podman rm vula-$$dist-test2 \
+		sudo podman rmi vula-$$dist \
+		sudo podman rmi vula-mallory-$$dist; \
+		rm -vf .dpkg-install-mitm-$$dist-stamp; \
+	done 2>&1 | grep -v 'no such image'
 
 
