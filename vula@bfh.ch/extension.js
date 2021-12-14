@@ -41,12 +41,13 @@ const Vula_Indicator = new Lang.Class({
            this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
            this.add_actor(this._icon);
 
+           // Toggle button start/stop Vula
            let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Start Vula', false);
             switchmenuitem.actor.connect('toggled', Lang.bind(this, function(object, value){
                 try {
                     if(value) {
                         this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA_ACTIVE.svg`);
-                        Util.spawn(['/usr/local/bin/vula', 'start']);
+                        Util.spawn(['/usr/bin/vula', 'start']);
                         Main.notify('Vula Notification', 'Vula started');
                     } else {
                         this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
@@ -60,10 +61,24 @@ const Vula_Indicator = new Lang.Class({
                 }
             }));
 
-           this.menu.addMenuItem(switchmenuitem);
+            // Vula Repair
+            let vulaRepairMenuItem = new PopupMenu.PopupMenuItem("Repair Vula", {});
+            vulaRepairMenuItem.actor.connect('activate', Lang.bind(this, function(){
+                try {
+                    Util.spawn(['/usr/bin/vula', 'repair']);
+		            Main.notify('Vula Notification', 'Vula repaired');
+                }
+                catch (error) {
+                    Main.notify('Vula Notification', `An error occured while repairing Vula: ${error}`);
+                    return;
+                }
+		    }));
+
+            // add Items to menu
+            this.menu.addMenuItem(switchmenuitem);
+            this.menu.addMenuItem(vulaRepairMenuItem);
        }
  });
-
 
 function init() {
     log ('Vula extension initalized');
