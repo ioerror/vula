@@ -31,6 +31,7 @@ setuptools = "*"
 stdeb = "*"
 semgrep = "*"
 bandit = "*"
+pydeps = "*"
 
 [requires]
 python_version = "3"

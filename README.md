@@ -53,6 +53,9 @@ installation and usage instructions.
 See [`HACKING.md`](https://codeberg.org/vula/vula/src/branch/main/HACKING.md) for
 some tips on opening the hood.
 
+See [`DEPENDENCY.md`](DEPENDENCY.md) for diagrams illustrating the different
+dependecy relationships between internal and external python modules.
+
 ### Security contact
 
 We consider this project to currently be alpha pre-release, experimental,
