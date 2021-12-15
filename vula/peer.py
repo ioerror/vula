@@ -664,6 +664,8 @@ class Peers(yamlrepr, queryable, schemadict):
         return res[0]
 
     def with_ip(self, ip):
+        # IPv6 analysis: not ipv6 ready
+        # Please enhance this function to support ipv6
         ip = IPv4Address(ip)
         res = self.limit(enabled=True).by('IPv4addrs').get(ip, [])
         if len(res) > 1:

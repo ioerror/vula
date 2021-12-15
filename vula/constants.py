@@ -46,4 +46,6 @@ _PUBLISH_DBUS_PATH: str = "/local/vula/publish"
 
 _LINUX_MAIN_ROUTING_TABLE = 254
 
+# IPv6 analysis: not ipv6 ready.
+# please provide IPv6 Routes.
 IPv4_GW_ROUTES = ('0.0.0.0/1', '128.0.0.0/1')

@@ -617,6 +617,8 @@ class wg(object):
         reading them from files, as wg does). Yes, this is not a great idea,
         but it makes testing easier.
         """
+        # IPv6 analysis: not ipv6 ready.
+        # Please enhance this function to support ipv6
         dev = Interface(interface)
         kwargs = {k: v for k, v in kwargs.items() if v not in (None, ())}
         current = {}

@@ -244,6 +244,8 @@ class OrganizeState(Engine, yamlrepr_hl):
 
     @Engine.action
     def action_ADJUST_TO_NEW_SYSTEM_STATE(self, new_system_state):
+        # IPv6 analysis: not ipv6 ready
+        # Please enhance this function to support ipv6
         cur_gw = list(self.peers.limit(use_as_gateway=True).values())
         cur_gw = cur_gw and cur_gw[0]
         if (
@@ -369,6 +371,8 @@ class OrganizeState(Engine, yamlrepr_hl):
 
     @Engine.action
     def action_REMOVE_PEER(self, peer):
+        # IPv6 analysis: not ipv6 ready.
+        # Please enhance this function to support ipv6
         self._REMOVE('peers', peer.id)
         self.result.add_triggers(
             remove_wg_peer=(str(peer.wg_pk),),

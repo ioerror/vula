@@ -15,6 +15,8 @@ from .common import (
 
 
 class Prefs(yamlrepr_hl, schemattrdict):
+    # IPv6 analysis: not ipv6 ready
+    # Please enhance this class to support ipv6
 
     schema = Schema(
         {
