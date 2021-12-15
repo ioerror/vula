@@ -453,6 +453,8 @@ class comma_separated_IPs(object):
 
         >>> comma_separated_IPs("127.0.0.1,15.15.15.15")
         <comma_separated_IPs('127.0.0.1,15.15.15.15')>
+        >>> comma_separated_IPs("fe80::1,fe80::2")
+        <comma_separated_IPs('fe80::1,fe80::2')>
         >>> comma_separated_IPs("::1")
         <comma_separated_IPs('::1')>
         >>> comma_separated_IPs("invalid")
@@ -484,6 +486,15 @@ class comma_separated_IPs(object):
         >>> test_list = comma_separated_IPs("127.0.0.2,127.0.0.3,127.0.0.4")
         >>> test_list.__getitem__(1)
         IPv4Address('127.0.0.3')
+
+
+        :param idx: int
+        :return: IPv6Address
+
+        >>> test_list = comma_separated_IPs("fe80::1,fe80::2")
+        >>> test_list.__getitem__(0)
+        IPv6Address('fe80::1')
+
         """
         return list(self)[idx]
 
@@ -494,6 +505,11 @@ class comma_separated_IPs(object):
         >>> ip = comma_separated_IPs('192.168.0.1')
         >>> ip.__repr__()
         "<comma_separated_IPs('192.168.0.1')>"
+
+        >>> ip = comma_separated_IPs('fe80::1')
+        >>> ip.__repr__()
+        "<comma_separated_IPs('fe80::1')>"
+
         """
 
         """
@@ -511,14 +527,25 @@ class comma_separated_IPs(object):
         """
         Return the comma separated IP addresses as a string
 
+        >>> ip = comma_separated_IPs('fe80::1')
+        >>> ip.__str__()
+        'fe80::1'
+
         >>> ip = comma_separated_IPs('192.168.0.1')
         >>> ip.__str__()
         '192.168.0.1'
+
         >>> ip_multiple = \
         comma_separated_IPs('192.168.29.32,127.0.0.1,149.132.22.70')
         >>> ip_multiple.__str__()
         '192.168.29.32,127.0.0.1,149.132.22.70'
+
+        >>> ip_multiple = \
+        comma_separated_IPs('fe80::1,fe80::2,fe80::3')
+        >>> ip_multiple.__str__()
+        'fe80::1,fe80::2,fe80::3'
         """
+
         return self._str
 
 
@@ -534,8 +561,17 @@ class comma_separated_Nets(comma_separated_IPs):
     Traceback (most recent call last):
        ...
     ValueError: 192.168.0.1/28 has host bits set
+
+    >>> comma_separated_Nets("fe80::1/10,fe80::/10")
+    Traceback (most recent call last):
+       ...
+    ValueError: fe80::1/10 has host bits set
+
     >>> comma_separated_Nets("192.168.0.0/28,192.168.1.0/25")
     <comma_separated_Nets('192.168.0.0/28,192.168.1.0/25')>
+
+    >>> comma_separated_Nets("fe80::/10,fe80::/10")
+    <comma_separated_Nets('fe80::/10,fe80::/10')>
     """
 
     def __init__(self, _str):
@@ -964,6 +1000,14 @@ def addrs_in_subnets(addrs, subnets):
     >>> addrs = ['10.0.0.0/24','10.0.14.0/24', '10.0.5.0/24']
     >>> addrs_in_subnets(addrs,current_subnets)
     ['10.0.0.0/24', '10.0.5.0/24']
+
+    >>> current_subnets={'fe80::/10':['fe80::1', 'fe80::2'],
+    ... 'fe80::1:0/10': ['fe80::1:1', 'fe80::1:6' ],
+    ... 'fe80::2:0/10': ['fe80::2:1', 'fe80::2:5' ]}
+    >>> addrs = ['fe80::/10', 'fe80::ffff:1/10', 'fe80::2:0/10']
+    >>> addrs_in_subnets(addrs, current_subnets)
+    ['fe80::/10', 'fe80::2:0/10']
+
     """
     return [
         addr for addr in addrs if any(addr in subnet for subnet in subnets)
