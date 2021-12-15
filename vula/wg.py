@@ -107,6 +107,28 @@ class PeerConfig(schemattrdict, serializable):
         >>> p['protocol_version'] # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         KeyError:
+        >>> p = PeerConfig.from_netlink({'attrs': dict(
+        ...     public_key=b64encode(b'A'*32),
+        ...     preshared_key=b64encode(b'A'*32),
+        ...     persistent_keepalive_interval=666,
+        ...     rx_bytes=2,
+        ...     tx_bytes=3,
+        ...     protocol_version=99,
+        ...     endpoint={'addr': 'FE80::FFFF:FFFF:FFFF:FFFE', 'port': 1000},
+        ...     last_handshake_time={'tv_sec':567})})
+        >>> type(p)
+        <class 'vula.wg.PeerConfig'>
+        >>> p['persistent_keepalive']
+        666
+        >>> p['endpoint_addr']
+        'FE80::FFFF:FFFF:FFFF:FFFE'
+        >>> p['endpoint_port']
+        1000
+        >>> p['stats']['latest_handshake']
+        567
+        >>> p['protocol_version'] # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        KeyError:
         """
         res = {
             k.replace('WGPEER_A_', '').lower(): dict(v)
