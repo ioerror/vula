@@ -110,12 +110,12 @@ class SystemState(schemattrdict):
         >>> SystemState(current_subnets={'10.0.0.0/24': ['10.0.0.1'],
         ... '192.168.0.0/24': ['192.168.1.1']}).current_ips
         [IPv4Address('10.0.0.1'), IPv4Address('192.168.1.1')]
-        >>> SystemState(current_subnets={'FE80::/10': ['FE80::FFFF:FFFF:FFFF:FFFE',
-        ... 'FE80::FFFF:FFFF:FFFF:FFFD']}).current_ips
-        [IPv6Address('fe80::ffff:ffff:ffff:fffe'), IPv6Address('fe80::ffff:ffff:ffff:fffd')]
-        >>> SystemState(current_subnets={'FE80::/10': ['FE80::FFFF:FFFF:FFFF:FFFE'],
-        ... 'FC00::/7': ['FC00::FFFF:FFFF:FFFF:FFFE']}).current_ips
-        [IPv6Address('fe80::ffff:ffff:ffff:fffe'), IPv6Address('fc00::ffff:ffff:ffff:fffe')]
+        >>> SystemState(current_subnets={'FE80::/10': ['FE80::FFFF:FFFE',
+        ... 'FE80::FFFF:FFFD']}).current_ips
+        [IPv6Address('fe80::ffff:fffe'), IPv6Address('fe80::ffff:fffd')]
+        >>> SystemState(current_subnets={'FE80::/10': ['FE80::FFFF:FFFE'],
+        ... 'FC00::/7': ['FC00::FFFF:FFFE']}).current_ips
+        [IPv6Address('fe80::ffff:fffe'), IPv6Address('fc00::ffff:fffe')]
         """
         return [
             ip for subnet in self.current_subnets.values() for ip in subnet
