@@ -81,7 +81,6 @@ class Descriptor(schemattrdict, serializable):
 
     ... IPv6
     Unfortunately, this test can't be adapted to IPv6 as it's not possible to get a valid signature.
- 
 
     For testing purposes, one could run the same command on the commandline like so:
     vula -d peer.Descriptor --addrs fe80::377b:d17:9b74:1b91 --c
