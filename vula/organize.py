@@ -110,6 +110,12 @@ class SystemState(schemattrdict):
         >>> SystemState(current_subnets={'10.0.0.0/24': ['10.0.0.1'],
         ... '192.168.0.0/24': ['192.168.1.1']}).current_ips
         [IPv4Address('10.0.0.1'), IPv4Address('192.168.1.1')]
+        >>> SystemState(current_subnets={'FE80::/10': ['FE80::FFFF:FFFE',
+        ... 'FE80::FFFF:FFFD']}).current_ips
+        [IPv6Address('fe80::ffff:fffe'), IPv6Address('fe80::ffff:fffd')]
+        >>> SystemState(current_subnets={'FE80::/10': ['FE80::FFFF:FFFE'],
+        ... 'FC00::/7': ['FC00::FFFF:FFFE']}).current_ips
+        [IPv6Address('fe80::ffff:fffe'), IPv6Address('fc00::ffff:fffe')]
         """
         return [
             ip for subnet in self.current_subnets.values() for ip in subnet
@@ -238,6 +244,8 @@ class OrganizeState(Engine, yamlrepr_hl):
 
     @Engine.action
     def action_ADJUST_TO_NEW_SYSTEM_STATE(self, new_system_state):
+        # IPv6 analysis: not ipv6 ready
+        # Please enhance this function to support ipv6
         cur_gw = list(self.peers.limit(use_as_gateway=True).values())
         cur_gw = cur_gw and cur_gw[0]
         if (
@@ -363,6 +371,8 @@ class OrganizeState(Engine, yamlrepr_hl):
 
     @Engine.action
     def action_REMOVE_PEER(self, peer):
+        # IPv6 analysis: not ipv6 ready.
+        # Please enhance this function to support ipv6
         self._REMOVE('peers', peer.id)
         self.result.add_triggers(
             remove_wg_peer=(str(peer.wg_pk),),

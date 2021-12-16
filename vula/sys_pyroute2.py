@@ -156,6 +156,8 @@ class Sys(object):
         """
         Syncs peer's wg config and routes. Returns a string.
         """
+        # IPv6 analysis: not ipv6 ready.
+        # Please enhance this function to support ipv6
         peer = self.organize.peers[vk]
         res = []
         if peer.enabled:
@@ -298,6 +300,8 @@ class Sys(object):
         know need to be removed, and then this method will actually only be
         used to remove rogue entries.
         """
+        # IPv6 analysis: not ipv6 ready
+        # Please enhance this function to support ipv6
         routing_table = self.organize.table
         res = []
         enabled_pks = [
