@@ -69,6 +69,15 @@ pytest-coverage:
     reports:
       cobertura: coverage.xml
 
+ping-test:
+  stage: Test
+  image: quay.io/podman/stable:latest
+  before_script:
+    - echo "hey"
+  script:
+    - dnf install -y make python-setuptools git-core
+    - cd podman && make test-ping
+
 # ---------- build stage
 
 build:

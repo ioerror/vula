@@ -6,7 +6,7 @@ SO_NAME := /usr/local/lib64/python3.9/site-packages/lib/libnss_vula.so.2
 dist := bullseye
 #dists := buster focal hirsute bullseye impish fedora34 alpine
 dists := bullseye impish fedora34
-podman_args := --volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula
+podman_args := --volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula --uts=private
 add_caps := --cap-add NET_ADMIN,NET_RAW
 test1 := vula-$(dist)-test1
 test2 := vula-$(dist)-test2
@@ -356,6 +356,8 @@ test-pytest: testnet-start
 
 .PHONY: test-ping
 test-ping: testnet-start
+	podman exec -it $(test2) perl -e 'until ("active\n" eq `systemctl is-active vula-organize.service`) {sleep 1}'
+	sleep 1
 	podman exec -it $(test1) vula status
 	podman exec -it $(test2) vula status
 	podman exec -it $(test2) ping -c 1 $(test1).local.
