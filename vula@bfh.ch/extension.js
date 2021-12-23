@@ -36,6 +36,7 @@ const Vula_Indicator = new Lang.Class({
     Extends: PanelMenu.Button,
 
        _init: function(){
+           const vulaPath = '/usr/local/bin/vula';
            this.parent(0.0);
            this._icon = new St.Icon({style_class: 'system-status-icon',});
            this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
@@ -47,7 +48,7 @@ const Vula_Indicator = new Lang.Class({
                 try {
                     if(value) {
                         this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA_ACTIVE.svg`);
-                        Util.spawn(['/usr/bin/vula', 'start']);
+                        Util.spawn([vulaPath, 'start']);
                         Main.notify('Vula Notification', 'Vula started');
                     } else {
                         this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
@@ -65,7 +66,7 @@ const Vula_Indicator = new Lang.Class({
             let vulaRepairMenuItem = new PopupMenu.PopupMenuItem("Repair Vula", {});
             vulaRepairMenuItem.actor.connect('activate', Lang.bind(this, function(){
                 try {
-                    Util.spawn(['/usr/bin/vula', 'repair']);
+                    Util.spawn([vulaPath, 'repair']);
 		            Main.notify('Vula Notification', 'Vula repaired');
                 }
                 catch (error) {
@@ -74,9 +75,27 @@ const Vula_Indicator = new Lang.Class({
                 }
 		    }));
 
+
+            // Vula Repair
+            let vulaStatusItem = new PopupMenu.PopupMenuItem("Get Vula Status", {});
+            vulaRepairMenuItem.actor.connect('activate', Lang.bind(this, function(){
+                try {
+                    Util.spawn([vulaPath, 'status'], (error, result, code) => {
+                        log ('result: ' + String(result));
+                        log ('error: ' + String(error));
+                        Main.notify('Vula Notification', String(result) + String(error));
+                    });
+                }
+                catch (error) {
+                    Main.notify('Vula Notification', `An error occured while getting Vula sta: ${error}`);
+                    return;
+                }
+		    }));
+
             // add Items to menu
             this.menu.addMenuItem(switchmenuitem);
             this.menu.addMenuItem(vulaRepairMenuItem);
+            this.menu.addMenuItem(vulaStatusItem);
        }
  });
 
