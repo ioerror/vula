@@ -25,6 +25,7 @@ const St = imports.gi.St;
 const Lang = imports.lang;
 const Util = imports.misc.util;
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -36,14 +37,14 @@ const Vula_Indicator = new Lang.Class({
     Extends: PanelMenu.Button,
 
        _init: function(){
-           const vulaPath = '/usr/local/bin/vula';
-           this.parent(0.0);
-           this._icon = new St.Icon({style_class: 'system-status-icon',});
-           this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
-           this.add_actor(this._icon);
+            const vulaPath = '/usr/bin/vula';
+            this.parent(0.0);
+            this._icon = new St.Icon({style_class: 'system-status-icon',});
+            this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
+            this.add_actor(this._icon);
 
-           // Toggle button start/stop Vula
-           let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Start Vula', false);
+            // Toggle button start/stop Vula
+            let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Start Vula', false);
             switchmenuitem.actor.connect('toggled', Lang.bind(this, function(object, value){
                 try {
                     if(value) {
@@ -76,26 +77,27 @@ const Vula_Indicator = new Lang.Class({
 		    }));
 
 
-            // Vula Repair
+            // Vula Status
             let vulaStatusItem = new PopupMenu.PopupMenuItem("Get Vula Status", {});
-            vulaRepairMenuItem.actor.connect('activate', Lang.bind(this, function(){
+            vulaStatusItem.actor.connect('activate', Lang.bind(this, function(){
                 try {
-                    Util.spawn([vulaPath, 'status'], (error, result, code) => {
-                        log ('result: ' + String(result));
-                        log ('error: ' + String(error));
-                        Main.notify('Vula Notification', String(result) + String(error));
-                    });
+                    let stuff = GLib.spawn_command_line_sync(vulaPath + " status")[1].toString();
+                    log ('stuff: ' + stuff);
+                    Main.notify('Vula Notification', stuff);
                 }
                 catch (error) {
-                    Main.notify('Vula Notification', `An error occured while getting Vula sta: ${error}`);
+                    Main.notify('Vula Notification', `An error occured while getting Vula status: ${error}`);
                     return;
                 }
 		    }));
+            
 
             // add Items to menu
             this.menu.addMenuItem(switchmenuitem);
             this.menu.addMenuItem(vulaRepairMenuItem);
             this.menu.addMenuItem(vulaStatusItem);
+
+            this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem);
        }
  });
 
