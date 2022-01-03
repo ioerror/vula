@@ -20,6 +20,7 @@ const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const MessageTray = imports.ui.messageTray;
+const MessageTraySourceActor = imports.ui.messageTray.SourceActor
 
 const St = imports.gi.St;
 
@@ -38,6 +39,7 @@ const Vula_Indicator = new Lang.Class({
     Extends: PanelMenu.Button,
 
     _init: function () {
+        // MessageTraySourceActor.prototype['size'] = 1900;
         const vulaPath = '/usr/local/bin/vula';
         this.parent(0.0);
         this._icon = new St.Icon({ style_class: 'system-status-icon', });
