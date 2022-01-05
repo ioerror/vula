@@ -26,22 +26,10 @@ before_script:
 
 # ---------- static analysis stage
 
-check-format:
+check:
   stage: Static-Analysis
   script:
-    - make check-format
-
-flake8-vula:
-  stage: Static-Analysis
-  allow_failure: false
-  script:
-    - make FOLDER=vula flake8
-
-flake8-test:
-  stage: Static-Analysis
-  allow_failure: false
-  script:
-    - make FOLDER=test flake8
+    - make check
 
 sast:
   stage: Static-Analysis
