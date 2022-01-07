@@ -21,6 +21,13 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const MessageTray = imports.ui.messageTray;
 const MessageTraySourceActor = imports.ui.messageTray.SourceActor
+const BannerBin = Main.messageTray._bannerBin;
+
+
+// const originalShow = MessageTray.prototype._showNotification;
+// const originalHide = MessageTray.prototype._hideNotification;
+// const originalUpdateShowing = MessageTray.prototype._updateShowingNotification;
+const origCreateBanner = MessageTray.Notification.prototype.createBanner;
 
 const St = imports.gi.St;
 
@@ -33,6 +40,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
 
+let banner;
 
 const Vula_Indicator = new Lang.Class({
     Name: 'Vula.indicator',
@@ -121,11 +129,22 @@ function init() {
 
 function enable() {
     log('Vula extension enabled');
+    MessageTray.Notification.prototype.createBanner = style;
     let _indicator = new Vula_Indicator();
     Main.panel._addToPanelBox('Vula', _indicator, 1, Main.panel._rightBox);
 };
 
 function disable() {
     log('Vula extension disabled');
+    MessageTray.Notification.prototype.createBanner = origCreateBanner;
     _indicator.destroy();
 };
+
+function style() {
+    banner = this.source.createBanner(this);
+    //banner.actor.add_style_class_name('message-tray');
+    banner.actor.add_style_class_name('message-tray-summary');
+    return banner;
+};
+
+  
