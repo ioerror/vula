@@ -23,12 +23,6 @@ const MessageTray = imports.ui.messageTray;
 const MessageTraySourceActor = imports.ui.messageTray.SourceActor
 const BannerBin = Main.messageTray._bannerBin;
 
-
-// const originalShow = MessageTray.prototype._showNotification;
-// const originalHide = MessageTray.prototype._hideNotification;
-// const originalUpdateShowing = MessageTray.prototype._updateShowingNotification;
-const origCreateBanner = MessageTray.Notification.prototype.createBanner;
-
 const St = imports.gi.St;
 
 const Lang = imports.lang;
@@ -36,10 +30,10 @@ const Util = imports.misc.util;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 
+
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-
-
+ 
 let banner;
 
 const Vula_Indicator = new Lang.Class({
@@ -47,7 +41,6 @@ const Vula_Indicator = new Lang.Class({
     Extends: PanelMenu.Button,
 
     _init: function () {
-        // MessageTraySourceActor.prototype['size'] = 1900;
         const vulaPath = '/usr/local/bin/vula';
         this.parent(0.0);
         this._icon = new St.Icon({ style_class: 'system-status-icon', });
@@ -89,10 +82,15 @@ const Vula_Indicator = new Lang.Class({
 
         // Vula Status Button
         let vulaStatusItem = new PopupMenu.PopupMenuItem("Get Vula status", {});
+        let status = new PopupMenu.PopupMenuItem("", {});
         vulaStatusItem.actor.connect('activate', Lang.bind(this, function () {
             try {
+                key.destroy()
+                status.destroy()
                 let processOutput = GLib.spawn_command_line_sync(vulaPath + " status")[1].toString();
-                Main.notify('Vula Notification', processOutput);
+                status = new PopupMenu.PopupMenuItem(processOutput, {});
+                this.menu.addMenuItem(status)
+                // Main.notify('Vula Notification', processOutput);
             }
             catch (error) {
                 Main.notify('Vula Notification', `An error occured while getting Vula status: ${error}`);
@@ -103,10 +101,15 @@ const Vula_Indicator = new Lang.Class({
 
         // Vula VK Button
         let getVkItem = new PopupMenu.PopupMenuItem("Get verification key", {});
+        let key = new PopupMenu.PopupMenuItem("", {});
         getVkItem.actor.connect('activate', Lang.bind(this, function () {
             try {
+                key.destroy()
+                status.destroy()
                 let processOutput = GLib.spawn_command_line_sync(vulaPath + " verify my-vk")[1].toString();
-                Main.notify('Vula Notification', processOutput);
+                key = new PopupMenu.PopupMenuItem(processOutput, {});
+                this.menu.addMenuItem(key);
+                //Main.notify('Vula Notification', 'Key is now visible');
             }
             catch (error) {
                 Main.notify('Vula Notification', `An error occured while getting Vula status: ${error}`);
@@ -120,6 +123,7 @@ const Vula_Indicator = new Lang.Class({
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem);
         this.menu.addMenuItem(vulaStatusItem);
         this.menu.addMenuItem(getVkItem);
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem);
     }
 });
 
@@ -129,22 +133,12 @@ function init() {
 
 function enable() {
     log('Vula extension enabled');
-    MessageTray.Notification.prototype.createBanner = style;
     let _indicator = new Vula_Indicator();
     Main.panel._addToPanelBox('Vula', _indicator, 1, Main.panel._rightBox);
 };
 
 function disable() {
     log('Vula extension disabled');
-    MessageTray.Notification.prototype.createBanner = origCreateBanner;
     _indicator.destroy();
 };
 
-function style() {
-    banner = this.source.createBanner(this);
-    //banner.actor.add_style_class_name('message-tray');
-    banner.actor.add_style_class_name('message-tray-summary');
-    return banner;
-};
-
-  
