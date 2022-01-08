@@ -1,23 +1,26 @@
+# VULA Gnome Shell extension
+
+![](docs/imgs/extension.png)
+
 ## Prerequisites
 ```
 sudo apt install gnome-tweaks
 sudo apt install gnome-shell-extensions
 ```
 
-## install
+## Installation
 
 ```
-download project from git
+# Clone project
 sudo mv vula@bfh.ch /usr/share/gnome-shell/extensions
-refresh gnome with "ALT+F2" and command "r"
+# Refresh gnome with "ALT+F2" and command "r"
 ```
 
-## uninstall
+## Uninstallation
 
 ```
-go to /usr/share/gnome-shell/extensions
-sudo rm -r vula@bfh
-refresh gnome with "ALT+F2" and command "r"
+sudo rm -r /usr/share/gnome-shell/extensions/vula@bfh
+# Refresh gnome with "ALT+F2" and command "r"
 ```
 
 ## Debugging
