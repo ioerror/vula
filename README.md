@@ -4,6 +4,22 @@ sudo apt install gnome-tweaks
 sudo apt install gnome-shell-extensions
 ```
 
+## install
+
+```
+download project from git
+sudo mv vula@bfh.ch /usr/share/gnome-shell/extensions
+refresh gnome with "ALT+F2" and command "r"
+```
+
+## uninstall
+
+```
+go to /usr/share/gnome-shell/extensions
+sudo rm -r vula@bfh
+refresh gnome with "ALT+F2" and command "r"
+```
+
 ## Debugging
 
 #### Accessing the logs
