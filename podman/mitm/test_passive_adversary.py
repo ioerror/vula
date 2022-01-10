@@ -222,13 +222,27 @@ def main_cli():
 
 
 @main_cli.command()
-def banner():
+@click.argument('name', type=str)
+def banner(name: str):
     f = Figlet()
-    printy(f.renderText("It's a me Eve!"), 'o>')
+    printy(f.renderText(f"It's a me {name}!"), 'o>')
     print()
     print("[+]", end=" ")
-    printy("Start passive attack test", 'n')
+    printy("Start attack test", 'n')
     print()
+
+
+@main_cli.command()
+@click.argument('ip1', type=str)
+@click.argument('ip2', type=str)
+def activeresult(ip1: str, ip2: str):
+    if ip1 == ip2:
+        print("[+]", end=" ")
+        printy(f"Test passed! Targets poisoned with {ip1}", 'n')
+    else:
+        print("[!]", end=" ")
+        printy("Test failed! Targets not poisoned", 'r>')
+        print("Try running the test again, poisoning is currently not stable")
 
 
 @main_cli.command()
