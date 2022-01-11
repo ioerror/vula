@@ -105,7 +105,7 @@ class Engine(schemattrdict, yamlfile):
     the schema, then none of the event's actions' write operations are applied.
 
     If the event does not have an error, after the new state is committed, the
-    triggers are executed and and their results are recorded in the event's
+    triggers are executed and their results are recorded in the event's
     result object. Triggers may modify state which exists outside of the state
     engine, and may also initiate new events.
 
@@ -113,9 +113,13 @@ class Engine(schemattrdict, yamlfile):
     event arguments and the resulting actions, writes, triggers, and trigger
     results, or contains the exception if one occurred.
 
-    This is all still subject to change and there may be comments which reflect
-    earlier states of development. Look at the vula.organize.OrganizeState
-    subclass of this to see how it is actually being used.
+    The state of the engine is only allowed to change through events which call
+    actions which in turn call write methods. The new state must depend solely
+    on the old state, and the event being processed. Therefore inputs from the
+    outside world such as, for instance, the system time, need to be contained
+    within an event to mutate the old state into the new state.  Similarly,
+    side effects should only happen in triggers which are run after the
+    successful processing of an event.
     """
 
     Result = Result
