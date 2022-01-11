@@ -89,7 +89,7 @@ class VulaKeys:
 
 
 def forge_descriptor(
-    vula_keys: VulaKeys, new_addrs: str, new_host: str
+    vula_keys: VulaKeys, new_addrs: str, new_host: str, port: int
 ) -> Descriptor:
     """
     :param vula_keys: ed25519, csidh, x25519
@@ -97,7 +97,11 @@ def forge_descriptor(
     :param new_host: neo.local.
     :return: signed Descriptor
     >>> vula_keys = VulaKeys()
-    >>> desc = forge_descriptor(vula_keys, '112.118.112.116', 'neo.local.')
+    >>> desc = forge_descriptor(
+    ...     vula_keys,
+    ...     '112.118.112.116',
+    ...     'neo.local.',
+    ...     5354)
     >>> print(desc.addrs)
     112.118.112.116
     >>> print(desc.hostname)
@@ -110,7 +114,7 @@ def forge_descriptor(
         hostname=new_host,
         pk=vula_keys.get_x25519_public_b64(),
         c=vula_keys.get_csidh_public_b64(),
-        port=5354,
+        port=port,
         dt=86400,
         vf=int(time.mktime(datetime.datetime.now().timetuple())),
         vk=vula_keys.get_ed25519_public_raw(),
@@ -119,6 +123,26 @@ def forge_descriptor(
     )
     desc = Descriptor(data)
     return desc.sign(vula_keys.get_ed25519_private_raw())
+
+
+def serialize_forged_descriptor(forged_descriptor: Descriptor) -> dict:
+    """
+    serialize forged descriptor
+    :param forged_descriptor: Descriptor object
+    :return: dictionaly containing serialized descriptor
+    >>> vula_keys = VulaKeys()
+    >>> desc = forge_descriptor(
+    ...     vula_keys,
+    ...     '112.118.112.116',
+    ...     'neo.local.',
+    ...     5354)
+    >>> serialized_desc = serialize_forged_descriptor(desc)
+    >>> isinstance(serialized_desc, dict)
+    True
+    >>> serialized_desc['addrs'] == '112.118.112.116'
+    True
+    """
+    return forged_descriptor._dict()
 
 
 if __name__ == "__main__":

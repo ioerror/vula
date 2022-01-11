@@ -306,6 +306,7 @@ testnet-mitm-start: .testnet-mitm-started-$(dist)-stamp
 		sudo podman start $$c; \
 	done
 	touch $@
+	sleep 20
 
 .PHONY: testnet-mitm-stop
 testnet-mitm-stop:
@@ -338,7 +339,7 @@ testnet-mitm-clean-all: testnet-mitm-stop
 
 .PHONY: test-passive-adversary
 test-passive-adversary: testnet-mitm-start
-	sudo podman exec -it mallory python3 podman/mitm/test_passive_adversary.py banner
+	sudo podman exec -it mallory python3 podman/mitm/test_passive_adversary.py banner Eve
 	sudo podman exec -itd mallory python3 podman/mitm/test_passive_adversary.py run $(shell sudo podman inspect vula-bullseye-test1 | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') $(shell sudo podman inspect vula-bullseye-test2 | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') 10 True
 	sudo podman exec -it $(test2) ping -c 7 $(test1).local.
 	sleep 10
@@ -346,9 +347,12 @@ test-passive-adversary: testnet-mitm-start
 
 .PHONY: test-active-adversary
 test-active-adversary: testnet-mitm-start
-	sudo podman exec -it mallory python3 ./podman/mitm/squirrel.py
-	sudo podman ps
-	make test-ping
+	sudo podman exec -it mallory python3 podman/mitm/test_passive_adversary.py banner Mallory
+	sudo podman exec -it vula-bullseye-test1 vula peer
+	sudo podman exec -itd mallory python3 -m podman.mitm.mdns_poison --ip $(shell sudo podman inspect mallory | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') --interesting-hosts vula-bullseye-test1,vula-bullseye-test2
+	sleep 20
+	sudo podman exec -it mallory python3 podman/mitm/test_passive_adversary.py activeresult $(shell sudo podman exec -it vula-bullseye-test2 vula peer | grep 'endpoint' | awk '{print $$2}' | awk -F ':' '{print $$1}') $(shell sudo podman inspect mallory | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}')
+	sudo podman exec -it vula-bullseye-test2 vula peer
 
 .PHONY: test-pytest
 test-pytest: testnet-start
