@@ -5,9 +5,7 @@ import os
 import time
 from shutil import copy2
 from sys import platform
-from os import system
 from glob import glob
-from platform import machine
 
 try:
     from stdeb.command.sdist_dsc import sdist_dsc
@@ -75,7 +73,6 @@ linux_data_files = [
         ['configs/dbus/local.vula.services.conf'],
     ),
     (
-        # "/etc/dbus-1/system-services/",
         "/usr/share/dbus-1/system-services/",
         [
             'configs/dbus/local.vula.organize.service',
