@@ -49,7 +49,7 @@ const Vula_Indicator = new Lang.Class({
         this.add_actor(this._icon);
 
         // Toggle button start/stop Vula
-        let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Start Vula', false);
+        let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Enable Vula', false);
         switchmenuitem.actor.connect('toggled', Lang.bind(this, function (object, value) {
             try {
                 if (value) {
@@ -95,7 +95,7 @@ const Vula_Indicator = new Lang.Class({
         }));
 
         // Vula Status Button
-        let vulaStatusItem = new PopupMenu.PopupMenuItem("Get Vula status", {});
+        let vulaStatusItem = new PopupMenu.PopupMenuItem("Vula status", {});
         let status = new PopupMenu.PopupMenuItem("", {});
         vulaStatusItem.actor.connect('activate', Lang.bind(this, function () {
             try {
@@ -114,7 +114,7 @@ const Vula_Indicator = new Lang.Class({
 
 
         // Vula VK Button
-        let getVkItem = new PopupMenu.PopupMenuItem("Get verification key", {});
+        let getVkItem = new PopupMenu.PopupMenuItem("Show verification key", {});
         getVkItem.actor.connect('activate', Lang.bind(this, function () {
             try {
                 status.destroy()
@@ -132,7 +132,7 @@ const Vula_Indicator = new Lang.Class({
         }));
         
         // Vula descriptor Button
-        let getDescriptorItem = new PopupMenu.PopupMenuItem("Get descriptor key", {});
+        let getDescriptorItem = new PopupMenu.PopupMenuItem("Show descriptor key", {});
         getDescriptorItem.actor.connect('activate', Lang.bind(this, function () {
             try {
                 status.destroy()
