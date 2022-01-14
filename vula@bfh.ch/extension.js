@@ -42,7 +42,7 @@ const Vula_Indicator = new Lang.Class({
 
     _init: function () {
 
-        const vulaPath ='/usr/local/bin/vula';
+        const vulaPath ='/usr/bin/vula';
         this.parent(0.0);
         this._icon = new St.Icon({ style_class: 'system-status-icon', });
         this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
