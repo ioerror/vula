@@ -32,6 +32,10 @@ stdeb = "*"
 semgrep = "*"
 bandit = "*"
 pydeps = "*"
+pyfiglet = "*"
+printy = "*"
+scapy = "*"
+pyshark = "*"
 
 [requires]
 python_version = "3"

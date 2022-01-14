@@ -41,9 +41,9 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-TEST_PASSED_STAMP = "./podman/mitm/.test-passed-stamp"
-TEST_NOT_PASSED_STAMP = "./podman/mitm/.test-not-passed-stamp"
-NO_CAPTURE = "./podman/mitm/.test-no-capture"
+TEST_PASSED_STAMP = "./podman/.test-passed-stamp"
+TEST_NOT_PASSED_STAMP = "./podman/.test-not-passed-stamp"
+NO_CAPTURE = "./podman/.test-no-capture"
 
 
 def _enable_macos_iproute():

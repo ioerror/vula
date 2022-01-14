@@ -1,11 +1,11 @@
-# PoC Traffic Capture
+# PoC Passive and Active Adversary
 
 ## Usage
 
 Prerequisites: Podman installed, read the README.md in the podman folder.
 
 * use "make test-passive-adversary" to create PCAP in network with two peers
-* use "make test-active-adversary" to start our attacker script. (Currently only printing banner)
+* use "make test-active-adversary" to start our attacker script. (Currently only poisoning MDNS cache)
 * use "make clean-all" to delete everything
 * use "make mallory-stop" to stop Mallory
 * use "make mallory-clean" remove mallory machine and image
