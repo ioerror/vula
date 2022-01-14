@@ -15,6 +15,9 @@ sudo apt install gnome-shell-extensions
 sudo mv vula@bfh.ch /usr/share/gnome-shell/extensions
 # Refresh gnome with "ALT+F2" and command "r"
 ```
+Enable it under the Extensions to see it:
+
+<img src="images/mini6.png" alt="" width="400"/>
 
 ## Uninstallation
 
