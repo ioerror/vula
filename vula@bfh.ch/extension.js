@@ -42,7 +42,7 @@ const Vula_Indicator = new Lang.Class({
 
     _init: function () {
 
-        const vulaPath ='/usr/bin/vula';
+        const vulaPath ='/usr/local/bin/vula';
         this.parent(0.0);
         this._icon = new St.Icon({ style_class: 'system-status-icon', });
         this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
@@ -99,7 +99,6 @@ const Vula_Indicator = new Lang.Class({
         let status = new PopupMenu.PopupMenuItem("", {});
         vulaStatusItem.actor.connect('activate', Lang.bind(this, function () {
             try {
-                key.destroy()
                 status.destroy()
                 let processOutput = GLib.spawn_command_line_sync(vulaPath + " status")[1].toString();
                 status = new PopupMenu.PopupMenuItem(processOutput, {});
@@ -118,7 +117,6 @@ const Vula_Indicator = new Lang.Class({
         getVkItem.actor.connect('activate', Lang.bind(this, function () {
             try {
                 status.destroy()
- 
                 let vulaCommand = vulaPath + " verify my-vk";
                 let gnomeCommand = vulaCommand + "; exec bash";
                 let arg = `gnome-terminal -- bash -c "${gnomeCommand}"`;                       
@@ -136,7 +134,6 @@ const Vula_Indicator = new Lang.Class({
         getDescriptorItem.actor.connect('activate', Lang.bind(this, function () {
             try {
                 status.destroy()
- 
                 let vulaCommand = vulaPath + " verify my-descriptor";
                 let gnomeCommand = vulaCommand + "; exec bash";
                 let arg = `gnome-terminal --maximize -- bash -c "${gnomeCommand}"`;                       
