@@ -41,14 +41,15 @@ const Vula_Indicator = new Lang.Class({
     Extends: PanelMenu.Button,
 
     _init: function () {
-        const vulaPath = '/usr/local/bin/vula';
+
+        const vulaPath ='/usr/bin/vula';
         this.parent(0.0);
         this._icon = new St.Icon({ style_class: 'system-status-icon', });
         this._icon.gicon = Gio.icon_new_for_string(`${Me.path}/icons/VULA.svg`);
         this.add_actor(this._icon);
 
         // Toggle button start/stop Vula
-        let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Start Vula', false);
+        let switchmenuitem = new PopupMenu.PopupSwitchMenuItem('Enable Vula', false);
         switchmenuitem.actor.connect('toggled', Lang.bind(this, function (object, value) {
             try {
                 if (value) {
@@ -79,12 +80,26 @@ const Vula_Indicator = new Lang.Class({
                 return;
             }
         }));
+        
+        // Vula Rediscover
+        let vulaRediscoverMenuItem = new PopupMenu.PopupMenuItem("Rediscover", {});
+        vulaRediscoverMenuItem.actor.connect('activate', Lang.bind(this, function () {
+            try {
+		let processOutput = GLib.spawn_command_line_sync(vulaPath + " rediscover")[1].toString();
+                Main.notify('Vula Notification', processOutput);
+            }
+            catch (error) {
+                Main.notify('Vula rediscover', `An error occured while rediscovering: ${error}`);
+                return;
+            }
+        }));
 
         // Vula Status Button
-        let vulaStatusItem = new PopupMenu.PopupMenuItem("Get Vula status", {});
+        let vulaStatusItem = new PopupMenu.PopupMenuItem("Vula status", {});
         let status = new PopupMenu.PopupMenuItem("", {});
         vulaStatusItem.actor.connect('activate', Lang.bind(this, function () {
             try {
+                key.destroy()
                 status.destroy()
                 let processOutput = GLib.spawn_command_line_sync(vulaPath + " status")[1].toString();
                 status = new PopupMenu.PopupMenuItem(processOutput, {});
@@ -99,18 +114,37 @@ const Vula_Indicator = new Lang.Class({
 
 
         // Vula VK Button
-        let getVkItem = new PopupMenu.PopupMenuItem("Get verification key", {});
-        let key = new PopupMenu.PopupMenuItem("", {});
+        let getVkItem = new PopupMenu.PopupMenuItem("Show verification key", {});
         getVkItem.actor.connect('activate', Lang.bind(this, function () {
             try {
-                key.destroy()
-                let processOutput = GLib.spawn_command_line_sync(vulaPath + " verify my-vk")[1].toString();
-                key = new PopupMenu.PopupMenuItem(processOutput, {});
-                this.menu.addMenuItem(key);
-                //Main.notify('Vula Notification', 'Key is now visible');
+                status.destroy()
+ 
+                let vulaCommand = vulaPath + " verify my-vk";
+                let gnomeCommand = vulaCommand + "; exec bash";
+                let arg = `gnome-terminal -- bash -c "${gnomeCommand}"`;                       
+                GLib.spawn_command_line_sync(arg);
+
             }
             catch (error) {
-                Main.notify('Vula Notification', `An error occured while getting Vula status: ${error}`);
+                Main.notify('Vula Notification', `An error occured while getting Vula verification-key: ${error}`);
+                return;
+            }
+        }));
+        
+        // Vula descriptor Button
+        let getDescriptorItem = new PopupMenu.PopupMenuItem("Show descriptor key", {});
+        getDescriptorItem.actor.connect('activate', Lang.bind(this, function () {
+            try {
+                status.destroy()
+ 
+                let vulaCommand = vulaPath + " verify my-descriptor";
+                let gnomeCommand = vulaCommand + "; exec bash";
+                let arg = `gnome-terminal --maximize -- bash -c "${gnomeCommand}"`;                       
+                GLib.spawn_command_line_sync(arg);
+
+            }
+            catch (error) {
+                Main.notify('Vula Notification', `An error occured while getting Vula descriptor: ${error}`);
                 return;
             }
         }));
@@ -118,9 +152,11 @@ const Vula_Indicator = new Lang.Class({
         // Add Items to menu
         this.menu.addMenuItem(switchmenuitem);
         this.menu.addMenuItem(vulaRepairMenuItem);
+        this.menu.addMenuItem(vulaRediscoverMenuItem);
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem);
         this.menu.addMenuItem(vulaStatusItem);
         this.menu.addMenuItem(getVkItem);
+        this.menu.addMenuItem(getDescriptorItem);
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem);
     }
 });
