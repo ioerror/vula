@@ -21,7 +21,6 @@ try:
             )
             return res
 
-
 except ImportError:
     sdist_dsc = None
     sdist_dsc_with_postinst = None
@@ -30,6 +29,16 @@ try:
     from click_man.commands.man_pages import man_pages
 except ImportError:
     man_pages = None
+
+dir = os.getcwd()
+copy_icon = (
+    'cp ' + dir + "/vula/frontend/desktop/vula_gui_icon.png /usr/share/icons"
+)
+copy_desktop = (
+    'cp ' + dir + "/vula/frontend/desktop/vula.desktop /usr/share/applications"
+)
+os.system(copy_icon)
+os.system(copy_desktop)
 
 try:
     os.environ['SOURCE_DATE_EPOCH'] = (

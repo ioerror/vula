@@ -17,7 +17,7 @@ a debianized version of our Python package using the `pypi-install` tool.
 To install the dependencies required for building vula packages yourself, or
 for installing a debian package via `pypi-install`, run this command:
 
-* `sudo apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot gcc make python3-all python3-all-dev python3-click python3-cpuinfo python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-setuptools-scm python3-stdeb python3-systemd python3-toml python3-yaml python3-zeroconf python-all wireguard-tools`
+* `sudo apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot gcc make python3-all python3-all-dev python3-click python3-cpuinfo python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-setuptools-scm python3-stdeb python3-systemd python3-toml python3-yaml python3-zeroconf python3-tk python-all wireguard-tools`
 
 You need `python3-click` module version 8.+, `apt` might install the latest version, 
 but will fail to install version 8.+. You need to remove the installed version and 
@@ -168,7 +168,27 @@ To see the preferences:
 To see commands for editing preferences:
 * `vula prefs --help`
 
+To start graphical user interface:
+* `vula gui`
+
 More documentation is coming soon. See
 [STATUS.md](https://codeberg.org/vula/vula/src/branch/main/STATUS.md) for more
 information about what currently works and doesn't.
 
+## vula GUI
+
+The graphical user interface uses Tkinter as a Python binding to the Tk GUI toolkit.
+
+### Screenshots
+
+#### Peers
+![peers](misc/frontend/peers.png)
+
+#### Preferences
+![preferences](misc/frontend/preferences.png)
+
+#### My verification key
+![my verification key](misc/frontend/my_verification_key.png)
+
+#### My descriptor
+![my descriptor](misc/frontend/my_descriptor.png)

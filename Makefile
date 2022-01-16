@@ -18,7 +18,7 @@ pypi-upload:
 .PHONY: deb
 deb: ${DEB_NAME}
 
-${DEB_NAME}: vula vula/*py configs configs/* configs/*/* setup.py
+${DEB_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py
 	python3 setup.py --command-packages=stdeb.command sdist_dsc bdist_deb
 
 .PHONY: rpm
@@ -98,5 +98,3 @@ dev-deps-pacman:
 	PATH=$$PATH:~/.local/bin
 	sudo pacman -S python-pipenv cairo pkgconf gobject-introspection gtk3
 	pipenv install --dev --skip-lock
-
-
