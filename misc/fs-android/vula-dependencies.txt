@@ -1,0 +1,71 @@
+Vula possible Dependencies
+
+newfstatat 11058 read and execute permissions
+ 
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/threading.py", {st_mode=S_IFREG|0644, st_size=52933, ...}, 0) = 0
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/yaml/reader.py", {st_mode=S_IFREG|0644, st_size=6794, ...}, 0) = 0
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/threadpoolctl-2.2.0.dist-info", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/threadpoolctl-2.2.0.dist-info", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/threadpoolctl-2.2.0.dist-info", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/click_threading-0.5.0-py3.9.egg-info", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/click_threading-0.5.0-py3.9.egg-info/PKG-INFO", {st_mode=S_IFREG|0644, st_size=554, ...}, 0) = 0
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/threadpoolctl-2.2.0.dist-info/namespace_packages.txt", 0x7ffc8a9476f0, 0) = -1 ENOENT (No such file or directory)
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/click_threading-0.5.0-py3.9.egg-info/namespace_packages.txt", 0x7ffc8a9476f0, 0) = -1 ENOENT (No such file or directory)
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/threadpoolctl-2.2.0.dist-info", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/cryptography/hazmat/primitives", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/cryptography/hazmat/primitives/asymmetric/__init__.cpython-39-x86_64-linux-gnu.so", 0x7ffc8a949e30, 0) = -1 ENOENT (No such file or directory)
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/cryptography/hazmat/primitives/asymmetric/__init__.abi3.so", 0x7ffc8a949e30, 0) = -1 ENOENT (No such file or directory)
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/cryptography/hazmat/primitives/asymmetric/__init__.so", 0x7ffc8a949e30, 0) = -1 ENOENT (No such file or directory)
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/cryptography/hazmat/primitives/asymmetric/__init__.py", {st_mode=S_IFREG|0644, st_size=956, ...}, 0) = 0
+	newfstatat(AT_FDCWD, "/usr/lib/python3.9/site-packages/cryptography/hazmat/primitives/asymmetric/__init__.py", {st_mode=S_IFREG|0644, st_size=956, ...}, 0) = 0
+
+https://android.googlesource.com/platform/external/strace.git/+/android-8.1.0_r42/tests/newfstatat.gen.test
+
+
+getdents64 1276 (POSIX = readdir)
+
+		getdents64(3, 0x559dfb831840 /* 211 entries */, 32768) = 7024 (Probably no permissions / dependencies. 
+
+
+
+  
+*read 3523 (read permissions) probaly no dependecy
+	read(3, "./vula-0.1.5-py3.9.egg\n", 8192) = 23
+
+	
+   
+ *openat 2455 read and execute permissions
+ 
+ ( O_NONBLOCK or O_NDELAY
+              When possible, the file is opened in nonblocking mode.)
+			  
+		openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/libpython3.9.so.1.0", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/libpthread.so.0", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/libdl.so.2", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/libutil.so.1", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/libm.so.6", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/locale/locale-archive", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/gconv/gconv-modules.cache", O_RDONLY) = -1 ENOENT (No
+		openat(AT_FDCWD, "/usr/lib/python3.9/__pycache__/threading.cpython-39.pyc", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/python3.9/threading.py", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/python3.9", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+		openat(AT_FDCWD, "/usr/bin/vula", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/bin", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+
+
+		openat(AT_FDCWD, "/usr/lib/python3.9/site-packages/yaml/__pycache__/reader.cpython-39.pyc", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/python3.9/site-packages/threadpoolctl-2.2.0.dist-info", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+		openat(AT_FDCWD, "/usr/lib/python3.9/site-packages/click_threading-0.5.0-py3.9.egg-info", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+		openat(AT_FDCWD, "/usr/lib/python3.9/site-packages/click_threading-0.5.0-py3.9.egg-info/PKG-INFO", O_RDONLY|O_CLOEXEC) = 3
+		openat(AT_FDCWD, "/usr/lib/python3.9/site-packages/threadpoolctl-2.2.0.dist-info", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+	
+		
+getrandom is called multiple times (possible dependency)
+
+sched_getaffinity
+
+sched_getaffinity(8310, 8, [0, 1, 2, 3]) = 8
+sched_getaffinity(0, 128, [0, 1, 2, 3]) = 40
+		
