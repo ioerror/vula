@@ -41,7 +41,7 @@ if [ "$dist" = "buster" ]; then
     vula_deps="$vula_deps python3-importlib-metadata" # needed for new pyroute2
 fi
 
-apt install -y --no-install-recommends $sibc_deps $vula_deps
+apt install -y --no-install-recommends --fix-missing $sibc_deps $vula_deps
 
 if [ "$dist" = "focal" ] || [ "$dist" = "buster" ]; then
     # focal needs a newer stdeb. The one it has can't even pypi-install an

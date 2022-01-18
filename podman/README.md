@@ -119,7 +119,9 @@ make dist=hirsute test
 make dist=impish test
 make dist=bullseye systemd-shell
 ```
+## Vula Man-in-the-Middle Testing
 
+Refer to [Vula Man-in-the-Middle Testing Notes](./Vula-MitM-tool.md)
 ## Development mode
 
 The `test-*` make targets have the side effect of creating a podman image

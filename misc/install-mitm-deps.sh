@@ -10,8 +10,9 @@ echo "Installing on '$dist'"
 attack_deps="tcpdump"
 attack_pip_deps="pyfiglet printy scapy pyshark"
 
-DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-apt install -y --no-install-recommends $attack_deps
+apt update
+DEBIAN_FRONTEND=noninteractive apt-get -y --fix-missing install tshark
+apt install -y --no-install-recommends --fix-missing $attack_deps
 pip3 install $attack_pip_deps
 
 echo "OK: deps installed on $(hostname)"
