@@ -121,7 +121,39 @@ make dist=bullseye systemd-shell
 ```
 ## Vula Man-in-the-Middle Testing
 
-Refer to [Vula Man-in-the-Middle Testing Notes](./Vula-MitM-tool.md)
+For details: [Vula Man-in-the-Middle Testing Notes](./Vula-MitM-tool.md)
+
+### Usage
+
+Go into the podman directory
+```cd podman```
+
+To run the passive adversary test:
+```make test-passive-adversary```
+
+To run the active adversary test:
+```make test-active-adversary```
+
+Clean everything up
+```make clean-sudo```
+
+### If it does not work as expected...
+* Due to network issues, sometimes tests will fail on the first run. Re-run the same test.
+* If you get lost in podman and stuff, here are some commands that might help.
+  * ```sudo podman ps -a```
+  * ```sudo podman image ls```
+  * ```sudo podman rmi vula-mallory-bullseye```
+  * ```sudo podman rm mallory``` 
+  * ```sudo podman rm sudo podman rm vula-bullseye-test1``` 
+  * ```sudo podman rm sudo podman rm vula-bullseye-test2```
+  * ```sudo podman image rm vula-mallory-bullseye```
+  * ```sudo podman network ls```
+  * ```sudo podman exec -it mallory sh```
+  * ```sudo podman image rm <25d0f69960f4> <09a2dc334328> <d40c1669cc17>```
+  * ```sudo podman network rm vula-net```
+* Checkout 'Comments and known bugs' in [mitm readme](./Vula-MitM-tool.md)
+
+
 ## Development mode
 
 The `test-*` make targets have the side effect of creating a podman image
