@@ -302,6 +302,12 @@ ethernet" work via a gethostbyname interface? Maybe.
   connectivity. This problem has hopefully gone away but we should carefully
   investigate what happens in various scenarios to be sure.
 
+- Increase test coverage
+
+- Add man page documentation
+
+- Add online documentation
+
 
 ## Compatibility with RPM-based systems
 
