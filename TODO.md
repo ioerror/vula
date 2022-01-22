@@ -178,6 +178,10 @@
 -- post-paper deadline
 -- easy
 
+- Continuous Documentation: automatically build, version, and host documentation with readthedocs
+-- there seems to be an issue with codeberg and RTD which has to be checked: https://codeberg.org/Codeberg/Community/issues/486
+
+
 - Alternative transport design
 -- post-paper deadline
 -- easy, boring, uninteresting, hateful
