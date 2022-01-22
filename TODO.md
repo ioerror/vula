@@ -1,3 +1,5 @@
+# TODO
+
 - we need to research more to figure out what our minimum requirements actually
   are, and better define a way to install everything on older systems.
   pipx? docker?
@@ -299,3 +301,18 @@ ethernet" work via a gethostbyname interface? Maybe.
 - Discover and publish used to throw exceptions when they lost network
   connectivity. This problem has hopefully gone away but we should carefully
   investigate what happens in various scenarios to be sure.
+
+
+## Compatability with RPM-based systems
+
+- To add the post-installation script to the RPM build, you can append the following parameter to the bdist_rpm command in the makefile:\n
+  `--post-install=misc/python3-vula.postinst`\
+  The RPM package then executes the post-installation script, but the script fails at importing vula-libnss.
+  When installing vula-libnss manually with `sudo pip install vula-libnss` it works again.
+
+- When installed on Fedora and run without root privileges, vula displays the following error message:\
+  `gi.repository.GLib.GError: g-dbus-error-quark: GDBus.Error:org.freedesktop.DBus.Error.AccessDenied: Sender is not authorized to send message (9)`
+
+- When manually executing the last post-installation step on openSUSE (`sudo systemctl enable --now vula-organize`), the following error message appears:\
+  `Failed to enable unit: Unit file vula-organize.service does not exist.`\
+  Vula cannot be used, if the organize service doesn't run.

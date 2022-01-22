@@ -116,6 +116,11 @@ hints on how to install the dependencies on Fedora.
 It is also possible to build an RPM in Fedora inside of a `podman` container by
 running `make dist=fedora34 rpm` in the `podman` directory.
 
+On Fedora you can install the rpm-build package with `sudo dnf install rpm-build`
+and then build the package executing `make rpm` in the vula repo.
+
+Note that compatibility issues with RPM-based systems are collected in TODO.md.
+
 ## option 4: install from AUR (only for arch based systems)
 
 Same as above only rudimentary testing of the functionality has been done on arch / manjaro.
