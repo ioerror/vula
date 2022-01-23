@@ -242,8 +242,8 @@ class Interface(attrdict, yamlrepr_hl):
     same shape as the pyroute2 structure but with less-irritating names.
 
     But wait, there's more... it also has a "peers" attribute which gives you
-    the peers in the same shape as pyroute2's Wireguard module exceptects to be
-    passed to the "set" method (note: round trips not yet tested).
+    the peers in the same shape as pyroute2's Wireguard module expects them to
+    be passed to the "set" method (note: round trips not yet tested).
 
     Because this is a DualUse.object, you can see the data on the commandline
     with commands like these:

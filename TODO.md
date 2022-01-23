@@ -216,7 +216,7 @@
 -- post-paper deadline?
 
 - vula should have a sub command called proxy mode. This should allow a
-  device which can use wireguard but cannot run other software to particiapte
+  device which can use wireguard but cannot run other software to participate
   in the protocol and then it should be able to push configuration changes to
   that machine.
 -- post paper deadline
