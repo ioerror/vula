@@ -70,7 +70,7 @@ class SystemState(schemattrdict):
     """
     The SystemState object stores the parts of the system's state which are
     relevant to events in the organize state engine. The object should be
-    udpated (replaced) whenever these values change, via the
+    updated (replaced) whenever these values change, via the
     event_NEW_SYSTEM_STATE event.
     """
 

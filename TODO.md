@@ -106,7 +106,7 @@
   dbus), upon which organize can delete the interface and rules.
 
 - dbus policy XML needs to be cleaned up a lot; currently it has lots of
-  dupliation annd unnecessary stuff to establish some boundaries but then
+  duplication and unnecessary stuff to establish some boundaries but then
   negates most of them for development.
 
 - there should also be a prerm or postrm hook to remove our nsswitch config
@@ -208,7 +208,7 @@
 -- post-paper deadline
 
 - Monolith mode: a single sub-command which runs all needed services in threads
-  or processes without privilege seperation.
+  or processes without privilege separation.
 -- post-paper deadline
 
 - Publish service should have a limited lifetime and it should have a way to
@@ -294,7 +294,7 @@ ethernet" work via a gethostbyname interface? Maybe.
 - Add support for OpenBSD; see TODO.porting
 
 - Signatures should be over an exploded buffer with foo=bar; rather than just a
-  concatination of bar into a buffer. This will allow the signed buffer to be
+  concatenation of bar into a buffer. This will allow the signed buffer to be
   parsed and result in a key value pair where every byte can be used.
   Currently, we do a half-assed thing and we should do something smarter.
 
@@ -303,7 +303,7 @@ ethernet" work via a gethostbyname interface? Maybe.
   investigate what happens in various scenarios to be sure.
 
 
-## Compatability with RPM-based systems
+## Compatibility with RPM-based systems
 
 - To add the post-installation script to the RPM build, you can append the following parameter to the bdist_rpm command in the makefile:\n
   `--post-install=misc/python3-vula.postinst`\
