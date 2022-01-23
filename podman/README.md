@@ -46,14 +46,14 @@ clean` target.
 ### `make deb`
 
 This target will build a `.deb` package of vula in `../deb_dist/` using the
-current checkout (including any uncomitted changes). It does not require root
+current checkout (including any uncommitted changes). It does not require root
 to run. By default, it will build using Debian `bullseye`; to build a deb using
 Ubuntu `impish` instead you can run `make clean deb dist=impish`.
 
 ### `make rpm`
 
 This target will build an RPM using Fedora 34. Note that this package is only
-minally tested and does not yet automatically configure the system; see
+minimally tested and does not yet automatically configure the system; see
 [`INSTALL.md`](https://codeberg.org/vula/vula/src/branch/main/podman/INSTALL.md)
 for details.
 
@@ -107,7 +107,7 @@ This will create a new container which, unlike the test hosts created by the
 test target, is connected to both the normal `podman` network (online behind
 NAT) *and* to the `vula-net` internal network which test hosts are connected
 to. Shells and tests for different dists can be run concurrently and
-communicate with eachother; if a clean test network is desired one can run
+communicate with each other; if a clean test network is desired one can run
 `make clean` or `make testnet-clean` prior to running `make test`.
 
 This example will create two test containers for each of three dists, and then

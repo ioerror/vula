@@ -24,5 +24,5 @@ how Vula is internally organized.
 To analyse these dependencies relationships in a text format, consider running
 the Makefile goal locally, which will allow you to generate the file
 `vula_deps.json` in the folder `misc/deps-graphs`. It is not directly included
-in the repository as it contains host specific informations (ie. system
+in the repository as it contains host specific information (ie. system
 specific paths).

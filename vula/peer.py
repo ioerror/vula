@@ -669,7 +669,7 @@ class Peer(schemattrdict):
 class Peers(yamlrepr, queryable, schemadict):
 
     """
-    A dictionry of peers. Note that, despite being the home of the conflict
+    A dictionary of peers. Note that, despite being the home of the conflict
     detection code, a Peers object can be valid (from a schema standpoint) even
     while containing conflicts. The schema of a SystemState object uses this
     conflict detection code to ensure that the peers object within a

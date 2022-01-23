@@ -129,7 +129,7 @@ def serialize_forged_descriptor(forged_descriptor: Descriptor) -> dict:
     """
     serialize forged descriptor
     :param forged_descriptor: Descriptor object
-    :return: dictionaly containing serialized descriptor
+    :return: dictionary containing serialized descriptor
     >>> vula_keys = VulaKeys()
     >>> desc = forge_descriptor(
     ...     vula_keys,
