@@ -10,6 +10,7 @@ import subprocess
 import platform
 import logging
 import click
+import json
 
 from threading import Timer
 from pyfiglet import Figlet
@@ -233,12 +234,33 @@ def banner(name: str):
 
 
 @main_cli.command()
-@click.argument('ip1', type=str)
-@click.argument('ip2', type=str)
-def activeresult(ip1: str, ip2: str):
-    if ip1 == ip2:
+def activeresult():
+    # Get Mallorys IP
+    cmd_mallory_podman = ["sudo", "podman", "inspect", "mallory"]
+    p_mallory = subprocess.Popen(
+        cmd_mallory_podman, stdout=subprocess.PIPE, universal_newlines=True
+    )
+    mallory_output = p_mallory.communicate()[0]
+    out_json = json.loads(mallory_output)
+    ip_mallory = out_json[0]["NetworkSettings"]["IPAddress"]
+
+    # Check if mallory's IP is in target peer output
+    cmd_target_podman = [
+        "sudo",
+        "podman",
+        "exec",
+        "vula-bullseye-test2",
+        "vula",
+        "peer",
+    ]
+    p_target = subprocess.Popen(
+        cmd_target_podman, stdout=subprocess.PIPE, universal_newlines=True
+    )
+    target_output = p_target.communicate()[0]
+
+    if ip_mallory in target_output:
         print("[+]", end=" ")
-        printy(f"Test passed! Targets poisoned with {ip1}", 'n')
+        printy(f"Test passed! Targets poisoned with {ip_mallory}", 'n')
     else:
         print("[!]", end=" ")
         printy("Test failed! Targets not poisoned", 'r>')
@@ -275,10 +297,7 @@ def result():
 @click.argument('capture_time', type=int)
 @click.argument('is_test', default=False, type=bool)
 def run(
-    target_ip1: str,
-    target_ip2: str,
-    capture_time: int,
-    is_test: bool = False,
+    target_ip1: str, target_ip2: str, capture_time: int, is_test: bool = False
 ):
 
     if not is_test:

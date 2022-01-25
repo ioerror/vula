@@ -352,7 +352,7 @@ test-active-adversary: testnet-mitm-start
 	@-sudo podman exec -it $(test2) ping -c 1 $(test1).local.
 	sudo podman exec -itd mallory python3 -m vula.mitm.mdns_poison --ip $(shell sudo podman inspect mallory | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') --interesting-hosts vula-bullseye-test1,vula-bullseye-test2
 	sleep 90
-#	python3 vula/mitm/test_passive_adversary.py activeresult $(shell sudo podman exec -it vula-bullseye-test2 vula peer | grep 'endpoint' | tail -1 | awk '{print $$2}' | awk -F ':' '{print $$1}') $(shell sudo podman inspect mallory | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}')
+	python3 ../vula/mitm/test_passive_adversary.py activeresult
 	sudo podman exec -it vula-bullseye-test1 vula peer
 
 .PHONY: test-pytest
@@ -442,6 +442,7 @@ clean-sudo:
 	@-sudo podman network rm -f vula-net
 	@rm -vf .deps-bullseye-mitm
 	@rm -vf ./podman/.test-passed-stamp
+	@rm -vf ./podman/.mallory-started-stamp
 	@-for dist in $(dists); do \
 		sudo podman rm vula-$$dist-test1 \
 		sudo podman rm vula-$$dist-test2 \
