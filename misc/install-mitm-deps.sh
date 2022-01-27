@@ -11,7 +11,7 @@ attack_deps="tcpdump"
 attack_pip_deps="pyfiglet printy scapy pyshark"
 
 apt update
-DEBIAN_FRONTEND=noninteractive apt-get -y --fix-missing install tshark
+DEBIAN_FRONTEND=noninteractive apt install -y tshark
 apt install -y --no-install-recommends --fix-missing $attack_deps
 pip3 install $attack_pip_deps
 

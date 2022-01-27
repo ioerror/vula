@@ -36,12 +36,12 @@ fi
 if [ "$dist" = "buster" ]; then
     if ! grep buster-backports /etc/apt/sources.list >/dev/null; then
         echo 'deb http://deb.debian.org/debian buster-backports main' | tee -a /etc/apt/sources.list
-        apt update
     fi
     vula_deps="$vula_deps python3-importlib-metadata" # needed for new pyroute2
 fi
 
-apt install -y --no-install-recommends --fix-missing $sibc_deps $vula_deps
+apt update
+apt install -y --no-install-recommends $sibc_deps $vula_deps
 
 if [ "$dist" = "focal" ] || [ "$dist" = "buster" ]; then
     # focal needs a newer stdeb. The one it has can't even pypi-install an

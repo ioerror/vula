@@ -306,6 +306,7 @@ testnet-mitm-start: .testnet-mitm-started-$(dist)-stamp
 		sudo podman start $$c; \
 	done
 	touch $@
+	# wait until mitm network setup completed
 	sleep 30
 
 .PHONY: testnet-mitm-stop
@@ -322,7 +323,7 @@ testnet-mitm-restart: testnet-mitm-stop testnet-mitm-start
 
 .PHONY: testnet-mitm-clean
 testnet-mitm-clean: testnet-mitm-stop
-	sudo -vW
+	sudo -v
 	@-for c in $(test_hosts); do \
                 sudo podman rm $$c; \
 	done 2>&1 | grep -v 'no container with name or ID'
