@@ -99,21 +99,7 @@ linux_data_files = [
 # that the files are stored in usr/local instead of usr/share.
 macos_data_files = [
     (
-        "/etc/systemd/system/",
-        [
-            "configs/systemd/vula.slice",
-            "configs/systemd/vula.target",
-            "configs/systemd/vula-discover.target",
-            "configs/systemd/vula-publish.target",
-            "configs/systemd/vula-organize-monolithic.target",
-            "configs/systemd/vula-discover.service",
-            "configs/systemd/vula-publish.service",
-            "configs/systemd/vula-organize.service",
-            "configs/systemd/vula-organize-monolithic.service",
-        ],
-    ),
-    (
-        "/etc/dbus-1/system.d/",
+        "/usr/local/share/dbus-1/",
         ['configs/dbus/local.vula.services.conf'],
     ),
     (
@@ -123,10 +109,6 @@ macos_data_files = [
             'configs/dbus/local.vula.publish.service',
             'configs/dbus/local.vula.discover.service',
         ],
-    ),
-    (
-        "/usr/local/polkit-1/actions/",
-        ['configs/polkit/local.vula.organize.Debug.policy'],
     ),
     ("/usr/local/lib/sysusers.d/", ['configs/sysusers.d/vula.conf']),
     (
