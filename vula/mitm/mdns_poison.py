@@ -5,7 +5,7 @@ import logging
 import click
 from ipaddress import IPv4Address
 from zeroconf import ServiceBrowser, Zeroconf, ServiceInfo, IPVersion
-from podman.mitm.forge_descriptor import (
+from vula.mitm.forge_descriptor import (
     VulaKeys,
     forge_descriptor,
     serialize_forged_descriptor,
@@ -181,7 +181,7 @@ class MdnsPoison:
         self.zeroconf.register_service(
             self.participants[hostname]["info"],
             # needed to force zeroconf to allow
-            #  multiple hosts announcing the same service
+            # multiple hosts announcing the same service
             cooperating_responders=True,
         )
         self.zeroconf.send
