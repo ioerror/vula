@@ -1,0 +1,13 @@
+{
+  "version": 39,
+  "shell-version": [
+    "40",
+    "41"
+  ],
+  "uuid": "vula@bfh.ch",
+  "name": "Vula",
+  "settings-schema": "org.gnome.shell.extensions.vula",
+  "gettext-domain": "gnome-shell-extension-vula",
+  "description": "Start, stop and monitor Vula",
+  "url": "https://gitlab.ti.bfh.ch/biere1/vula-gnome-shell-extension"
+}
