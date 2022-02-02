@@ -201,9 +201,6 @@
 - pip3 installable objects
 -- post-paper deadline
 
-- Gnome-widget
--- post-paper deadline
-
 - Standalone GUI (QT for portability reasons)
 -- post-paper deadline
 
