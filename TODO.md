@@ -299,6 +299,8 @@ ethernet" work via a gethostbyname interface? Maybe.
   connectivity. This problem has hopefully gone away but we should carefully
   investigate what happens in various scenarios to be sure.
 
+- For concerns regarding IPv6 compatibility consolidate README.ipv6.md
+
 - Increase test coverage
 
 - Add man page documentation
