@@ -383,6 +383,13 @@ class Descriptor(schemattrdict, serializable):
 
     @property
     def qr_code(self):
+        """
+        This generates a QR-Code and prints it.
+        The data that is encoded within the QR-Code is
+        given by this functions parameter.
+
+        It returns a String.
+        """
         global _qrcode
         if _qrcode is None:
             import qrcode as _qrcode
