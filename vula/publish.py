@@ -86,7 +86,10 @@ class Publish(object):
                     zeroconf.register_service(service_info)
                     self.log.debug("Registered vula mDNS publishing service.")
                 except NonUniqueNameException:
-                    self.log.debug("Unable to register vula mDNS publishing service.")
+                    self.log.debug(
+                        "Unable to register vula mDNS publishing service."
+                    )
+
     @classmethod
     def daemon(cls):
         """
