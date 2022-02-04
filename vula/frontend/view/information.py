@@ -3,11 +3,13 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.constants import W
 
-import i18n
+import gettext
 
 from vula.frontend import _WIDTH, _HEIGHT, dataprovider
 from vula.frontend.view import QRCodeLabel
 from vula.peer import Descriptor
+
+_ = gettext.gettext
 
 
 class Information(tk.Frame):
@@ -19,9 +21,7 @@ class Information(tk.Frame):
         self.pack_propagate(0)
         self.grid_propagate(0)
 
-        label = ttk.Label(
-            self, text=i18n.t("vula.my_verification_key"), font=("Arial", 20)
-        )
+        label = ttk.Label(self, text=_("Verification Key"), font=("Arial", 20))
         label.grid(row=0, column=0, padx=1, pady=1, sticky=W)
         self.display_qr_code()
 
@@ -37,7 +37,7 @@ class Information(tk.Frame):
             # Verification Key String Label
             label = ttk.Label(
                 self,
-                text=i18n.t("vula.my_vk_is") + ": {}".format(vk),
+                text=_("VK") + ": {}".format(vk),
                 font=("Arial", 12),
             )
             label.grid(row=gridrow, column=0, padx=1, pady=1, sticky=W)
@@ -50,20 +50,20 @@ class Information(tk.Frame):
             gridrow += 1
 
             # Separator
-            sep = ttk.Separator(self, orient='horizontal')
+            sep = ttk.Separator(self, orient="horizontal")
             sep.grid(row=gridrow, column=0, padx=1, pady=1, sticky=W)
             gridrow += 1
 
         for ip, desc in my_descriptors.items():
             # IP Label
             label = ttk.Label(
-                self, text="Descriptor for {}: ".format(ip), font=("Arial", 12)
+                self, text=_("Descriptor for ") + ip + ":", font=("Arial", 12)
             )
             label.grid(row=gridrow, column=0, padx=1, pady=1, sticky=W)
             gridrow += 1
 
             # Separator
-            sep = ttk.Separator(self, orient='horizontal')
+            sep = ttk.Separator(self, orient="horizontal")
             sep.grid(row=gridrow, column=0, padx=1, pady=1, sticky=W)
             gridrow += 1
 

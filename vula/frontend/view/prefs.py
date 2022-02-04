@@ -2,9 +2,11 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.constants import W
 
-import i18n
+import gettext
 
 from vula.frontend import _WIDTH, _HEIGHT, dataprovider
+
+_ = gettext.gettext
 
 
 class Prefs(tk.Frame):
@@ -19,9 +21,7 @@ class Prefs(tk.Frame):
         self.grid(row=0, column=0, sticky="ew")
 
         # Display title of Preference view
-        label = ttk.Label(
-            self, text=i18n.t("vula.preferences"), font=("Arial", 20)
-        )
+        label = ttk.Label(self, text=_("Settings"), font=("Arial", 20))
         label.grid(row=0, column=0, padx=1, pady=1, sticky=W)
         self.display_prefs()
 
@@ -33,7 +33,7 @@ class Prefs(tk.Frame):
         # Loop over all preferences and display them
         for key, value in prefs.items():
             key_label = ttk.Label(
-                self, text=i18n.t("vula." + str(key)) + ":", font=("Arial", 12)
+                self, text=_(str(key)) + ":", font=("Arial", 12)
             )
             key_label.grid(row=counter, column=0, padx=1, pady=1, sticky=W)
 

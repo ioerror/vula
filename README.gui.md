@@ -5,7 +5,6 @@
 
 ## Installation
 1. sudo pypi-install sibc
-2. sudo pip install python-i18n
 3. sudo make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb
 
 ## Start Graphical User Interface for Vula

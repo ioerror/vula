@@ -3,9 +3,11 @@ from functools import partial
 from tkinter import ttk, simpledialog
 from tkinter.constants import W
 
-import i18n
+import gettext
 
 from vula.frontend import _WIDTH, _HEIGHT, DataProvider
+
+_ = gettext.gettext
 
 
 class Peers(tk.Frame):
@@ -39,8 +41,8 @@ class Peers(tk.Frame):
         # show message to ask user if they really
         # want to remove a peer and refresh view
         box = tk.messagebox.askyesno(
-            i18n.t("vula.remove"),
-            i18n.t("vula.remove_text") + peer_name + " ?",
+            _("Remove"),
+            _("Remove this peer: ") + peer_name + " ?",
         )
 
         if box:
@@ -57,7 +59,7 @@ class Peers(tk.Frame):
 
     def edit_peer(self, peer_id):
         dialog = simpledialog.askstring(
-            i18n.t("vula.add_name"), i18n.t("vula.add_name_text")
+            _("Edit peer name"), _("Enter new peer name")
         )
 
         if dialog is not None:
@@ -71,12 +73,16 @@ class Peers(tk.Frame):
     def add_peer(self):
         # show dialogs to add a new peer
         dialog = simpledialog.askstring(
-            i18n.t("vula.add_peer"), i18n.t("vula.add_peer_text")
+            _("+ Add peer"),
+            _(
+                "Important: It may take a few minutes for new peers to be displayed!\n"  # noqa
+                + "Enter a verification key:"
+            ),
         )
 
         if dialog is not None:
             dialog_ip = simpledialog.askstring(
-                i18n.t("vula.add_peer"), i18n.t("vula.add_peer_ip")
+                _("+ Add peer"), _("Enter IP address")
             )
             if dialog_ip is not None:
                 try:
@@ -126,7 +132,7 @@ class Peers(tk.Frame):
         if len(peers) == 0:
             no_peers_label = ttk.Label(
                 self,
-                text=i18n.t("vula.no_peers_available"),
+                text=_("No peers found"),
                 font=("Arial", 12),
             )
             no_peers_label.grid(
@@ -150,17 +156,15 @@ class Peers(tk.Frame):
 
             # buttons for editing/removing peers
             btn_remove_peer = ttk.Button(
-                self, text=i18n.t("vula.remove"), command=remove_with_arg
+                self, text=_("Remove"), command=remove_with_arg
             )
             btn_remove_peer.grid(
                 row=counter, column=3, padx=1, pady=1, sticky=W
             )
-            btn_edit = ttk.Button(
-                self, text=i18n.t("vula.edit"), command=edit_name
-            )
+            btn_edit = ttk.Button(self, text=_("Edit name"), command=edit_name)
             btn_edit.grid(row=counter, column=2, padx=1, pady=1, sticky=W)
             btn_pin = ttk.Button(
-                self, text=i18n.t("vula.pin_verify"), command=pin_with_arg
+                self, text=_("Pin and verify"), command=pin_with_arg
             )
             btn_pin.grid(row=counter, column=4, padx=1, pady=1, sticky=W)
             self.gui_components.append(btn_remove_peer)
@@ -171,7 +175,7 @@ class Peers(tk.Frame):
             for key, value in peer.items():
                 key = ttk.Label(
                     self,
-                    text=i18n.t("vula." + str(key)) + ":",
+                    text=str(key) + ":",
                     font=("Arial", 12),
                 )
                 key.grid(row=counter, column=0, padx=1, pady=1, sticky=W)
@@ -182,7 +186,7 @@ class Peers(tk.Frame):
                 self.gui_components.append(key)
 
             # Add a separator to split the peers
-            sep = ttk.Separator(self, orient='horizontal')
+            sep = ttk.Separator(self, orient="horizontal")
             sep.grid(row=counter, column=0, padx=20, pady=20, sticky=W)
             counter += 1
             self.gui_components.append(sep)
@@ -190,7 +194,7 @@ class Peers(tk.Frame):
         # button for adding new peers
         if not clear_gui:
             btn_add = ttk.Button(
-                self, text=i18n.t("vula.add_peer"), command=self.add_peer
+                self, text=_("+ Add peer"), command=self.add_peer
             )
             btn_add.grid(row=counter, column=0, padx=1, pady=1, sticky=W)
             self.gui_components.append(btn_add)

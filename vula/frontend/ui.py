@@ -1,10 +1,9 @@
-import locale
-import os
-import tkinter as tk
 from sys import platform
+
+import tkinter as tk
 from tkinter import ttk
 
-import i18n
+import gettext
 
 from vula import common
 from vula.frontend import DataProvider
@@ -14,21 +13,7 @@ from vula.frontend.view import (
     Information,
 )
 
-try:
-    import qrcode
-except ImportError:
-    qrcode = None
-
-loc = locale.getlocale()  # get current locale
-locals_path = os.path.dirname(__file__) + "/locals"
-i18n.load_path.append(locals_path)
-
-if loc[0].__contains__("en"):
-    i18n.set('locale', 'en')
-elif loc[0].__contains__("de"):
-    i18n.set('locale', 'de')
-else:
-    i18n.set('fallback', 'en')
+_ = gettext.gettext
 
 
 class App(tk.Tk):
@@ -42,15 +27,17 @@ class App(tk.Tk):
         container = ttk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
 
-        if not platform == 'linux':
-            error_label = ttk.Label(self, text="Your OS is not supported")
+        if not platform == "linux":
+            error_label = ttk.Label(self, text=_("Your OS is not supported"))
             error_label.pack(
                 side="top", fill="both", expand=True, ipadx=30, ipady=30
             )
         else:
             status_values = data.get_status()
             if status_values is None:
-                error_label = ttk.Label(self, text="Vula is not running")
+                error_label = ttk.Label(
+                    self, text=_("Vula service is not running")
+                )
                 error_label.pack(
                     side="top", fill="both", expand=True, ipadx=30, ipady=30
                 )
@@ -61,34 +48,34 @@ class App(tk.Tk):
 
                 # Add several menu points
                 menu.add_command(
-                    label=i18n.t("vula.preferences"),
+                    label=_("Settings"),
                     command=lambda: self.show_frame(Prefs),
                 )
 
                 menu.add_command(
-                    label=i18n.t("vula.peers"),
+                    label=_("Peers"),
                     command=lambda: self.show_frame(Peers),
                 )
 
                 menu.add_command(
-                    label=i18n.t("vula.information"),
+                    label=_("Information"),
                     command=lambda: self.show_frame(Information),
                 )
 
                 # Add submenu with different command
                 commands = tk.Menu(menu)
                 commands.add_command(
-                    label=i18n.t("vula.rediscover"),
+                    label=_("Rediscover"),
                     command=lambda: self.rediscover(),
                 )
                 commands.add_command(
-                    label=i18n.t("vula.repair"), command=lambda: self.repair()
+                    label=_("Repair"), command=lambda: self.repair()
                 )
                 commands.add_command(
-                    label=i18n.t("vula.release_gateway"),
+                    label=_("Release Gateway"),
                     command=lambda: self.release_gateway(),
                 )
-                menu.add_cascade(label=i18n.t("vula.actions"), menu=commands)
+                menu.add_cascade(label=_("Actions"), menu=commands)
 
                 # Get the status of the different vula processes
                 state = data.get_status()
@@ -96,9 +83,9 @@ class App(tk.Tk):
                 # Display the status at the bottom
                 status_label = ttk.Label(
                     self,
-                    text=f'Publish: {i18n.t("vula." + state["publish"])} '
-                    f'\t Discover: {i18n.t("vula." + state["discover"])} '
-                    f'\t Organize: {i18n.t("vula." + state["organize"])}',
+                    text=f'Publish: {_(state["publish"])} '
+                    f'\t Discover: {_(state["discover"])} '
+                    f'\t Organize: {_(state["organize"])}',
                     font=("Arial", 15),  # noqa: E501
                 )
                 status_label.pack(side="top", fill="both", expand=True)
@@ -138,5 +125,5 @@ def main():
         app = App()
         app.title("Vula")
         app.mainloop()
-    except RuntimeError:
-        return
+    except RuntimeError as e:
+        print(e)

@@ -1,15 +1,23 @@
 import setuptools
 from setuptools.command.build_ext import build_ext as hookBuild_ext
 from subprocess import check_output
+
 import os
 import time
+
 from shutil import copy2
 from sys import platform
 from glob import glob
 
 try:
+    from babel.messages import frontend as babel
+    compile_catalog = babel.compile_catalog
+except ImportError:
+    compile_catalog=None
+try:
     from stdeb.command.sdist_dsc import sdist_dsc
     from stdeb.command.bdist_deb import bdist_deb
+
 
     class sdist_dsc_with_postinst(sdist_dsc):
         def run(self):
@@ -29,16 +37,6 @@ try:
     from click_man.commands.man_pages import man_pages
 except ImportError:
     man_pages = None
-
-dir = os.getcwd()
-copy_icon = (
-    'cp ' + dir + "/vula/frontend/desktop/vula_gui_icon.png /usr/share/icons"
-)
-copy_desktop = (
-    'cp ' + dir + "/vula/frontend/desktop/vula.desktop /usr/share/applications"
-)
-os.system(copy_icon)
-os.system(copy_desktop)
 
 try:
     os.environ['SOURCE_DATE_EPOCH'] = (
@@ -80,6 +78,18 @@ linux_data_files = [
     (
         "/etc/dbus-1/system.d/",
         ['configs/dbus/local.vula.services.conf'],
+    ),
+    (
+        "/usr/share/applications",
+        [
+            "vula/frontend/desktop/vula.desktop"
+        ]
+    ),
+    (
+        "/usr/share/icons",
+        [
+            "vula/frontend/desktop/vula_gui_icon.png"
+        ]
     ),
     (
         "/usr/share/dbus-1/system-services/",
@@ -140,10 +150,12 @@ setuptools.setup(
     },
     install_requires=requirements,
     data_files=our_data_files,
+    package_data={'vula': ['vula/locale/*/LC_MESSAGES/*.mo']},
     include_package_data=True,
     zip_safe=False,
     tests_require=["pytest"],
     cmdclass=dict(
+        compile_catalog=compile_catalog,
         bdist_deb=bdist_deb,
         sdist_dsc=sdist_dsc_with_postinst,
         man_pages=man_pages,

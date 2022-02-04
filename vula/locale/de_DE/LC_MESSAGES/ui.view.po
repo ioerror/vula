@@ -1,0 +1,78 @@
+# vula ui view package translations.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.1.14\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-02-03 15:48+0100\n"
+"PO-Revision-Date: 2022-02-03 15:48+0100\n"
+"Last-Translator: Timon Borter <timon.borter@gmx.ch>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: Deutsch\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: vula/frontend/view/prefs.py:24
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: vula/frontend/view/information.py:24
+msgid "Verification Key"
+msgstr "Verifizierungs Schlüssel"
+
+#: vula/frontend/view/information.py:40
+msgid "VK"
+msgstr "VK"
+
+#: vula/frontend/view/information.py:60
+msgid "Descriptor for "
+msgstr "Deskriptor für "
+
+#: vula/frontend/view/peers.py:44 vula/frontend/view/peers.py:159
+msgid "Remove"
+msgstr "Entfernen"
+
+#: vula/frontend/view/peers.py:45
+msgid "Remove this peer: "
+msgstr "Dieses Peer entfernen"
+
+#: vula/frontend/view/peers.py:62
+msgid "Edit peer name"
+msgstr "Peer Name editieren"
+
+#: vula/frontend/view/peers.py:62
+msgid "Enter new peer name"
+msgstr "Neuen Peer Name eingeben"
+
+#: vula/frontend/view/peers.py:76 vula/frontend/view/peers.py:85
+#: vula/frontend/view/peers.py:197
+msgid "+ Add peer"
+msgstr "+ Peer hinzufügen"
+
+#: vula/frontend/view/peers.py:78
+msgid ""
+"Important: It may take a few minutes for new peers to be displayed!\n"
+"Enter a verification key:"
+msgstr ""
+"Wichtig: Es kann einige Minuten dauern bis neue Peers angezeigt werden!\n"
+"Einen Verifizierungs Schlüssel eingeben:"
+
+#: vula/frontend/view/peers.py:85
+msgid "Enter IP address"
+msgstr "IP Adresse eingeben"
+
+#: vula/frontend/view/peers.py:135
+msgid "No peers found"
+msgstr "Keine Peers gefunden"
+
+#: vula/frontend/view/peers.py:164
+msgid "Edit name"
+msgstr "Name editieren"
+
+#: vula/frontend/view/peers.py:167
+msgid "Pin and verify"
+msgstr "Pinnen und verifizieren"
