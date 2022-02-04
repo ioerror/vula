@@ -14,7 +14,7 @@ from logging import Logger, getLogger
 from platform import node
 
 import click
-from zeroconf import ServiceInfo, Zeroconf
+from zeroconf import ServiceInfo, Zeroconf, NonUniqueNameException
 
 import pydbus
 from gi.repository import GLib
@@ -82,9 +82,11 @@ class Publish(object):
                     interfaces=list(map(str, comma_separated_IPs(ip_addr)))
                 )
                 self.log.debug("Registering vula service: %s", service_info)
-                zeroconf.register_service(service_info)
-                self.log.debug("Registered vula service.")
-
+                try:
+                    zeroconf.register_service(service_info)
+                    self.log.debug("Registered vula mDNS publishing service.")
+                except NonUniqueNameException:
+                    self.log.debug("Unable to register vula mDNS publishing service.")
     @classmethod
     def daemon(cls):
         """
