@@ -23,11 +23,12 @@ Therefore, the initial thought was that the implementation could be done quickly
 * Although this argument applies to any alternative, adding one to Vula would add complexity. It would probably be implemented in such a way that the protocol to use is configurable, runs in parallel, or is even dynamically selected based on the network situation. All of this needs coordination, which in turn is an additional source of errors.
 
 ### Conclusion
-Based on our judgement, the cons outweigh the pros and the necessary work to implement LLMNR is not worth it for the resulting advantages.
+Based on our judgment, the cons outweigh the pros and the necessary work to implement LLMNR is not worth it for the resulting advantages.
 
 ## Current recommendation
 If you want to invest time to reduce Vulas dependence on mDNS; the best option we think there currently is: Come up with an entirely custom solution/protocol!
 
 Because the search for further similar established protocols, into which we could inject the Vula peer descriptor, turns out to be difficult. Accordingly, there are probably no useful libraries for these protocols that could be implemented quickly.
 
-From what we imagine, that custom solution could be a new protocol on layer 2 that fits Vulas specific needs and is built as resilient to network censorship as possible.
+From what we imagine, that custom solution could be a new protocol on layer 2 that fits Vula-specific needs and is built as resilient to network censorship as possible.
+
