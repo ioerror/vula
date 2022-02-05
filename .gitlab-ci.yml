@@ -18,7 +18,7 @@ cache:
 before_script:
   - PATH=$PATH:~/.local/bin
   - apt update
-  - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev make git
+  - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
   - python -m pip install --user pipx
   - python -m pipx ensurepath
   - pipx install pipenv
@@ -83,4 +83,3 @@ build:
     paths:
       - deb_dist/*.deb
       - dist/*.rpm
-

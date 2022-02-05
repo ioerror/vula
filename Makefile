@@ -7,6 +7,12 @@ FOLDER = vula test podman
 test:
 	echo ${VERSION}
 
+gettext-build:
+	python3 setup.py compile_catalog --directory vula/locale --locale de_DE --domain ui
+	python3 setup.py compile_catalog --directory vula/locale --locale de_DE --domain ui.view
+	python3 setup.py compile_catalog --directory vula/locale --locale en_US --domain ui
+	python3 setup.py compile_catalog --directory vula/locale --locale en_US --domain ui.view
+
 .PHONY: pypi-build
 pypi-build:
 	python3 -m build
@@ -18,13 +24,13 @@ pypi-upload:
 .PHONY: deb
 deb: ${DEB_NAME}
 
-${DEB_NAME}: vula vula/*py configs configs/* configs/*/* setup.py
+${DEB_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py gettext-build
 	python3 setup.py --command-packages=stdeb.command sdist_dsc bdist_deb
 
 .PHONY: rpm
 rpm: ${RPM_NAME}
 
-${RPM_NAME}: vula vula/*py configs configs/* configs/*/* setup.py
+${RPM_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py
 	python3 setup.py --command-packages=stdeb.command bdist_rpm
 .PHONY: pytest-coverage
 pytest-coverage:
@@ -33,6 +39,7 @@ pytest-coverage:
 .PHONY: clean
 clean:
 	-rm -rf build/ dist/ vula.egg-info deb_dist
+	find vula/locale -type f -name \*.mo -delete
 
 .PHONY: format
 format: black
@@ -98,5 +105,3 @@ dev-deps-pacman:
 	PATH=$$PATH:~/.local/bin
 	sudo pacman -S python-pipenv cairo pkgconf gobject-introspection gtk3
 	pipenv install --dev --skip-lock
-
-

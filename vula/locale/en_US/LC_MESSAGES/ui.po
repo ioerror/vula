@@ -1,0 +1,53 @@
+# vula ui translations.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the vula package.
+# Timon Borter <timon.borter@gmx.ch>, 2022.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.1.14\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-02-03 15:48+0100\n"
+"PO-Revision-Date: 2022-02-03 15:48+0100\n"
+"Last-Translator: Timon Borter <timon.borter@gmx.ch>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: English\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: vula/frontend/ui.py:30
+msgid "Your OS is not supported"
+msgstr "Your OS is not supported"
+
+#: vula/frontend/ui.py:37
+msgid "Vula service is not running"
+msgstr "Vula service is not running"
+
+#: vula/frontend/ui.py:48
+msgid "Settings"
+msgstr "Settings"
+
+#: vula/frontend/ui.py:53
+msgid "Peers"
+msgstr "Peers"
+
+#: vula/frontend/ui.py:58
+msgid "Information"
+msgstr "Information"
+
+#: vula/frontend/ui.py:65
+msgid "Rediscover"
+msgstr "Rediscover"
+
+#: vula/frontend/ui.py:69
+msgid "Repair"
+msgstr "Repair"
+
+#: vula/frontend/ui.py:72
+msgid "Release Gateway"
+msgstr "Release Gateway"
+
+#: vula/frontend/ui.py:75
+msgid "Actions"
+msgstr "Actions"

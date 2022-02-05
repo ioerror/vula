@@ -28,6 +28,8 @@ from .constants import (
     _PUBLISH_DBUS_PATH,
 )
 
+from .frontend import ui
+
 
 @click.version_option()
 @click.option(
@@ -90,6 +92,11 @@ def start(quick):
     status.main(
         args=(('--only-systemd',) if quick else ()), standalone_mode=False
     )
+
+
+@main.command(short_help="Starts the graphical user interface")
+def gui():
+    ui.main()
 
 
 @main.command(short_help="Ensure that system is configured correctly")
