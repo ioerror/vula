@@ -31,3 +31,4 @@ If you want to invest time to reduce Vulas dependence on mDNS; the best option w
 Because the search for further similar established protocols, into which we could inject the Vula peer descriptor, turns out to be difficult. Accordingly, there are probably no useful libraries for these protocols that could be implemented quickly.
 
 From what we imagine, that custom solution could be a new protocol on layer 2 that fits Vula-specific needs and is built as resilient to network censorship as possible.
+
