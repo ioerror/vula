@@ -101,8 +101,9 @@ class Engine(schemattrdict, yamlfile):
     the engine state is allowed to be modified.
 
     If there are any exceptions during execution of the event and its actions,
-    or if the state after all of the actions have been completed does not satisfy
-    the schema, then none of the event's actions' write operations are applied.
+    or if the state after all of the actions have been completed does not
+    satisfy the schema, then none of the event's actions' write operations
+    are applied.
 
     If the event does not have an error, after the new state is committed, the
     triggers are executed and their results are recorded in the event's
