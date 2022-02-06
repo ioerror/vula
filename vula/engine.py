@@ -89,19 +89,19 @@ class Engine(schemattrdict, yamlfile):
     form of events and actions.
 
     An event engine using this class may be thought of as a pure function which
-    takes a current state and new event, and produces a new state.
+    takes a current state and a new event, and produces a new state.
 
     Subclasses should define @Engine.event methods and @Engine.action methods.
     Events should call one or more actions. Actions may mutate the state via
     write operations, and may call other actions, and may register triggers
     which will be run after the transaction is committed.
 
-    The three built-in write methods are SET, ADD, and REMOVE. These methods,
+    The three built-in write methods are SET, ADD and REMOVE. These methods,
     called from actions during an event transaction, are the only place where
     the engine state is allowed to be modified.
 
     If there are any exceptions during execution of the event and its actions,
-    or if the state after all of the actions have completed does not satisfy
+    or if the state after all of the actions have been completed does not satisfy
     the schema, then none of the event's actions' write operations are applied.
 
     If the event does not have an error, after the new state is committed, the
@@ -110,7 +110,7 @@ class Engine(schemattrdict, yamlfile):
     engine, and may also initiate new events.
 
     Calling an event will yield a Result object which contains a record of the
-    event arguments and the resulting actions, writes, triggers, and trigger
+    event arguments and the resulting actions, writes, triggers and trigger
     results, or contains the exception if one occurred.
 
     The state of the engine is only allowed to change through events which call

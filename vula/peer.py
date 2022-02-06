@@ -850,7 +850,7 @@ class PeerCommands(object):
         With no arguments, all enabled peers are shown.
 
         Peer arguments can be specified as ID, name, or IP, unless options are also
-        specified in which case arguments must (currently) be IDs.
+        specified, in which case arguments must (currently) be IDs.
         """
 
         available = self.organize.peer_ids(which if which else 'enabled')
@@ -954,7 +954,7 @@ class PeerCommands(object):
         """
         Modify arbitrary peer properties
 
-        This is currently the only way to verify peers, enable/disable them,
+        This is currently the only way to verify peers, enable/disable them
         and enable or disable IP addresses.
 
         In the future, this command should perhaps only be available for
