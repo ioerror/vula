@@ -105,3 +105,7 @@ dev-deps-pacman:
 	PATH=$$PATH:~/.local/bin
 	sudo pacman -S python-pipenv cairo pkgconf gobject-introspection gtk3
 	pipenv install --dev --skip-lock
+
+.PHONY: fuzz
+fuzz:
+	python vulaFuzzer.py /misc/fuzzing
