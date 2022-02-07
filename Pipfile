@@ -37,6 +37,7 @@ pyfiglet = "*"
 printy = "*"
 scapy = "*"
 pyshark = "*"
+atheris = "*"
 
 [requires]
 python_version = "3"
