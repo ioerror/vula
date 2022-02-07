@@ -114,7 +114,37 @@ linux_data_files = [
     ),
 ]
 
-our_data_files = linux_data_files
+# The locations for files on macOS. This differs from Linux in
+# that the files are stored in usr/local instead of usr/share.
+macos_data_files = [
+    (
+        "/usr/local/share/dbus-1/",
+        ['configs/dbus/local.vula.services.conf'],
+    ),
+    (
+        "/usr/local/dbus-1/system-services/",
+        [
+            'configs/dbus/local.vula.organize.service',
+            'configs/dbus/local.vula.publish.service',
+            'configs/dbus/local.vula.discover.service',
+        ],
+    ),
+    ("/usr/local/lib/sysusers.d/", ['configs/sysusers.d/vula.conf']),
+    (
+        "/usr/local/man/man1/",
+        glob('man/vula*1'),
+    ),
+    (
+        "",
+        ["misc/python3-vula.postinst"],
+    ),
+]
+
+# Uses the macOS specific paths for Darwin (macOS) systems
+if platform == "darwin":
+    our_data_files = macos_data_files
+else:
+    our_data_files = linux_data_files
 
 if platform.startswith("openbsd"):
     our_data_files = []
