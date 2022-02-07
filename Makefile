@@ -108,4 +108,4 @@ dev-deps-pacman:
 
 .PHONY: fuzz
 fuzz:
-	python vulaFuzzer.py /misc/fuzzing
+	python misc/fuzzing/vulaFuzzer.py
