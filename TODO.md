@@ -43,6 +43,8 @@
   - Implement an AEAD payload keyed by a DH between host keys and target
     system's keys to ensure a camera cannot meaningfully make use of a QR code
     on a screen.
+  - see `bfh-verify-against` feature branch for progress toward design and
+    implementation.
 
 - async csidh?
 
@@ -90,6 +92,8 @@
 
     - this requires new descriptors to be generated and signed even if nothing
       else has changed to bump the vf value up.
+    - see `bfh-expiration-of-unpinned-peer-feature` branch for progress toward
+      this feature.
 
 - we should have different events for peer and pref edits, instead of using
   `ev_USER_EDIT`, and then we should have triggers fired by the state engine to
@@ -125,6 +129,9 @@
   reunion-on-an-ethernet to automatically verify (and thus pin) any other peers
   using that passphrase. this will allow bidirectional pinning with headless
   peers (including routers).
+
+    - see `bfh-reunion-integration` feature branch for progress toward REUNION
+      integration.
 
 - write a cryptographic warnings page about CSIDH similar to this one about
   ntruprime:
@@ -201,16 +208,13 @@
 - pip3 installable objects
 -- post-paper deadline
 
-- Standalone GUI (QT for portability reasons)
--- post-paper deadline
-
 - Monolith mode: a single sub-command which runs all needed services in threads
   or processes without privilege separation.
 -- post-paper deadline
 
 - Publish service should have a limited lifetime and it should have a way to
   rotate CSIDH keys.
--- post-paper deadline?
+-- see branch `bfh-keyrotation-feature` for progress on this task.
 
 - vula should have a sub command called proxy mode. This should allow a
   device which can use wireguard but cannot run other software to participate
