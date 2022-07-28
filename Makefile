@@ -85,9 +85,9 @@ sast-analysis:
 
 .PHONY: deps-graphs
 deps-graphs:
-	pipenv run pydeps --pylib-all --cluster --max-cluster-size 10 -o misc/deps-graphs/precisely_linked.svg vula
-	pipenv run pydeps --pylib-all --cluster --keep-target-cluster --max-cluster-size 10 -o misc/deps-graphs/all_clustered.svg vula
-	pipenv run pydeps --pylib-all --show-deps vula -o misc/deps-graphs/unorganized.svg > misc/deps-graphs/vula_deps.json
+	pipenv run pydeps --pylib-all --cluster --max-cluster-size 10 -o contrib/deps-graphs/precisely_linked.svg vula
+	pipenv run pydeps --pylib-all --cluster --keep-target-cluster --max-cluster-size 10 -o contrib/deps-graphs/all_clustered.svg vula
+	pipenv run pydeps --pylib-all --show-deps vula -o contrib/deps-graphs/unorganized.svg > contrib/deps-graphs/vula_deps.json
 
 .PHONY: dev-deps-apt
 dev-deps-apt:
@@ -108,4 +108,4 @@ dev-deps-pacman:
 
 .PHONY: fuzz
 fuzz:
-	python misc/fuzzing/vulaFuzzer.py
+	python contrib/fuzzing/vulaFuzzer.py
