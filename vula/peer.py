@@ -218,10 +218,6 @@ class Descriptor(schemattrdict, serializable):
         """
         Return the number or IP as a string
 
-        >>> my_num = 12
-        >>> my_num.__str__()
-        '12'
-
         >>> ip = comma_separated_IPs('192.168.13.37')
         >>> ip.__str__()
         '192.168.13.37'
