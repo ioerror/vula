@@ -269,7 +269,7 @@ def raw(value):
 
 class serializable(dict):
     def _dict(self):
-        """Serialize dictionary
+        """Return serializable as a dictionary
 
         >>> serializable({1:serializable({2:3})})._dict()
         {1: {2: 3}}
