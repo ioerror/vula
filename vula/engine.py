@@ -96,7 +96,7 @@ class Engine(schemattrdict, yamlfile):
     write operations, and may call other actions, and may register triggers
     which will be run after the transaction is committed.
 
-    The three built-in write methods are SET, ADD and REMOVE. These methods,
+    The three built-in write methods are SET, ADD, and REMOVE. These methods,
     called from actions during an event transaction, are the only place where
     the engine state is allowed to be modified.
 
@@ -111,7 +111,7 @@ class Engine(schemattrdict, yamlfile):
     engine, and may also initiate new events.
 
     Calling an event will yield a Result object which contains a record of the
-    event arguments and the resulting actions, writes, triggers and trigger
+    event arguments and the resulting actions, writes, triggers, and trigger
     results, or contains the exception if one occurred.
 
     The state of the engine is only allowed to change through events which call

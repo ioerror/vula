@@ -961,7 +961,7 @@ class PeerCommands(object):
         """
         Modify arbitrary peer properties
 
-        This is currently the only way to verify peers, enable/disable them
+        This is currently the only way to verify peers, enable/disable them,
         and enable or disable IP addresses.
 
         In the future, this command should perhaps only be available for
