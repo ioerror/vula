@@ -1,11 +1,11 @@
 # Vula Graphical User Interface
 
 
-!["Graphical User Interface for Vula"](misc/frontend/Preferences.png "Vula GUI")
+!["Graphical User Interface for Vula"](misc/tk_frontend/Preferences.png "Vula GUI")
 
 ## Installation
-1. sudo pypi-install sibc
-3. sudo make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb
+1. `sudo pypi-install sibc`
+3. `sudo make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb`
 
 ## Start Graphical User Interface for Vula
 From the terminal use the following command:
@@ -14,7 +14,7 @@ $ vula gui
 ```
 
 Or use the desktop icon and double click it:
-!["Desktop Icon"](misc/frontend/Desktop.png "Desktop Icon")
+!["Desktop Icon"](misc/tk_frontend/Desktop.png "Desktop Icon")
 
 
 ## Functionalities
@@ -22,16 +22,16 @@ Or use the desktop icon and double click it:
 The following functionalities are available in the graphical user interface
 
 ### Display Preferences
-!["Preference View"](misc/frontend/Preferences.png "Preference View")
+!["Preference View"](misc/tk_frontend/Preferences.png "Preference View")
 
 ### Display Peers
-!["Empty Peers View"](misc/frontend/Empty_Peers.png "Empty Peers View")
+!["Empty Peers View"](misc/tk_frontend/Empty_Peers.png "Empty Peers View")
 
 ### Display Keys
-!["Information View"](misc/frontend/Information.png "Information View")
+!["Information View"](misc/tk_frontend/Information.png "Information View")
 
 ### Help
-!["Vula Actions"](misc/frontend/Actions.png "Vula Actions")
+!["Vula Actions"](misc/tk_frontend/Actions.png "Vula Actions")
 
 ## Contributing
 Pull requests are enabled for this project. If you want to change something please create a new 

@@ -369,11 +369,6 @@ def red(s):
     >>> red_string = "This text is red"
     >>> print(red(red_string))
     \x1b[31mThis text is red\x1b[0m
-
-    Afterwards, the text output should be default again.
-    >>> default_string = "This text is default formatted"
-    >>> print(default_string)
-    This text is default formatted
     """
     return click.style(s, fg="red")
 
@@ -385,11 +380,6 @@ def green(s):
     >>> green_string = "This text is green"
     >>> print(green(green_string))
     \x1b[32mThis text is green\x1b[0m
-
-    Afterwards, the text output should be default again.
-    >>> default_string = "This text is default formatted"
-    >>> print(default_string)
-    This text is default formatted
     """
     return click.style(s, fg="green")
 
@@ -401,11 +391,6 @@ def blue(s):
     >>> blue_string = "This text is blue"
     >>> print(blue(blue_string))
     \x1b[34mThis text is blue\x1b[0m
-
-    Afterwards, the text output should be default again.
-    >>> default_string = "This text is default formatted"
-    >>> print(default_string)
-    This text is default formatted
     """
     return click.style(s, fg="blue")
 
@@ -417,11 +402,6 @@ def yellow(s):
     >>> yellow_string = "This text is yellow"
     >>> print(yellow(yellow_string))
     \x1b[33mThis text is yellow\x1b[0m
-
-    Afterwards, the text output should be default again.
-    >>> default_string = "This text is default formatted"
-    >>> print(default_string)
-    This text is default formatted
     """
     return click.style(s, fg="yellow")
 
@@ -433,11 +413,6 @@ def bold(s):
     >>> bold_string = "This text is bold"
     >>> print(bold(bold_string))
     \x1b[1mThis text is bold\x1b[0m
-
-    Afterwards, the text output should be default again.
-    >>> default_string = "This text is default formatted"
-    >>> print(default_string)
-    This text is default formatted
     """
     return click.style(s, bold=True)
 
