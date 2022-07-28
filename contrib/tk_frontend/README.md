@@ -4,8 +4,8 @@
 !["Graphical User Interface for Vula"](misc/tk_frontend/Preferences.png "Vula GUI")
 
 ## Installation
-1. sudo pypi-install sibc
-3. sudo make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb
+1. `sudo pypi-install sibc`
+3. `sudo make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb`
 
 ## Start Graphical User Interface for Vula
 From the terminal use the following command:
