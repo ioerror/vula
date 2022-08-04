@@ -33,7 +33,7 @@ def hkdf(raw_key: ByteString) -> str:
     >>> hkdf("my_raw_key_string")
     Traceback (most recent call last):
      ...
-    TypeError: Unicode-objects must be encoded before hashing
+    TypeError: ...
     """
     kdf = Hkdf(salt=None, input_key_material=raw_key, hash=sha512)
     key = kdf.expand(b"vula-organize-1", 32)
