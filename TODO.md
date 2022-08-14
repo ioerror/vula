@@ -1,9 +1,33 @@
 # TODO
 
+We should migrate everything in this TODO to codeberg issues.
+
+- URGENT pre pypi release: determine if missing requirements.txt breaks PyPI packaging
+
+- move DEPENDENCY.md to contrib?
+
+- move misc/install-mitm-deps.sh to contrib/mitm/ ?
+
+- review HACKING.md and ensure pipenv/pipx information is relevant/working/etc (narrator: it isn't)
+
+- setup codeberg CI
+
 - we need to research more to figure out what our minimum requirements actually
   are, and better define a way to install everything on older systems.
   pipx? docker?
 
+
+- install .desktop file for gui
+- figure out what it takes to use vula with userspace (golang) wg. (does pyroute2 help?)
+- delete some no-op tests from publish (and elsewhere)
+- figure out what could cause a NonUniqueNameException - (post-bfh merge we
+  ignore that exception now instead of crashing on it, but we don't know
+  when/why it actually happens. maybe we should make systemd not stop restarting
+  instead?)
+
+- rename notclick to click or clickutils or something
+- make tk frontend stop doing import *
+- check if tk frontend really needs to make a tempfile or if qrcode lib can just return an image
 - petnames are broken on Ubuntu 20.04 due to a permissions issue
 
 - stop calling sync from `get_new_system_state`, triggers should handle it
