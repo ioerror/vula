@@ -4,6 +4,8 @@ We should migrate everything in this TODO to codeberg issues.
 
 - URGENT pre pypi release: determine if missing requirements.txt breaks PyPI packaging
 
+- review Tk frontend more; fix scrolling bug there.
+
 - move DEPENDENCY.md to contrib?
 
 - move misc/install-mitm-deps.sh to contrib/mitm/ ?
