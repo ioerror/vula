@@ -471,8 +471,8 @@ class comma_separated_IPs(object):
         """
         Iterate over ips
 
-        >>> [ip for ip in comma_separated_IPs("::1,126.26.17.18")]
-        [IPv6Address('::1'), IPv4Address('126.26.17.18')]
+        >>> [ip for ip in comma_separated_IPs("::1,192.168.1.1")]
+        [IPv6Address('::1'), IPv4Address('192.168.1.1')]
         """
         return iter(self._items)
 
