@@ -1,0 +1,85 @@
+image: python:3.8.12-slim-bullseye
+
+stages:
+  - Static-Analysis
+  - Test
+  - Build
+
+variables:
+  PIPENV_VERBOSITY: -1
+  PIPENV_CACHE_DIR: .cache/pipenv
+  PIP_CACHE_DIR: .cache/pip
+
+cache:
+  paths:
+    - .cache/pip
+    - .cache/pipenv
+
+before_script:
+  - PATH=$PATH:~/.local/bin
+  - apt update
+  - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+  - python -m pip install --user pipx
+  - python -m pipx ensurepath
+  - pipx install pipenv
+  - pipenv install --dev --skip-lock
+
+# ---------- static analysis stage
+
+check:
+  stage: Static-Analysis
+  script:
+    - make check
+
+sast:
+  stage: Static-Analysis
+  allow_failure: true #TODO discuss whether this should fail or not
+  script:
+    - make sast-analysis
+  artifacts:
+    when: always 
+    paths:
+      - ./report-*.txt
+
+# ---------- test stage
+
+pytest:
+  stage: Test
+  allow_failure: false
+  script:
+    - make pytest
+
+pytest-coverage:
+  stage: Test
+  script:
+    - make pytest-coverage
+  artifacts:
+    reports:
+      cobertura: coverage.xml
+
+ping-test:
+  stage: Test
+  image: quay.io/podman/stable:latest
+  before_script:
+    - echo "hey"
+  script:
+    - dnf install -y make python-setuptools git-core
+    - cd podman && make test-ping
+
+# ---------- build stage
+
+build:
+  stage: Build
+  allow_failure: false
+  script:
+    - . $(pipenv --venv)/bin/activate
+    - apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot git make python3-setuptools rpm
+    - make deb
+    - dpkg -I deb_dist/*.deb
+    - make rpm
+    - rpm -qpl dist/*.rpm
+  artifacts:
+    name: deb+rpm
+    paths:
+      - deb_dist/*.deb
+      - dist/*.rpm

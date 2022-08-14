@@ -13,10 +13,8 @@
  addresses for the local network segment are used as WireGuard peers.
 """
 
-from logging import INFO, DEBUG, Logger, basicConfig, getLogger
-from sys import stdout
-from time import sleep
-from typing import Optional, cast
+from logging import Logger, getLogger
+from typing import Optional
 import click
 from click.exceptions import Exit
 from pyroute2 import IPRoute
@@ -29,13 +27,9 @@ from zeroconf import ServiceBrowser, ServiceInfo, ServiceListener, Zeroconf
 from ipaddress import ip_address as ip_addr_parser
 
 from .peer import Descriptor
-from .common import attrdict
-from .click import DualUse
 
 from .constants import (
-    _DATE_FMT,
     _LABEL,
-    _LOG_FMT,
     _ORGANIZE_DBUS_NAME,
     _ORGANIZE_DBUS_PATH,
     _DISCOVER_DBUS_NAME,
@@ -54,25 +48,21 @@ class WireGuardServiceListener(ServiceListener):
         self.log: Logger = getLogger()
         self.callback = callback
 
-    # pylint: disable=R0201
-    # disable=no-self-use
     def remove_service(
         self, zeroconf: Zeroconf, s_type: str, name: str
     ) -> None:
         """
         *remove_service* does nothing.
         """
-        log: Logger = getLogger()
-        log.debug("remove_service called: %s, %s, %s", zeroconf, s_type, name)
+        self.log.debug(
+            "remove_service called: %s, %s, %s", zeroconf, s_type, name
+        )
 
-    # pylint: disable=R0201
-    # disable=no-self-use
     def add_service(self, zeroconf: Zeroconf, s_type: str, name: str) -> None:
         """
         When zeroconf discovers a new WireGuard service it calls *add_service*
         which produces a peer descriptor on *stdout*.
         """
-        log: Logger = getLogger()
         # Typing note:
         # 'Any' works here and while 'Optional[ServiceInfo]' should, it does
         # not unless mypy is called with --no-strict-optional like so:
@@ -136,7 +126,7 @@ class Discover(object):
         if ip_address:
             try:
                 ip_addr = str(ip_addr_parser(ip_address))
-            except:
+            except:  # noqa: E722
                 self.log.info("Invalid IP address argument")
                 raise Exit(3)
             ip_addr: str = ip_address
@@ -211,7 +201,7 @@ class Discover(object):
 #        try:
 #            while True:
 #                sleep(1)
-##        except KeyboardInterrupt:
+#        except KeyboardInterrupt:
 #            pass
 #        finally:
 #            discover.shutdown()
@@ -231,13 +221,15 @@ class Discover(object):
     "-I",
     "--ip-address",
     type=str,
-    help="bind this IP address instead of automatically choosing which IP to bind",
+    help="bind this IP address instead of automatically choosing which IP "
+    "to bind",
 )
 @click.option(
     #    "-i",
     "--interface",
     type=str,
-    help="bind to the primary IP address for the given interface, automatically choosing which IP to announce",
+    help="bind to the primary IP address for the given interface, "
+    "automatically choosing which IP to announce",
 )
 def main(**kwargs):
     Discover.daemon(**kwargs)

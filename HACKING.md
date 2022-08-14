@@ -20,15 +20,54 @@ root and as the `vula-organize` user which is used when running under systemd.
 
 # Setup development environment
 
-For developing on your host system, you may find it helpful to set up an environment such as this:
+For developing on your host system, you may find it helpful to set up an
+environment such as the following.
+
+Install `pipenv` and the dependencies for `pygobject`.
+For other distros use the "Installing from PyPI with pip" section from
+[PyGObject](https://pygobject.readthedocs.io/en/latest/getting_started.html).
+
+On ubuntu/debian the following command can be used.
+
+```
+sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0 python3-venv
+```
+
+After installing the `pygobject` dependencies you can install pipenv.
+Pipenv will create a virtual python environment with all the dependencies of
+vula in one place. In this setup the dependencies for vula are not shared with
+the python modules directly installed on the system.
 
 ```
 export PIPENV_VERBOSITY=-1
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 pipx install pipenv
-pipenv install black flake8 isort mypy pytest pytest-cov --dev --skip-lock
+exec $SHELL
+
+pipenv install --dev --skip-lock
 ```
+
+To verify the installation you can run `pipenv run pytest --cov`.
+In order to run commands inside the pipenv you use the `pipenv run <command>` command.
+If you prefer you can start a shell inside of the pipenv using `pipenv shell`.
+
+
+Full example on debian/ubuntu.
+
+```
+sudo apt update
+sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0 python3-venv
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+pipx install pipenv
+exec $SHELL
+pipenv install --dev --skip-lock
+```
+
+Now the command `pipenv run pytest --cov` should succeed.
+
+
 
 Alternately, you can use our
 [podman environment](https://codeberg.org/vula/vula/src/branch/main/podman/README.md)

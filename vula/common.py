@@ -3,43 +3,24 @@
 """
 from __future__ import annotations
 import os
-import sys
-import inspect
-import codecs
 import pdb
 from logging import Logger, getLogger
 from typing import Any, Dict, Optional
-from functools import reduce
-from schema import (
-    Schema,
-    And,
-    Use,
-    Optional as Optional_,
-    Or,
-    Regex,
-    SchemaError,
-)
+from schema import Schema, And, Use, Or, SchemaError
 from base64 import b64decode, b64encode
 import yaml
 import json
 import copy
-from ipaddress import (
-    IPv4Network,
-    IPv4Address,
-    IPv6Address,
-    IPv6Network,
-    ip_address,
-    ip_network,
-)
+from ipaddress import ip_address, ip_network
 from pathlib import Path
 import pydbus
 import click
-from .click import DualUse, red, green, yellow, bold, Exit
+from .notclick import DualUse, Exit  # noqa: F401
 from .constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
 
 try:
     import pygments
-    from pygments import highlight, lexers, formatters
+    from pygments import lexers, formatters  # noqa: F401
 except ImportError:
     pygments = None
 
@@ -50,7 +31,20 @@ memoize = lambda f: (
 )()
 
 
-def chown_like_dir(path):
+def chown_like_dir_if_root(path):
+    """
+    This chowns a file to have the same owner as its parent, if we are running
+    as root. Otherwise, it does nothing.
+
+    Normally vula is not run as root. The purpose of this function is to ensure
+    that files remain owned by their correct user (which is hopefully the owner
+    of the directory they reside in) if/when vula *is* run is root.
+
+    As of this writing, this function is only used by the organize daemon when
+    writing the hosts file.
+
+    FIXME: this should probably be used when writing the state file as well?
+    """
     if os.getuid() == 0:
         dirstat = os.stat(os.path.dirname(os.path.realpath(path)))
         os.chown(path, dirstat.st_uid, dirstat.st_gid)
@@ -110,6 +104,18 @@ class attrdict(dict):
     """
 
     def __getattr__(self, key):
+        """
+        get value of key
+
+        >>> a = attrdict({1:2})
+        >>> a.__getattr__(1)
+        2
+
+        >>> a.__getattr__(2)
+        Traceback (most recent call last):
+            ...
+        AttributeError: 'attrdict' object has no attribute 2
+        """
         if key in self:
             return self[key]
         else:
@@ -120,12 +126,12 @@ class attrdict(dict):
     def __setattr__(self, key, value):
         if key in self:
             raise ValueError(
-                "Programmer error: attempt to set an attribute (%s=%r) of an instance of %r (which is an attrdict, which provides read-only access to keys through the attribute interface). Attributes which are dictionary keys are not allowed to be set through the attrdict attribute interface."
-                % (
-                    key,
-                    value,
-                    type(self),
-                )
+                "Programmer error: attempt to set an attribute (%s=%r) of an"
+                "instance of %r ( which is an attrdict, which provides "
+                "read-only access to keys through the attribute interface). "
+                "Attributes which are dictionary keys are not allowed to be "
+                "set through the attrdict attribute interface. "
+                % (key, value, type(self))
             )
         super(attrdict, self).__setattr__(key, value)
 
@@ -144,20 +150,66 @@ class ro_dict(dict):
     and because we don't need the feature frozendict provides which we don't
     (hashability). Perhaps in the future we'll decide to use frozendict
     instead.
+
+    >>> ro = ro_dict({'a':1,'b':2,'c':3})
+    >>> ro['a'] = 2
+    Traceback (most recent call last):
+         ...
+    ValueError: Attempt to set key 'a' in read-only dictionary
+
+    >>> ro = ro_dict({'a':1})
+    >>> ro.update({'a':2})
+    Traceback (most recent call last):
+         ...
+    ValueError: Attempt to update read-only dictionary (...)
+
     """
 
     def __setitem__(self, key, value):
+        """
+        raises a ValueError exception when trying to set a key in a ro_dict
+
+        test adding a non-existing key to ro_dict:
+        >>> test_ro_dict = ro_dict({"key": "value"})
+        >>> test_ro_dict["different_key"] = "other_value"
+        Traceback (most recent call last):
+        ...
+        ValueError: Attempt to set key 'different_key' in read-only dictionary
+
+        test setting an existing key:
+        >>> test_ro_dict = ro_dict({"key": "value"})
+        >>> test_ro_dict["key"] = "other_value"
+        Traceback (most recent call last):
+        ...
+        ValueError: Attempt to set key 'key' in read-only dictionary
+        """
         raise ValueError(
             "Attempt to set key %r in read-only dictionary" % (key,)
         )
 
     def update(self, *a, **kw):
+        """
+        raises a ValueError exception when trying to change a ro_dict using the
+        update() method
+
+        test updating an existing key:
+        >>> test_ro_dict = ro_dict({"key": "value"})
+        >>> test_ro_dict.update({"key": "other_value"})
+        Traceback (most recent call last):
+        ...
+        ValueError: Attempt to update read-only dictionary (*({'key': \
+'other_value'},), **{})
+
+        test updating a non-existing key:
+        >>> test_ro_dict = ro_dict({"key": "value"})
+        >>> test_ro_dict.update({"different_key": "other_value"})
+        Traceback (most recent call last):
+        ...
+        ValueError: Attempt to update read-only dictionary \
+(*({'different_key': 'other_value'},), **{})
+        """
         raise ValueError(
-            "Attempt to update read-only dictionary (*%s, **%s)"
-            % (
-                a,
-                kw,
-            )
+            "Attempt to update read-only dictionary (*%s, **%s)" % (a, kw)
         )
 
 
@@ -168,6 +220,30 @@ def raw(value):
     This tries to return the original unmodified object whenever possible, to
     avoid precluding the possibility of having automatic YAML object references
     when a sub-object occurs multiple times within a parent object.
+
+    >>> raw(3)
+    3
+    >>> raw("vula")
+    'vula'
+    >>> raw(True)
+    True
+    >>> raw(2.8)
+    2.8
+
+    >>> intBool = IntBool(1)
+    >>> raw(intBool)
+    True
+
+    >>> raw(["one", "two", "three"])
+    ['one', 'two', 'three']
+    >>> raw(("one", "two", "three"))
+    ['one', 'two', 'three']
+    >>> sorted(raw({"one", "two", "three"}))
+    ['one', 'three', 'two']
+
+    >>> raw({"number" : 1, "letter" : "a"})
+    {'number': 1, 'letter': 'a'}
+
     """
     if type(value) in (int, str, bool, float):
         return value
@@ -198,6 +274,14 @@ def raw(value):
 
 class serializable(dict):
     def _dict(self):
+        """Return serializable as a dictionary
+
+        >>> serializable({1:serializable({2:3})})._dict()
+        {1: {2: 3}}
+
+        >>> serializable({1:{2:(3,4,5)}})._dict()
+        {1: {2: [3, 4, 5]}}
+        """
         return {raw(k): raw(v) for k, v in self.items()}
 
 
@@ -242,7 +326,7 @@ class yamlfile(serializable):
                 yaml.safe_dump(self._dict(), default_style='', sort_keys=False)
             )
         if autochown:
-            chown_like_dir(path)
+            chown_like_dir_if_root(path)
 
     @classmethod
     def from_yaml_file(cls, path):
@@ -251,7 +335,23 @@ class yamlfile(serializable):
 
 
 class yamlrepr(serializable):
+    r"""
+    Function to return a YAML representation of a Serializable in human
+    readable format
+    >>> myObj = serializable(("ab", "cd"))
+    >>> myYaml = yamlrepr(myObj)
+    >>> myYaml.__repr__()
+    'a: b\nc: d\n'
+    """
+
     def __repr__(self):
+        """
+        Function to return a YAML representation of a Serializable in human
+        readable format
+        >>> yamlrepr(serializable({2:3}))
+        2: 3
+        <BLANKLINE>
+        """
         return yaml.safe_dump(self._dict(), default_style='', sort_keys=False)
 
     @classmethod
@@ -261,11 +361,26 @@ class yamlrepr(serializable):
 
 class jsonrepr_pp(serializable):
     def __repr__(self):
+        r"""
+        Function to return a json representation of a Serializable in human
+        readable format
+        >>> myObj = serializable(("ab", "cd"))
+        >>> myJson = jsonrepr_pp(myObj)
+        >>> myJson.__repr__()
+        '{\n    "a": "b",\n    "c": "d"\n}'
+        """
         return json.dumps(self._dict(), indent=4)
 
 
 class jsonrepr(serializable):
     def __repr__(self):
+        """
+        Function to return a json representation of a Serializable.
+        >>> mySerializable = serializable(("ab", "cd"))
+        >>> myJsonRepr = jsonrepr(mySerializable)
+        >>> myJsonRepr.__repr__()
+        '{"a": "b", "c": "d"}'
+        """
         return json.dumps(self._dict())
 
 
@@ -297,54 +412,173 @@ if pygments is not None:
                 pygments.lexers.YamlLexer(),
                 pygments.formatters.TerminalTrueColorFormatter(
                     #    style=MyStyle,
-                    style='paraiso-dark',
+                    style='paraiso-dark'
                 ),
             )
             return res
 
     class jsonrepr_hl(jsonrepr):
         def __repr__(self):
+            r"""
+            Function to return a raw json formatted content with syntax
+            highlighting.
+            >>> serializableObj = serializable(("ab", "cd"))
+            >>> jsonReprObj = jsonrepr(serializableObj)
+            >>> jsonReprhlObj = jsonrepr_hl(jsonReprObj)
+            >>> jsonReprhlObj.__repr__()
+            '\x1b[38;2;231;233;219m{\x1b[39m\n\x1b[38;2;231;233;219m  \x1b[39m\x1b[38;2;91;196;191m"a"\x1b[39m\x1b[38;2;231;233;219m:\x1b[39m\x1b[38;2;231;233;219m \x1b[39m\x1b[38;2;72;182;133m"b"\x1b[39m\x1b[38;2;231;233;219m,\x1b[39m\n\x1b[38;2;231;233;219m  \x1b[39m\x1b[38;2;91;196;191m"c"\x1b[39m\x1b[38;2;231;233;219m:\x1b[39m\x1b[38;2;231;233;219m \x1b[39m\x1b[38;2;72;182;133m"d"\x1b[39m\n\x1b[38;2;231;233;219m}\x1b[39m\n'
+            """  # noqa: E501
 
             res = pygments.highlight(
                 json.dumps(self._dict(), indent=2),
                 pygments.lexers.JsonLexer(),
                 pygments.formatters.TerminalTrueColorFormatter(
-                    style='paraiso-dark',
+                    style='paraiso-dark'
                 ),
             )
             return res
 
-
 else:
-    yamlrepr_hl = yamlrepr
-    jsonrepr_hl = jsonrepr
+    yamlrepr_hl = yamlrepr  # type: ignore
+    jsonrepr_hl = jsonrepr  # type: ignore
 
 
 class Bug(Exception):
     pass
 
 
+class ConsistencyError(Exception):
+    pass
+
+
 class comma_separated_IPs(object):
     def __init__(self, _str):
+        """
+        create a list of IP address
+
+        >>> comma_separated_IPs("127.0.0.1,15.15.15.15")
+        <comma_separated_IPs('127.0.0.1,15.15.15.15')>
+        >>> comma_separated_IPs("fe80::1,fe80::2")
+        <comma_separated_IPs('fe80::1,fe80::2')>
+        >>> comma_separated_IPs("::1")
+        <comma_separated_IPs('::1')>
+        >>> comma_separated_IPs("invalid")
+        Traceback (most recent call last):
+        ...
+        ValueError: 'invalid' does not appear to be an IPv4 or IPv6 address
+        """
         self._str = str(_str)
         self._items = tuple(
             ip_address(ip) for ip in self._str.split(',') if ip
         )
 
     def __iter__(self):
+        """
+        Iterate over ips
+
+        >>> [ip for ip in comma_separated_IPs("::1,192.168.1.1")]
+        [IPv6Address('::1'), IPv4Address('192.168.1.1')]
+        """
         return iter(self._items)
 
     def __getitem__(self, idx):
+        """
+        get item at index
+
+        :param idx: int
+        :return: IPv4Address
+
+        >>> test_list = comma_separated_IPs("127.0.0.2,127.0.0.3,127.0.0.4")
+        >>> test_list.__getitem__(1)
+        IPv4Address('127.0.0.3')
+
+
+        :param idx: int
+        :return: IPv6Address
+
+        >>> test_list = comma_separated_IPs("fe80::1,fe80::2")
+        >>> test_list.__getitem__(0)
+        IPv6Address('fe80::1')
+
+        """
         return list(self)[idx]
 
     def __repr__(self):
+        """
+        Return the type of the class with his IP
+
+        >>> ip = comma_separated_IPs('192.168.0.1')
+        >>> ip.__repr__()
+        "<comma_separated_IPs('192.168.0.1')>"
+
+        >>> ip = comma_separated_IPs('fe80::1')
+        >>> ip.__repr__()
+        "<comma_separated_IPs('fe80::1')>"
+
+        """
+
+        """
+        get IP
+
+        >>> ips = comma_separated_IPs("192.168.3.2,192.168.0.3,192.168.3.4,
+        ... 192.168.0.2,192.168.0.3,192.168.3.4")
+        >>> ips.__repr__()
+        "<comma_separated_IPs('192.168.3.2,192.168.0.3,192.168.3.4, \
+        192.168.0.2,192.168.0.3,192.168.3.4')>"
+        """
         return "<%s(%r)>" % (type(self).__name__, self._str)
 
     def __str__(self):
+        """
+        Return the comma separated IP addresses as a string
+
+        >>> ip = comma_separated_IPs('fe80::1')
+        >>> ip.__str__()
+        'fe80::1'
+
+        >>> ip = comma_separated_IPs('192.168.0.1')
+        >>> ip.__str__()
+        '192.168.0.1'
+
+        >>> ip_multiple = \
+        comma_separated_IPs('192.168.29.32,127.0.0.1,149.132.22.70')
+        >>> ip_multiple.__str__()
+        '192.168.29.32,127.0.0.1,149.132.22.70'
+
+        >>> ip_multiple = \
+        comma_separated_IPs('fe80::1,fe80::2,fe80::3')
+        >>> ip_multiple.__str__()
+        'fe80::1,fe80::2,fe80::3'
+        """
+
         return self._str
 
 
 class comma_separated_Nets(comma_separated_IPs):
+    """
+    Instantiate a list of networks
+
+    >>> comma_separated_Nets("blabla")
+    Traceback (most recent call last):
+       ...
+    ValueError: 'blabla' does not appear to be an IPv4 or IPv6 network
+    >>> comma_separated_Nets("192.168.0.0/28,192.168.0.1/28")
+    Traceback (most recent call last):
+       ...
+    ValueError: 192.168.0.1/28 has host bits set
+
+    >>> comma_separated_Nets("fe80::1/10,fe80::/10")
+    Traceback (most recent call last):
+       ...
+    ValueError: fe80::1/10 has host bits set
+
+    >>> comma_separated_Nets("192.168.0.0/28,192.168.1.0/25")
+    <comma_separated_Nets('192.168.0.0/28,192.168.1.0/25')>
+
+    >>> comma_separated_Nets("fe80::/10,fe80::/10")
+    <comma_separated_Nets('fe80::/10,fe80::/10')>
+    """
+
     def __init__(self, _str):
         self._str = str(_str)
         self._items = tuple(
@@ -358,6 +592,11 @@ class constraint(object):
         self.kwargs = kwargs
 
     def __repr__(self):
+        """
+        Function to return constraint object.
+        >>> constraint({4:3})
+        constraint({4: 3})
+        """
         # FIXME: add kwargs to repr
         return "%s(%s)" % (
             type(self).__name__,
@@ -373,19 +612,45 @@ class constraint(object):
 
 
 class Length(constraint):
+    """
+    Constraint to check if a string length is equal to, min or max a given
+    value.
+    """
+
     @staticmethod
     def constraint(value, length=None, min=None, max=None):
+        """
+        Validates min and max length of a given string.
+        Returns the value of constraints are met else an error is raised.
+
+        >>> Length.constraint("Test", min = 3, max = 5)
+        'Test'
+        >>> Length.constraint("Vula is cool", length = 12)
+        'Vula is cool'
+        >>> Length.constraint("Test", length = 3)
+        Traceback (most recent call last):
+            ...
+        ValueError: length is 4, should be 3: 'Test'
+        >>> Length.constraint("Test", max = 3)
+        Traceback (most recent call last):
+            ...
+        ValueError: length is 4, should be <=3: 'Test'
+        >>> Length.constraint("Test", min = 5)
+        Traceback (most recent call last):
+            ...
+        ValueError: length is 4, should be >=5: 'Test'
+        """
         if length is not None and len(value) != length:
             raise ValueError(
                 "length is %s, should be %s: %r" % (len(value), length, value)
             )
         if max is not None and len(value) > max:
             raise ValueError(
-                "length is %s, should be >=%s: %r" % (len(value), max, value)
+                "length is %s, should be <=%s: %r" % (len(value), max, value)
             )
         if min is not None and len(value) < min:
             raise ValueError(
-                "length is %s, should be <=%s: %r" % (len(value), max, value)
+                "length is %s, should be >=%s: %r" % (len(value), min, value)
             )
         return value
 
@@ -393,14 +658,54 @@ class Length(constraint):
 class int_range(constraint):
     @staticmethod
     def constraint(value, min, max):
+        """
+        Validates value, which must be an integer between min and max.
+        Returns the value if constraints are met, false otherwise.
+
+        >>> int_range.constraint(5, min = 2, max = 10)
+        5
+        >>> int_range.constraint(5, min = 7, max = 10)
+        False
+        >>> int_range.constraint(5, min = 2, max = 4)
+        False
+        >>> int_range.constraint("abc", min = 2, max = 10)
+        Traceback (most recent call last):
+        ...
+        ValueError: invalid literal for int() with base 10: 'abc'
+        >>> int_range.constraint(10, 5, 20)
+        10
+        >>> int_range.constraint(5, 10, 20)
+        False
+        >>> int_range.constraint(20, 5, 10)
+        False
+        >>> int_range.constraint(5, 5, 5)
+        5
+        >>> int_range.constraint(5, 6, 4)
+        False
+        """
         return min <= int(value) <= max and int(value)
 
 
 class colon_hex_bytes(bytes):
     def __str__(self):
+        """
+        Return the hex representation as a string.
+
+        >>> a = colon_hex_bytes.with_len(3).validate(b'ABC')
+        >>> a.__str__()
+        '41:42:43'
+        """
         return ":".join("%x" % byte for byte in self)
 
     def __repr__(self):
+        """
+        Return the canonical string representation of the colon_hex_bytes
+        object.
+
+        >>> hex_bytes = colon_hex_bytes.with_len(3).validate(b'ABC')
+        >>> hex_bytes.__repr__()
+        "'41:42:43'"
+        """
         return repr(str(self))
 
     @classmethod
@@ -409,7 +714,8 @@ class colon_hex_bytes(bytes):
         >>> a = colon_hex_bytes.with_len(3).validate(b'ABC')
         >>> a
         '41:42:43'
-        >>> colon_hex_bytes.with_len(3).validate(b'ABCD') # doctest: +IGNORE_EXCEPTION_DETAIL
+        >>> colon_hex_bytes.with_len(3).validate( \
+        b'ABCD') # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         schema.SchemaError:
         >>> b = colon_hex_bytes.with_len(3).validate(str(a))
@@ -419,6 +725,9 @@ class colon_hex_bytes(bytes):
         [65, 66, 67]
         >>> a.decode()
         'ABC'
+        >>> c = colon_hex_bytes.with_len(4).validate(b'ABCD')
+        >>> c
+        '41:42:43:44'
         """
         str_len = length * 3 - 1
         return Or(
@@ -431,8 +740,9 @@ class colon_hex_bytes(bytes):
                 Use(cls),
             ),
             And(bytes, Length(length), Use(cls)),
-            error="{!r} is not %s bytes or a %s-char colon-separated hex string representing %s bytes"
-            % (length, str_len, length),
+            error=f"{{!r}} is not {length} bytes or a {str_len}-char "
+            f"colon-separated hex string "
+            f"representing {length} bytes",
         )
 
 
@@ -448,9 +758,28 @@ class b64_bytes(bytes):
     """
 
     def __str__(self):
+        """
+        Function to return a string representation of entered bytes.
+
+        >>> string = "Test"
+        >>> arr = bytearray(string, 'utf-8')
+        >>> test = b64_bytes(arr)
+        >>> str(test)
+        'VGVzdA=='
+        >>> b64decode(str(test))
+        b'Test'
+        """
         return b64encode(self).decode()
 
     def __repr__(self):
+        """
+        Function to return a base64 representation of entered bytes
+
+        >>> string = "Vula is cool."
+        >>> arr = bytearray(string, 'utf-8')
+        >>> b64_bytes(arr).__repr__()
+        '<b64:VnVsYS...(13)>'
+        """
         return "<b64:%s...(%s)>" % (str(self)[:6], len(self))
 
     @classmethod
@@ -484,9 +813,11 @@ class b64_bytes(bytes):
         ...     e = ex
         >>> import schema, packaging.version as pkgv
         >>> assert type(e) is schema.SchemaError
-        >>> msg = "'123' is not 10 bytes or a 16-char base64 string which decodes to 10 bytes"
+        >>> msg = "'123' is not 10 bytes or a 16-char base64 string "\
+        "which decodes to 10 bytes"
         >>> if pkgv.parse(schema.__version__) < pkgv.parse('0.7.3'):
-        ...     msg += "\\n{!r} is not 10 bytes or a 16-char base64 string which decodes to 10 bytes"
+        ...     msg += "\\n{!r} is not 10 bytes or a 16-char "
+        ...     msg += "base64 string which decodes to 10 bytes"
         >>> assert e.args == (msg,), (e.args, msg)
 
         """
@@ -499,14 +830,11 @@ class b64_bytes(bytes):
                 Use(cls),
                 Length(length),
             ),
-            And(
-                bytes,
-                Length(length),
-                Use(cls),
-            ),
-            error="{!r} is not %s bytes or a %s-char base64 string which decodes to %s bytes"
-            % (length, b64_length, length),
-            # name = '%s bytes base64-encoded' % (length,), # when we upgrade to the newer schema lib
+            And(bytes, Length(length), Use(cls)),
+            error="{!r} is not %s bytes or a %s-char base64 string which "
+            "decodes to %s bytes" % (length, b64_length, length),
+            # name = '%s bytes base64-encoded' % (length,), #when we upgrade to
+            # the newer schema lib
         )
 
 
@@ -531,17 +859,30 @@ Flexibool = And(
                 if v.lower() in ('true', 'yes', 'on', '1', 'y', 'j', 'ja')
                 else 0
                 if v.lower() in ('false', 'no', 'off', '0', 'n', 'nein', 'nej')
-                else 'error',
+                else 'error'
             ),
         ),
     ),
     Use(IntBool),
-    error="invalid value {!r}; must be one of <true|false|1|0|on|off|yes|no|ja|nein|nej|y|j|n>",
+    error="invalid value {!r}; must be one of "
+    "<true|false|1|0|on|off|yes|no|ja|nein|nej|y|j|n>",
 )
 
 
 class queryable(dict):
     def limit(self, **kw):
+        """
+        >>> d = {1:{"enabled":True},2:{"enabled":False}}
+        >>> d
+        {1: {'enabled': True}, 2: {'enabled': False}}
+        >>> q = queryable(d)
+        >>> q.limit(enabled=True)
+        {1: {'enabled': True}}
+        >>> q.limit(enabled=False)
+        {2: {'enabled': False}}
+        >>> q.limit()
+        {1: {'enabled': True}, 2: {'enabled': False}}
+        """
         return type(self)(
             (name, item)
             for name, item in self.items()
@@ -637,11 +978,19 @@ class chunkable_values(dict):
         return type(self)(res)
 
     def unchunk(self):
+        """Combines chunks of this dictionary.
+
+        >>> chunkable_values({'a01':'23','a00':'01','a02':'45'}).unchunk()
+        {'a': '012345'}
+        """
         res = {}
         for k, v in list(sorted(self.items())):
+            rk = k[:-2]
             try:
-                rk, c = k[:-2], int(k[-2:])
-            except Exception as ex:
+                int(k[-2:])
+            except ValueError:
+                # Expects a ValueError: invalid literal for int() ...  if the
+                # last two digits are not a number it is not a chunked key
                 res[k] = v
                 continue
             res[rk] = res.get(rk, '') + v
@@ -649,6 +998,22 @@ class chunkable_values(dict):
 
 
 def addrs_in_subnets(addrs, subnets):
+    """
+    >>> current_subnets={'10.0.0.0/24': ['10.0.0.9', '10.0.0.51',
+    ... '10.0.0.17'], '10.0.1.0/24':
+    ... ['10.0.1.22', '10.0.1.73'], '10.0.5.0/24': ['10.0.5.21', '10.0.5.63']}
+    >>> addrs = ['10.0.0.0/24','10.0.14.0/24', '10.0.5.0/24']
+    >>> addrs_in_subnets(addrs,current_subnets)
+    ['10.0.0.0/24', '10.0.5.0/24']
+
+    >>> current_subnets={'fe80::/10':['fe80::1', 'fe80::2'],
+    ... 'fe80::1:0/10': ['fe80::1:1', 'fe80::1:6' ],
+    ... 'fe80::2:0/10': ['fe80::2:1', 'fe80::2:5' ]}
+    >>> addrs = ['fe80::/10', 'fe80::ffff:1/10', 'fe80::2:0/10']
+    >>> addrs_in_subnets(addrs, current_subnets)
+    ['fe80::/10', 'fe80::2:0/10']
+
+    """
     return [
         addr for addr in addrs if any(addr in subnet for subnet in subnets)
     ]
@@ -683,7 +1048,8 @@ def organize_dbus_if_active():
         return bus.get(_ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH)
     elif _ORGANIZE_DBUS_NAME in bus.dbus.ListActivatableNames():
         raise Exit(
-            "Organize is not running (but it is dbus-activatable; use 'vula start' to start it.)."
+            "Organize is not running (but it is dbus-activatable; use 'vula"
+            "start' to start it.)."
         )
     else:
         raise Exit("Organize dbus service is not configured")
@@ -721,15 +1087,17 @@ def sfmt(
     '1H'
     >>> sfmt(10**30)
     '1000H'
-    >>> sfmt(1023, base=1024, unit="B", infix="i", prefixes="KMG", preprefix=" ")
+    >>> sfmt(1023,base=1024,unit="B",infix="i",prefixes="KMG",preprefix=" ")
     '1023 B'
-    >>> sfmt(1024, base=1024, unit="B", infix="i", prefixes="KMG", preprefix=" ")
+    >>> sfmt(1024,base=1024,unit="B",infix="i",prefixes="KMG",preprefix=" ")
     '1 KiB'
-    >>> sfmt(100_000, base=1024, unit="B", infix="i", prefixes="KMG", preprefix=" ")
+    >>> sfmt(100_000,base=1024,unit="B",infix="i",prefixes="KMG",preprefix=" ")
     '98 KiB'
-    >>> sfmt(1_000_000, base=1024, unit="B", infix="i", prefixes="KMG", preprefix=" ")
+    >>> sfmt(1_000_000,base=1024,unit="B",infix="i",prefixes="KMG",
+    ... preprefix=" ")
     '977 KiB'
-    >>> sfmt(10_000_000, base=1024, unit="B", infix="i", prefixes="KMG", preprefix=" ", places=1)
+    >>> sfmt(10_000_000, base=1024, unit="B", infix="i", prefixes="KMG",
+    ... preprefix=" ", places=1)
     '9.5 MiB'
 
     """

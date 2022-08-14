@@ -13,9 +13,6 @@
  after it has been verified.
 """
 
-from logging import INFO, DEBUG, Logger, basicConfig, getLogger
-from sys import stdout
-
 try:
     import cv2
     from pyzbar.pyzbar import decode
@@ -34,17 +31,12 @@ import yaml
 import click
 from click.exceptions import Exit
 import pydbus
-from time import sleep
 
-from .common import jsonrepr
 from .constants import (
-    _DATE_FMT,
-    _LABEL,
-    _LOG_FMT,
     _ORGANIZE_DBUS_NAME,
     _ORGANIZE_DBUS_PATH,
 )
-from .click import DualUse, green, bold
+from .notclick import DualUse, green, bold
 from .peer import Descriptor
 from .engine import Result
 
@@ -103,7 +95,8 @@ class VerifyCommands(object):
     @click.argument('hostname', type=str, required=True)
     def scan(self, width, height, camera, hostname, debug):
         """
-        We expect a string object that roughly looks like the following three things:
+        We expect a string object that roughly looks like the following three
+        things:
 
 
             local.vula:desc:<descriptor base64 representation>
@@ -155,7 +148,7 @@ class VerifyCommands(object):
                 res = self.organize.verify_and_pin_peer(vk, hostname)
                 res = Result(yaml.safe_load(res))
                 click.echo(res)
-                if res.error != None:
+                if res.error is not None:
                     raise Exception(res.error)
             else:
                 click.echo("keys are for the wrong DeLorean")
@@ -163,7 +156,7 @@ class VerifyCommands(object):
         else:
             click.echo("unknown qrcode subtype")
             raise Exit(1)
-        if res.error != None:
+        if res.error is not None:
             click.echo(res)
             raise Exit(1)
         else:

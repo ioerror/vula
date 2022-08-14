@@ -1,10 +1,13 @@
-import os
-import sys
-import click
 import inspect
+import os
+import shutil
+import sys
 from functools import reduce, wraps
+
+import click
+import packaging.version as pkgv
+from click.exceptions import Exit  # noqa: F401
 from schema import Optional, Schema
-from click.exceptions import Exit
 
 """
 This file contains various click-related bits of vula. None of this is
@@ -27,8 +30,14 @@ is "vula sync" which calls Organize's sync method via dbus; this "vula
 organize sync" method is instantiating an organize object from its state file
 and calling the method on that.)
 
-Or, this:
-    vula -d peer.Descriptor --addrs 10.168.128.160 --c vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIRH49QmNYDw== --dt 86400 --e false --hostname wg-mdns-test3.local.  --pk EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM= --port 5354 --r '' --s T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3sSbVTYjzFGZSCO6n80SRaR+BIeOCg== --vf 1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yBbuf3Zg= valid
+Or, this: vula -d peer.Descriptor --addrs 10.168.128.160 --c
+vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIR
+H49QmNYDw== --dt
+86400 --e false --hostname wg-mdns-test3.local.  --pk
+EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM= --port 5354 --r '' --s
+T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3sSbVTYjzFGZSCO6n80SR
+aR+BIeOCg== --vf
+1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yBbuf3Zg= valid
 
 ...will instantiate a Descriptor object and verify that its signature is
 correct.
@@ -84,7 +93,8 @@ class Debuggable(OrderedGroup):
                     and sys.stdout.isatty()
                 ),
                 help="Drop to a pdb.post_mortem shell upon uncaught exception "
-                "(default True if DEBUG env var is set and stdin/out are ttys, False otherwise)",
+                "(default True if DEBUG env var is set and stdin/out are "
+                "ttys, False otherwise)",
             )
         )
 
@@ -97,13 +107,15 @@ class Debuggable(OrderedGroup):
             if isinstance(ex, click.exceptions.Exit):
                 raise ex
             if ctx.params.get('debug'):
-                import pdb, traceback
+                import pdb
+                import traceback
 
                 tb = sys.exc_info()[2]
                 traceback.print_tb(tb)
                 print(
-                    "stopping to allow inspecting exception:\n\n    %r\n\ntype c to continue to post-mortem frame, or q to quit.\n"
-                    % (ex,)
+                    "stopping to allow inspecting exception:\n\n    "
+                    "%r\n\ntype c to continue to "
+                    "post-mortem frame, or q to quit.\n " % (ex,)
                 )
                 pdb.set_trace()
                 print("pdb.post_mortem on %r:" % (ex,))
@@ -294,7 +306,9 @@ class DualUse(click.Group):
             decos = opts + (click.command(*a, **kw),)
             wrapper = reduce(lambda a, b: b(a), decos, wrapper)
             f.cli = wrapper
-            return f  # note: returning undecorated function, which has click command attached to it
+            # note: returning undecorated function, which has click command
+            # attached to it
+            return f
 
         return decorator
 
@@ -348,15 +362,75 @@ def schema2click_options(f):
     return f
 
 
-red = lambda s: click.style(s, fg="red")
-green = lambda s: click.style(s, fg="green")
-blue = lambda s: click.style(s, fg="bright_blue")
-yellow = lambda s: click.style(s, fg="yellow")
-bold = lambda s: click.style(s, bold=True)
+def red(s):
+    """
+    Formats the given string 's' to red foreground color.
+
+    >>> red_string = "This text is red"
+    >>> print(red(red_string))
+    \x1b[31mThis text is red\x1b[0m
+    """
+    return click.style(s, fg="red")
+
+
+def green(s):
+    """
+    Formats the given string 's' to green foreground color.
+
+    >>> green_string = "This text is green"
+    >>> print(green(green_string))
+    \x1b[32mThis text is green\x1b[0m
+    """
+    return click.style(s, fg="green")
+
+
+def blue(s):
+    """
+    Formats the given string 's' to blue foreground color.
+
+    >>> blue_string = "This text is blue"
+    >>> print(blue(blue_string))
+    \x1b[34mThis text is blue\x1b[0m
+    """
+    return click.style(s, fg="blue")
+
+
+def yellow(s):
+    """
+    Formats the given string 's' to yellow foreground color.
+
+    >>> yellow_string = "This text is yellow"
+    >>> print(yellow(yellow_string))
+    \x1b[33mThis text is yellow\x1b[0m
+    """
+    return click.style(s, fg="yellow")
+
+
+def bold(s):
+    """
+    Formats the given string 's' to be bold.
+
+    >>> bold_string = "This text is bold"
+    >>> print(bold(bold_string))
+    \x1b[1mThis text is bold\x1b[0m
+    """
+    return click.style(s, bold=True)
 
 
 def echo_maybepager(s):
-    if s.count("\n") < click.get_terminal_size()[1]:
+    if s.count("\n") < shutil.get_terminal_size()[1]:
         click.echo(s)
     else:
         click.echo_via_pager(s)
+
+
+def shell_complete_helper(fn):
+    """
+    This is a helper to maintain compatibility with both click 7.x and 8.x.
+
+    We could pass the old "autocompletion" argument to click 7.x but instead we
+    pass nothing because autocompletion didn't work there anyway.
+    """
+    if pkgv.parse(click.__version__) >= pkgv.parse('8.0.0'):
+        return dict(shell_complete=fn)
+    return {}

@@ -9,51 +9,31 @@ from __future__ import annotations
 
 import os
 import pdb
-from base64 import b64decode, b64encode
 from ipaddress import (
     ip_address,
     ip_network,
 )
 from logging import Logger, getLogger
-import os
 from platform import node
-from sys import stdin, stdout
 import time
-from typing import Iterable, Dict, Generator, List, Optional, TextIO, Tuple
-from codecs import decode
-from tempfile import mkstemp
-from functools import reduce
 
-from gi.repository import GLib, Gio
+from gi.repository import GLib
 
 import click
 import pydbus
-import yaml
-from schema import Schema, And, Or, Use, Optional as Optional_
-from nacl.exceptions import BadSignatureError
-from nacl.signing import VerifyKey
+from schema import Schema, And, Use, Optional as Optional_
 from pathlib import Path
-from schema import SchemaError
 
 from .common import (
-    _safer_load,
     attrdict,
-    Bug,
     schemattrdict,
-    schemadict,
-    serializable,
-    queryable,
-    Length,
     b64_bytes,
     yamlrepr,
     yamlrepr_hl,
     jsonrepr,
-    bp,
-    Flexibool,
     addrs_in_subnets,
     raw,
-    comma_separated_IPs,
-    chown_like_dir,
+    chown_like_dir_if_root,
     memoize,
 )
 from .engine import Engine, Result
@@ -63,14 +43,10 @@ from .constants import (
     _FWMARK,
     _IP_RULE_PRIORITY,
     _DOMAIN,
-    _LOG_FMT,
-    _ORGANIZE_CACHE_BASEDIR,
     _ORGANIZE_CONF_FILE,
     _ORGANIZE_HOSTS_FILE,
     _ORGANIZE_KEYS_CONF_FILE,
-    _ORGANIZE_UPDATE_TEMP,
     _ORGANIZE_DBUS_NAME,
-    _ORGANIZE_DBUS_PATH,
     _DISCOVER_DBUS_NAME,
     _DISCOVER_DBUS_PATH,
     _PUBLISH_DBUS_NAME,
@@ -78,12 +54,11 @@ from .constants import (
     _WG_PORT,
     IPv4_GW_ROUTES,
 )
-from .common import KeyFile
 from .configure import Configure
 
-from .click import DualUse
+from .notclick import DualUse
 from .csidh import hkdf, csidh_parameters, CSIDH
-from .peer import Descriptor, Peer, Peers, PeerCommands
+from .peer import Descriptor, Peers, PeerCommands
 from .prefs import Prefs
 from .discover import Discover
 from .publish import Publish
@@ -95,7 +70,7 @@ class SystemState(schemattrdict):
     """
     The SystemState object stores the parts of the system's state which are
     relevant to events in the organize state engine. The object should be
-    udpated (replaced) whenever these values change, via the
+    updated (replaced) whenever these values change, via the
     event_NEW_SYSTEM_STATE event.
     """
 
@@ -124,6 +99,24 @@ class SystemState(schemattrdict):
 
     @property
     def current_ips(self):
+        """
+        Currently assigned IP addresses of the system.
+
+        >>> SystemState().current_ips
+        []
+        >>> SystemState(current_subnets={'10.0.0.0/24': ['10.0.0.1',
+        ... '10.0.0.2']}).current_ips
+        [IPv4Address('10.0.0.1'), IPv4Address('10.0.0.2')]
+        >>> SystemState(current_subnets={'10.0.0.0/24': ['10.0.0.1'],
+        ... '192.168.0.0/24': ['192.168.1.1']}).current_ips
+        [IPv4Address('10.0.0.1'), IPv4Address('192.168.1.1')]
+        >>> SystemState(current_subnets={'FE80::/10': ['FE80::FFFF:FFFE',
+        ... 'FE80::FFFF:FFFD']}).current_ips
+        [IPv6Address('fe80::ffff:fffe'), IPv6Address('fe80::ffff:fffd')]
+        >>> SystemState(current_subnets={'FE80::/10': ['FE80::FFFF:FFFE'],
+        ... 'FC00::/7': ['FC00::FFFF:FFFE']}).current_ips
+        [IPv6Address('fe80::ffff:fffe'), IPv6Address('fc00::ffff:fffe')]
+        """
         return [
             ip for subnet in self.current_subnets.values() for ip in subnet
         ]
@@ -251,6 +244,8 @@ class OrganizeState(Engine, yamlrepr_hl):
 
     @Engine.action
     def action_ADJUST_TO_NEW_SYSTEM_STATE(self, new_system_state):
+        # IPv6 analysis: not ipv6 ready
+        # Please enhance this function to support ipv6
         cur_gw = list(self.peers.limit(use_as_gateway=True).values())
         cur_gw = cur_gw and cur_gw[0]
         if (
@@ -260,7 +255,8 @@ class OrganizeState(Engine, yamlrepr_hl):
                 not (set(cur_gw.enabled_ips) & set(new_system_state.gateways))
             )
         ):
-            # if a non-pinned peer had our gateway IP but no longer does, remove its gateway flag
+            # if a non-pinned peer had our gateway IP but no longer does,
+            # remove its gateway flag
             self._SET(('peers', cur_gw.id, 'use_as_gateway'), False)
             self.result.add_triggers(remove_routes=(IPv4_GW_ROUTES,))
         if not (cur_gw and cur_gw.pinned):
@@ -369,12 +365,14 @@ class OrganizeState(Engine, yamlrepr_hl):
             self._SET(('peers', peer.id, 'nicknames', desc.hostname), True)
 
         if set(desc.addrs) & set(self.system_state.gateways):
-            self._SET(('peers', descriptor.id, 'use_as_gateway'), True)
+            self._SET(('peers', desc.id, 'use_as_gateway'), True)
 
         self.result.add_triggers(sync_peer=(peer.id,))
 
     @Engine.action
     def action_REMOVE_PEER(self, peer):
+        # IPv6 analysis: not ipv6 ready.
+        # Please enhance this function to support ipv6
         self._REMOVE('peers', peer.id)
         self.result.add_triggers(
             remove_wg_peer=(str(peer.wg_pk),),
@@ -618,7 +616,7 @@ class Organize(attrdict):
                 "dt": "86400",
                 "port": str(self.port),
                 "hostname": node() + _DOMAIN,
-                "r": '',  # Later this will allow a user to announce they're a router
+                "r": '',
                 "e": False,
             }
         ).sign(self._keys.vk_Ed25519_sec_key)
@@ -654,9 +652,10 @@ class Organize(attrdict):
 
             if os.path.exists(self.state_file):
                 self.log.info(
-                    "Existing state file will be overwritten because it was malformed: %r",
+                    "Existing state file will be overwritten because it was "
+                    "malformed: %r",
                     ex
-                    # XXX we should probably move the malformed file aside here...
+                    # XXX we should probably move the malformed file aside here
                 )
             self.log.debug("Created new OrganizeState")
 
@@ -698,7 +697,7 @@ class Organize(attrdict):
                 "\n".join("%s %s" % (ip, host) for host, ip in hosts.items())
                 + "\n"
             )
-        chown_like_dir(hosts_file)
+        chown_like_dir_if_root(hosts_file)
         return True
 
     @DualUse.method()
@@ -875,8 +874,8 @@ class Organize(attrdict):
             descriptor = Descriptor.parse(descriptor)
         except Exception as ex:
             self.log.info(
-                "organize failed to parse descriptor because %r (descriptor was %r)"
-                % (ex, descriptor)
+                "organize failed to parse descriptor because %r (descriptor "
+                "was %r)" % (ex, descriptor)
             )
             return
 

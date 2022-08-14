@@ -1,14 +1,10 @@
 from ipaddress import ip_address, ip_network
 from pyroute2 import IPRoute
-from pyroute2.netlink.exceptions import NetlinkError
 from socket import AddressFamily
 from .wg import Interface as WgInterface
-from .peer import Peer
 from .constants import _LINUX_MAIN_ROUTING_TABLE, IPv4_GW_ROUTES
 import threading
 from pyroute2 import IPRSocket
-from pprint import pprint
-from .common import bp
 
 # FIXME: find where the larger canonical version of this table lives
 SCOPES = {0: 'global', 253: 'static'}
@@ -43,11 +39,21 @@ class Sys(object):
             self._monitor_thread.start()
 
     def get_stats(self):
+        """
+        Get the statistics
+
+        >>> s = Sys(None)
+        >>> type(s.get_stats())
+        <class 'dict'>
+        """
         self.wgi.query()
         stats = {peer.public_key: peer['stats'] for peer in self.wgi.peers}
         return stats
 
-    def stop_monitor(self):
+    def stop_monitor(self) -> None:
+        """
+        Stops the monitor
+        """
         self._stop_monitor = True
 
     def _monitor(self):
@@ -58,7 +64,8 @@ class Sys(object):
             msg = ip.get()
             if len(msg) != 1:
                 self.log.info(
-                    "BUG: got message with non-1 length %r which we didn't expect ever happens",
+                    "BUG: got message with non-1 length %r which we didn't "
+                    "expect ever happens",
                     msg,
                 )
                 continue
@@ -99,13 +106,6 @@ class Sys(object):
                 if r.get_attrs('RTA_GATEWAY')
             )
         )
-
-        system_links = {
-            dict(link['attrs'])['IFLA_IFNAME']: dict(link['attrs'])[
-                'IFLA_CARRIER'
-            ]  # unused
-            for link in self.ipr.get_links()
-        }
 
         current_subnets = {}
 
@@ -149,6 +149,8 @@ class Sys(object):
         """
         Syncs peer's wg config and routes. Returns a string.
         """
+        # IPv6 analysis: not ipv6 ready.
+        # Please enhance this function to support ipv6
         peer = self.organize.peers[vk]
         res = []
         if peer.enabled:
@@ -210,7 +212,8 @@ class Sys(object):
                         flags=not_flag,
                     )
                 res.append(
-                    "ip -{af} rule add not from all fwmark 0x{mark:x} lookup {table}".format(
+                    "ip -{af} rule add not from all fwmark 0x{mark:x} "
+                    "lookup {table}".format(
                         af=ip_version[family], mark=mark, table=routing_table
                     )
                 )
@@ -290,6 +293,8 @@ class Sys(object):
         know need to be removed, and then this method will actually only be
         used to remove rogue entries.
         """
+        # IPv6 analysis: not ipv6 ready
+        # Please enhance this function to support ipv6
         routing_table = self.organize.table
         res = []
         enabled_pks = [
@@ -331,7 +336,9 @@ class Sys(object):
                         'del', table=routing_table, dst=str(dst), scope=scope
                     )
                 if scope in SCOPES:
-                    # this is strictly cosmetic; the printed "ip route" command is runnable with the scope as an integer too
+                    # this is strictly cosmetic
+                    # the printed "ip route" command is runnable with the scope
+                    # as an integer too
                     scope = SCOPES[scope]
                 res.append(
                     "ip route del {dst} table {table} scope {scope}".format(
@@ -359,7 +366,9 @@ class Sys(object):
                         scope=scope,
                     )
                 if scope in SCOPES:
-                    # this is strictly cosmetic; the printed "ip route" command is runnable with the scope as an integer too
+                    # this is strictly cosmetic
+                    # the printed "ip route" command is runnable with the scope
+                    # as an integer too
                     scope = SCOPES[scope]
                 res.append(
                     "ip route del {dst} table {table} scope {scope}".format(
@@ -402,7 +411,8 @@ class Sys(object):
                         # doesn't belong here at all; will refactor
                         # this into system state soon.
                 res.append(
-                    f"ip route add {dest} dev {self.wg_name} proto static scope link%s table {table}"
+                    f"ip route add {dest} dev {self.wg_name} proto "
+                    f"static scope link%s table {table}"
                     % (f" src {src}" if src else "")
                 )
                 if not dryrun:

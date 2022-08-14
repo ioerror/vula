@@ -1,8 +1,11 @@
+[build-system]
+requires= ["click", "cryptography", "hkdf", "pynacl", "pydbus", "pyroute2", "qrcode", "schema", "setuptools", "sibc", "pyyaml", "zeroconf"]
+
 [tool.black]
 line-length = 79
 skip-string-normalization = true
 target-version = ['py38']
-include = 'vula/\.pyi?$'
+include = '\.pyi?$'
 exclude = '''
 /(
     \.eggs

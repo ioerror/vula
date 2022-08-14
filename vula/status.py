@@ -1,12 +1,8 @@
 from logging import getLogger
-from os import geteuid
-from sys import stdout, platform
+from sys import platform
 import time
 from datetime import timedelta
 import click
-from click.exceptions import Exit
-import yaml
-from gi.repository import GLib
 
 import pydbus
 
@@ -16,8 +12,7 @@ except ImportError:
     daemon = None
 
 from click.exceptions import Exit
-from .common import bp, yamlrepr_hl
-from .click import green, red, yellow, echo_maybepager
+from .notclick import green, red, yellow
 
 from .constants import (
     _ORGANIZE_DBUS_NAME,
@@ -57,7 +52,6 @@ def main(only_systemd):
 
     if daemon is not None and daemon.booted() == 1:
         systemd = bus.get(".systemd1")
-        all_units = {str(u[0]): u for u in systemd.ListUnits()}
         for service in [
             "publish",
             "discover",
@@ -116,7 +110,8 @@ def main(only_systemd):
             else:
                 printer(
                     "active",
-                    "{} enabled peers correctly configured; {} disabled".format(
+                    "{} enabled peers correctly configured; "
+                    "{} disabled".format(
                         str(len(organize.peer_ids('enabled'))),
                         str(len(organize.peer_ids('disabled'))),
                     ),

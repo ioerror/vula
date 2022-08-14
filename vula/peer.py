@@ -1,41 +1,27 @@
 from __future__ import annotations
-from logging import Logger, getLogger
 import time
 
 import click
-import pydbus
-import yaml
 import json
 
 from io import StringIO
 from datetime import timedelta
 
-from .click import OrderedGroup
+from .notclick import shell_complete_helper
 
 from ipaddress import (
     IPv4Address,
     IPv6Address,
-    ip_address,
     ip_network,
 )
 from nacl.signing import SigningKey, VerifyKey
 from nacl.exceptions import BadSignatureError
 
 from base64 import b64encode
-from schema import Schema, And, Or, Regex, Use, Optional
+from schema import Schema, And, Regex, Use, Optional
+from typing import List
 
-import codecs
-from hkdf import Hkdf
-from hashlib import sha512
-
-from .constants import (
-    _DATE_FMT,
-    _LOG_FMT,
-    _ORGANIZE_DBUS_NAME,
-    _ORGANIZE_DBUS_PATH,
-)
-
-from .click import (
+from .notclick import (
     DualUse,
     red,
     green,
@@ -43,12 +29,12 @@ from .click import (
     yellow,
     bold,
     echo_maybepager,
-    Exit,
 )
 from .engine import Result
 from .common import (
+    Bug,
+    ConsistencyError,
     attrdict,
-    DualUse,
     schemattrdict,
     serializable,
     b64_bytes,
@@ -77,11 +63,32 @@ class Descriptor(schemattrdict, serializable):
 
     This ridiculous test uses the fact that this is commandline-accessible:
 
-    >>> x = Descriptor.cli.main(standalone_mode=False, args=tuple("--addrs 10.168.128.160 --c vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIRH49QmNYDw== --dt 86400 --e false --hostname wg-mdns-test3.local.  --pk EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM= --port 5354 --s T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3sSbVTYjzFGZSCO6n80SRaR+BIeOCg== --vf 1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yBbuf3Zg= valid".split()))
+    >>> x = Descriptor.cli.main(standalone_mode=False, args=tuple("--addrs 10.168.128.160 --c "
+    ... "vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIRH49QmNYDw=="
+    ... " --dt 86400 --e false --hostname wg-mdns-test3.local.  --pk EqcQ5gYxzGtzg7B4xi83kLyfuSMp8K"
+    ... "v3cmAJMs12nDM= --port 5354 --s T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3s"
+    ... "SbVTYjzFGZSCO6n80SRaR+BIeOCg== --vf 1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yB"
+    ... "buf3Zg= valid".split()))
     True
 
     For testing purposes, one could run the same command on the commandline like so:
-        vula -d peer.Descriptor --addrs 10.168.128.160 --c vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIRH49QmNYDw== --dt 86400 --e false --hostname wg-mdns-test3.local.  --pk EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM= --port 5354 --r '' --s T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3sSbVTYjzFGZSCO6n80SRaR+BIeOCg== --vf 1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yBbuf3Zg= valid
+    vula -d peer.Descriptor --addrs 10.168.128.160 --c
+    vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIRH49QmNYDw== --dt
+    86400 --e false --hostname wg-mdns-test3.local.  --pk
+    EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM= --port 5354 --r '' --s
+    T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3sSbVTYjzFGZSCO6n80SRaR+BIeOCg== --vf
+    1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yBbuf3Zg= valid
+
+    ... IPv6
+    Unfortunately, this test can't be adapted to IPv6 as it's not possible to get a valid signature.
+
+    For testing purposes, one could run the same command on the commandline like so:
+    vula -d peer.Descriptor --addrs fe80::377b:d17:9b74:1b91 --c
+    vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIRH49QmNYDw== --dt
+    86400 --e false --hostname wg-mdns-test3.local.  --pk
+    EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM= --port 5354 --r '' --s
+    T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3sSbVTYjzFGZSCO6n80SRaR+BIeOCg== --vf
+    1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yBbuf3Zg= valid
 
     ... but this is of course not the correct way to use this object.
     """
@@ -90,12 +97,14 @@ class Descriptor(schemattrdict, serializable):
         {
             'addrs': Use(
                 comma_separated_IPs
-            ),  # This is a list of endpoints by preference and is also used for AllowedIPs; fixme in the future
+            ),  # This is a list of endpoints by preference and is also used for AllowedIPs;
+            # fixme in the future
             'pk': b64_bytes.with_len(32),
             'c': b64_bytes.with_len(64),
             'hostname': And(
                 str,
-                # fixme: this should also ensure labels don't start or end with a dash, as per RFC1123
+                # fixme: this should also ensure labels don't
+                #  start or end with a dash, as per RFC1123
                 Regex('^[a-zA-Z0-9.-]+$'),
                 lambda name: 0 < len(name) < 256,
             ),
@@ -116,23 +125,89 @@ class Descriptor(schemattrdict, serializable):
     @classmethod
     def parse(cls, desc: str) -> Descriptor:
         """
-        Parse the *descriptor* line into a dictionary. Carefully.
+        Parse the *descriptor* string line into a dictionary-like object. Carefully.
 
         This relies on the schema to coerce values into the right types.
+        >>> d = Descriptor.parse("addrs=192.168.2.106;"
+        ...            "pk=/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg=;"
+        ...            "c=SbS/v8aTX2Ti3E1jp4T7d8lHoW4v5iRcBcdQ6tSv5bzCuYg9h56A4YFjkKv9aFA+"
+        ...            "A7u0yrqYhTdpuAWuBgL2BQ==;"
+        ...            "hostname=bubu.local;"
+        ...            "port=5354;"
+        ...            "vk=/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg=;"
+        ...            "dt=86400;"
+        ...            "vf=1636045801;"
+        ...            "e=false")
+        >>> d
+        {'r': <comma_separated_Nets('')>, 'addrs': <comma_separated_IPs('192.168.2.106')>, 'pk': \
+<b64:/O6SlK...(32)>, 'c': <b64:SbS/v8...(64)>, 'hostname': 'bubu.local', 'port': 5354, \
+'vk': <b64:/O6SlK...(32)>, 'dt': 86400, 'vf': 1636045801, 'e': 0}
+        >>> str(d.addrs)
+        '192.168.2.106'
+        >>> str(d.pk)
+        '/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg='
+        >>> str(d.c)
+        'SbS/v8aTX2Ti3E1jp4T7d8lHoW4v5iRcBcdQ6tSv5bzCuYg9h56A4YFjkKv9aFA+A7u0yrqYhTdpuAWuBgL2BQ=='
+        >>> d.hostname
+        'bubu.local'
+        >>> d.port
+        5354
+        >>> str(d.vk)
+        '/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg='
+        >>> d.dt
+        86400
+        >>> d.vf
+        1636045801
+        >>> d.e
+        0
+
+        This relies on the schema to coerce values into the right types.
+        >>> d = Descriptor.parse("addrs=fe80::377b:d17:9b74:1b91;"
+        ...            "pk=/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg=;"
+        ...            "c=SbS/v8aTX2Ti3E1jp4T7d8lHoW4v5iRcBcdQ6tSv5bzCuYg9h56A4YFjkKv9aFA+"
+        ...            "A7u0yrqYhTdpuAWuBgL2BQ==;"
+        ...            "hostname=bubu.local;"
+        ...            "port=5354;"
+        ...            "vk=/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg=;"
+        ...            "dt=86400;"
+        ...            "vf=1636045801;"
+        ...            "e=false")
+        >>> d
+        {'r': <comma_separated_Nets('')>, 'addrs': <comma_separated_IPs('fe80::377b:d17:9b74:1b91')>, 'pk': \
+<b64:/O6SlK...(32)>, 'c': <b64:SbS/v8...(64)>, 'hostname': 'bubu.local', 'port': 5354, \
+'vk': <b64:/O6SlK...(32)>, 'dt': 86400, 'vf': 1636045801, 'e': 0}
+        >>> str(d.addrs)
+        'fe80::377b:d17:9b74:1b91'
+        >>> str(d.pk)
+        '/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg='
+        >>> str(d.c)
+        'SbS/v8aTX2Ti3E1jp4T7d8lHoW4v5iRcBcdQ6tSv5bzCuYg9h56A4YFjkKv9aFA+A7u0yrqYhTdpuAWuBgL2BQ=='
+        >>> d.hostname
+        'bubu.local'
+        >>> d.port
+        5354
+        >>> str(d.vk)
+        '/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg='
+        >>> d.dt
+        86400
+        >>> d.vf
+        1636045801
+        >>> d.e
+        0
         """
         try:
-            split: List = desc.split(";")
-            desc: dict = dict(
+            split_desc: List = desc.split(";")
+            dir_desc: dict = dict(
                 val.split("=", maxsplit=1)
-                for val in [kv.strip() for kv in split]
+                for val in [kv.strip() for kv in split_desc]
                 if len(val) > 1
             )
-            desc = cls(desc)
-        except ValueError as error:
+            descriptor: Descriptor = cls(dir_desc)
+        except ValueError:
             raise
             # log.info("Unable to parse descriptor: %s (%r)", error, descriptor)
             return None
-        return desc
+        return descriptor
 
     def _build_sig_buf(self: Descriptor) -> bytes:
         return " ".join(
@@ -140,15 +215,65 @@ class Descriptor(schemattrdict, serializable):
         ).encode()
 
     def __str__(self):
+        """
+        Return the number or IP as a string
+
+        >>> ip = comma_separated_IPs('192.168.13.37')
+        >>> ip.__str__()
+        '192.168.13.37'
+
+        >>> ip = comma_separated_IPs('fe80::377b:d17:9b74:1b91')
+        >>> ip.__str__()
+        'fe80::377b:d17:9b74:1b91'
+        """
         return " ".join("%s=%s;" % kv for kv in sorted(self.items()))
 
     @property
     def id(self):
-        "This returns the peer ID (aka the verify key, base64-encoded)"
+        """
+        This returns the peer ID (aka the verify key, base64-encoded)
+        >>> desc_s = (
+        ... "addrs=192.168.6.9;"
+        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
+        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;"
+        ... "vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.id
+        'Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M='
+
+        >>> desc_s = (
+        ... "addrs=fe80::377b:d17:9b74:1b91;"
+        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
+        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;"
+        ... "port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.id
+        'Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M='
+
+        """
         return str(self.vk)
 
     @property
     def ephemeral(self):
+        """
+        >>> desc_s = (
+        ... "addrs=192.168.6.9;"
+        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
+        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;"
+        ... "port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.ephemeral
+        0
+
+        >>> desc_s = (
+        ... "addrs=fe80::377b:d17:9b74:1b91;"
+        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
+        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;"
+        ... "port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.ephemeral
+        0
+        """
         return self.e
 
     @property
@@ -159,10 +284,46 @@ class Descriptor(schemattrdict, serializable):
 
     @property
     def IPv4addrs(self):
+        """
+        >>> desc_s = (
+        ... "addrs=2001:0db8:85a3:0000:0000:8a2e:0370:7334;"
+        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
+        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;"
+        ... "port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.IPv4addrs
+        []
+        >>> desc_s = (
+        ... "addrs=192.168.6.9;"
+        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;"
+        ... "hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;vf=1601388653;"
+        ... "vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.IPv4addrs
+        [IPv4Address('192.168.6.9')]
+        """
         return [ip for ip in self.addrs if isinstance(ip, IPv4Address)]
 
     @property
     def IPv6addrs(self):
+        """
+        >>> desc_s = (
+        ... "addrs=2001:0db8:85a3:0000:0000:8a2e:0370:7334;"
+        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
+        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;"
+        ... "vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.IPv6addrs
+        [IPv6Address('2001:db8:85a3::8a2e:370:7334')]
+        >>> desc_s = (
+        ... "addrs=192.168.6.9;"
+        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
+        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;"
+        ... "port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> d = Descriptor.parse(desc_s)
+        >>> d.IPv6addrs
+        []
+        """
         return [ip for ip in self.addrs if isinstance(ip, IPv6Address)]
 
     def sign(self, seed) -> Descriptor:
@@ -173,6 +334,25 @@ class Descriptor(schemattrdict, serializable):
         return descriptor
 
     def verify_signature(self) -> bool:
+        """
+        Verifies the signature.
+        Returns true if valid, false if invalid.
+
+        Valid Signature:
+        >>> desc_str = (
+        ... "addrs=10.215.167.50; c=KNDxDMgmkH8Poa7TJBlIZrvTnQBN5w10gYlyY5"
+        ... "MfvkA7Eu12IhpheCdJzWIwap4PE5Ryv3PzvU4ikrEY6oXJNw==; dt=86400; e=0; "
+        ... "hostname=wg-mdns-test1.local.; pk=y9bQa4DAj4NT5lh8PffyAbXNbYCkxczMKLk/r"
+        ... "tP4CVY=; port=5354; r=; s=YJqLUPrI8G/IfA1wIbW2z5p0EtYcDFh4gxCjP5czMK2wi"
+        ... "GRgZdeBibs6shDoRusfHtSy+4m/Z9Jfhul+amQYAQ==; vf=1605737957; vk=XGQErb1N"
+        ... "Jmg4dMLZK7hXfhRahgZ6ix/oP3+BTq2+Dy8=;")
+        >>> desc = Descriptor.parse(desc_str)
+        >>> assert desc.verify_signature() is True
+
+        Invalid Signature:
+        >>> desc = Descriptor(desc, port=desc['port'] + 1)
+        >>> assert desc.verify_signature() is False
+        """
         verify_public_key = VerifyKey(self.vk)
         sig = self.s
         buf_to_verify: bytes = self._build_sig_buf()
@@ -199,6 +379,13 @@ class Descriptor(schemattrdict, serializable):
 
     @property
     def qr_code(self):
+        """
+        This generates a QR-Code and prints it.
+        The data that is encoded within the QR-Code is
+        given by this functions parameter.
+
+        It returns a String.
+        """
         global _qrcode
         if _qrcode is None:
             import qrcode as _qrcode
@@ -225,7 +412,8 @@ class Peer(schemattrdict):
                 Optional('use_as_gateway'): Flexibool,
                 Optional('_allow_unsigned_descriptor'): Flexibool,
             },
-            #     lambda peer: peer['descriptor'].verify_signature() or peer.get('_allow_unsigned_descriptor')
+            # lambda peer:
+            # peer['descriptor'].verify_signature() or peer.get('_allow_unsigned_descriptor')
         )
     )
 
@@ -250,6 +438,33 @@ class Peer(schemattrdict):
 
         It is either the petname, or the last name announced, or, if the last
         name announced is disabled, another enabled name.
+        >>> desc_string = ("addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
+        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
+        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> descriptor = Descriptor.parse(desc_string)
+        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,
+        ... verified=False,nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip
+        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name
+        'george'
+        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
+        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
+        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name
+        'george.local'
+        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
+        ... nicknames={descriptor.hostname: False, "schnubbi": True},IPv4addrs={ip: True for ip
+        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name
+        'schnubbi'
+
+        >>> desc_string = ("addrs=fe80::377b:d17:9b74:1b91;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
+        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
+        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> descriptor = Descriptor.parse(desc_string)
+        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,
+        ... verified=False,nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip
+        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name
+        'george'
         """
         latest = self.descriptor.hostname
         return self.get('petname') or (
@@ -262,10 +477,72 @@ class Peer(schemattrdict):
 
     @property
     def other_names(self):
+        """
+        Returns a sorted list of all names other than self.name
+
+        >>> desc_string = ("addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
+        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
+        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> descriptor = Descriptor.parse(desc_string)
+        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
+        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
+        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
+        []
+        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,
+        ... verified=False,nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip
+        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
+        ['george.local']
+        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,verified=False,
+        ... nicknames={descriptor.hostname: False, "schnubbi": True},IPv4addrs={ip: True for ip
+        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
+        ['george.local', 'schnubbi']
+
+        >>> desc_string = ("addrs=fe80::377b:d17:9b74:1b91;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
+        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
+        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> descriptor = Descriptor.parse(desc_string)
+        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
+        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
+        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
+        []
+        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,
+        ... verified=False,nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip
+        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
+        ['george.local']
+        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,verified=False,
+        ... nicknames={descriptor.hostname: False, "schnubbi": True},IPv4addrs={ip: True for ip
+        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
+        ['george.local', 'schnubbi']
+        """
         return list(sorted(set(self.nicknames) - set([self.name])))
 
     @property
     def name_and_id(self):
+        """
+        Returns the name and id of the peer.
+
+        >>> desc_string = ("addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
+        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
+        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> descriptor = Descriptor.parse(desc_string)
+        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
+        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
+        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name_and_id
+        'george.local (Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=)'
+
+        >>> desc_string = ("addrs=fe80::377b:d17:9b74:1b91;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
+        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
+        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
+        >>> descriptor = Descriptor.parse(desc_string)
+        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
+        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
+        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name_and_id
+        'george.local (Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=)'
+        """
         return "%s (%s)" % (self.name, self.id)
 
     @property
@@ -395,7 +672,7 @@ class Peer(schemattrdict):
 class Peers(yamlrepr, queryable, schemadict):
 
     """
-    A dictionry of peers. Note that, despite being the home of the conflict
+    A dictionary of peers. Note that, despite being the home of the conflict
     detection code, a Peers object can be valid (from a schema standpoint) even
     while containing conflicts. The schema of a SystemState object uses this
     conflict detection code to ensure that the peers object within a
@@ -422,6 +699,8 @@ class Peers(yamlrepr, queryable, schemadict):
         return res[0]
 
     def with_ip(self, ip):
+        # IPv6 analysis: not ipv6 ready
+        # Please enhance this function to support ipv6
         ip = IPv4Address(ip)
         res = self.limit(enabled=True).by('IPv4addrs').get(ip, [])
         if len(res) > 1:
@@ -496,12 +775,14 @@ class Peers(yamlrepr, queryable, schemadict):
         else:
             return None
 
+
 def _ac_get_peer_ids(ctx, args, incomplete):
     organize = (
-            ctx.meta.get('Organize', {}).get('magic_instance')
-            or organize_dbus_if_active()
-        )
+        ctx.meta.get('Organize', {}).get('magic_instance')
+        or organize_dbus_if_active()
+    )
     return organize.peer_ids('all')
+
 
 @DualUse.object(
     short_help="View and modify peer information",
@@ -572,7 +853,7 @@ class PeerCommands(object):
         With no arguments, all enabled peers are shown.
 
         Peer arguments can be specified as ID, name, or IP, unless options are also
-        specified in which case arguments must (currently) be IDs.
+        specified, in which case arguments must (currently) be IDs.
         """
 
         available = self.organize.peer_ids(which if which else 'enabled')
@@ -669,7 +950,7 @@ class PeerCommands(object):
             click.echo(Result.from_yaml(self.organize.peer_addr_del(vk, ip)))
 
     @DualUse.method(short_help="Set arbitrary peer properties")
-    @click.argument('vk', type=str, autocompletion=_ac_get_peer_ids)
+    @click.argument('vk', type=str, **shell_complete_helper(_ac_get_peer_ids))
     @click.argument('path', type=str, nargs=-1)
     @click.argument('value', type=str)
     def set(self, vk, path, value):
@@ -703,3 +984,8 @@ class PeerCommands(object):
 
 
 main = PeerCommands.cli
+
+if __name__ == "__main__":
+    import doctest
+
+    print(doctest.testmod())

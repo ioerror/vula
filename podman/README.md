@@ -46,14 +46,14 @@ clean` target.
 ### `make deb`
 
 This target will build a `.deb` package of vula in `../deb_dist/` using the
-current checkout (including any uncomitted changes). It does not require root
+current checkout (including any uncommitted changes). It does not require root
 to run. By default, it will build using Debian `bullseye`; to build a deb using
 Ubuntu `impish` instead you can run `make clean deb dist=impish`.
 
 ### `make rpm`
 
 This target will build an RPM using Fedora 34. Note that this package is only
-minally tested and does not yet automatically configure the system; see
+minimally tested and does not yet automatically configure the system; see
 [`INSTALL.md`](https://codeberg.org/vula/vula/src/branch/main/podman/INSTALL.md)
 for details.
 
@@ -107,7 +107,7 @@ This will create a new container which, unlike the test hosts created by the
 test target, is connected to both the normal `podman` network (online behind
 NAT) *and* to the `vula-net` internal network which test hosts are connected
 to. Shells and tests for different dists can be run concurrently and
-communicate with eachother; if a clean test network is desired one can run
+communicate with each other; if a clean test network is desired one can run
 `make clean` or `make testnet-clean` prior to running `make test`.
 
 This example will create two test containers for each of three dists, and then
@@ -119,36 +119,46 @@ make dist=hirsute test
 make dist=impish test
 make dist=bullseye systemd-shell
 ```
+## Vula Man-in-the-Middle Testing
 
-## Running vula on the host's LAN
+For details: [Vula Man-in-the-Middle Testing Notes](./Vula-MitM-tool.md)
 
-### `make lan-start`
+### Usage
 
-This will create a new podman container (as root) called `vula` with
-`--network=host`, meaning that it will operate in the host system's default
-network namespace. This is a convenient way that one can run vula to
-communicate with other hosts on a physical LAN, without needing to install any
-dependencies besides `wireguard`, `podman`, `make`, and `sudo`. The `dist=`
-argument may be specified to use a different distribution than the default
-(`bullseye`) inside of the container.
+Go into the podman directory
+```cd podman```
 
-### `make lan-shell`
+To run the passive adversary test:
+```make test-passive-adversary```
 
-This will spawn a shell in the `vula` container started by `lan-start`.
+To run the active adversary test:
+```make test-active-adversary```
 
-### `make lan-stop`
+Clean everything up
+```make clean-sudo```
 
-This will stop the `vula` container started by `lan-start`.
+### If it does not work as expected...
+* Due to network issues, sometimes tests will fail on the first run. Re-run the same test.
+* If you get lost in podman and stuff, here are some commands that might help.
+  * ```sudo podman ps -a```
+  * ```sudo podman image ls```
+  * ```sudo podman rmi vula-mallory-bullseye```
+  * ```sudo podman rm mallory``` 
+  * ```sudo podman rm sudo podman rm vula-bullseye-test1``` 
+  * ```sudo podman rm sudo podman rm vula-bullseye-test2```
+  * ```sudo podman image rm vula-mallory-bullseye```
+  * ```sudo podman network ls```
+  * ```sudo podman exec -it mallory sh```
+  * ```sudo podman image rm <25d0f69960f4> <09a2dc334328> <d40c1669cc17>```
+  * ```sudo podman network rm vula-net```
+* Checkout 'Comments and known bugs' in [mitm readme](./Vula-MitM-tool.md)
 
-### `make lan-clean`
-
-This will delete the `vula` container started by `lan-start`.
 
 ## Development mode
 
-The `test-*` and `lan-*` make targets both have the side effect of creating a
-podman image called `vula-$dist` (bullseye, by default), which by default
-contains a dpkg installation of vula. This image can be modified or replaced.
+The `test-*` make targets have the side effect of creating a podman image
+called `vula-$dist` (bullseye, by default), which by default contains a dpkg
+installation of vula. This image can be modified or replaced.
 
 ### `make editable-image`
 
@@ -166,8 +176,7 @@ clean rpm-image`.
 This will delete the `.deb` package built in `../deb_dist`, the `vula-$dist`
 podman images, the test containers, and any stray intermediate containers. It
 will *not* delete the `vula-deps-$dist` images, which require network access to
-recreate, nor will it delete the `vula` container which is created by the
-`lan-start` target.
+recreate.
 
 ### `make clean-all`
 

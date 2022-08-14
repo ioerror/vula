@@ -10,19 +10,16 @@ this module.
 
 from __future__ import annotations
 from logging import Logger, getLogger
-from os import geteuid
 import time
+from typing import Tuple
 from datetime import timedelta
 import click
-from click.exceptions import Exit
 from pyroute2 import (
     WireGuard as PyRoute2WireGuard,
     IPRoute,
-    IPDB,
-    NetlinkError,
 )
 from pyroute2.netlink import nla as netlink_atom
-from base64 import b64encode, b64decode
+from base64 import b64encode, b64decode  # noqa: F401
 from ipaddress import ip_address, ip_network
 from schema import Schema, And, Or, Use, Optional
 from .common import (
@@ -37,23 +34,23 @@ from .common import (
     format_byte_stats,
 )
 
-from .common import bp
-
 
 def _wg_interface_list():
-
     """
     This returns a list of the current wireguard interfaces' names.
 
     There must be a better way to do this!
+    >>> type(_wg_interface_list())
+    <class 'list'>
     """
-    links = [dict(link['attrs']) for link in IPRoute().get_links()]
-    return [
-        link['IFLA_IFNAME']
-        for link in links
-        if link.get('IFLA_LINKINFO', {}).get('attrs', [[0, 0]])[0][1]
-        == "wireguard"
-    ]
+    interfaces = []
+    links = IPRoute().get_links()
+    for link in links:
+        linkinfo = link.get_attr('IFLA_LINKINFO')
+        if linkinfo is not None:
+            if linkinfo.get_attr('IFLA_INFO_KIND') == "wireguard":
+                interfaces.append(link.get_attr('IFLA_IFNAME'))
+    return interfaces
 
 
 class PeerConfig(schemattrdict, serializable):
@@ -83,9 +80,55 @@ class PeerConfig(schemattrdict, serializable):
     @classmethod
     def from_netlink(cls, peer):
         """
-        This converts approximately from what pyroute2 produces to what pyroute2 consumes
+        This converts approximately from what pyroute2 produces to what
+        pyroute2 consumes
 
         (plus the extra key 'stats' with two keys)
+
+        >>> p = PeerConfig.from_netlink({'attrs': dict(
+        ...     public_key=b64encode(b'A'*32),
+        ...     preshared_key=b64encode(b'A'*32),
+        ...     persistent_keepalive_interval=666,
+        ...     rx_bytes=2,
+        ...     tx_bytes=3,
+        ...     protocol_version=99,
+        ...     endpoint={'addr': '192.168.0.0', 'port': 1000},
+        ...     last_handshake_time={'tv_sec':567})})
+        >>> type(p)
+        <class 'vula.wg.PeerConfig'>
+        >>> p['persistent_keepalive']
+        666
+        >>> p['endpoint_addr']
+        '192.168.0.0'
+        >>> p['endpoint_port']
+        1000
+        >>> p['stats']['latest_handshake']
+        567
+        >>> p['protocol_version'] # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        KeyError:
+        >>> p = PeerConfig.from_netlink({'attrs': dict(
+        ...     public_key=b64encode(b'A'*32),
+        ...     preshared_key=b64encode(b'A'*32),
+        ...     persistent_keepalive_interval=666,
+        ...     rx_bytes=2,
+        ...     tx_bytes=3,
+        ...     protocol_version=99,
+        ...     endpoint={'addr': 'FE80::FFFF:FFFF:FFFF:FFFE', 'port': 1000},
+        ...     last_handshake_time={'tv_sec':567})})
+        >>> type(p)
+        <class 'vula.wg.PeerConfig'>
+        >>> p['persistent_keepalive']
+        666
+        >>> p['endpoint_addr']
+        'FE80::FFFF:FFFF:FFFF:FFFE'
+        >>> p['endpoint_port']
+        1000
+        >>> p['stats']['latest_handshake']
+        567
+        >>> p['protocol_version'] # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        KeyError:
         """
         res = {
             k.replace('WGPEER_A_', '').lower(): dict(v)
@@ -199,17 +242,17 @@ class Interface(attrdict, yamlrepr_hl):
     same shape as the pyroute2 structure but with less-irritating names.
 
     But wait, there's more... it also has a "peers" attribute which gives you
-    the peers in the same shape as pyroute2's Wireguard module exceptects to be
-    passed to the "set" method (note: round trips not yet tested).
+    the peers in the same shape as pyroute2's Wireguard module expects them to
+    be passed to the "set" method (note: round trips not yet tested).
 
     Because this is a DualUse.object, you can see the data on the commandline
     with commands like these:
 
-    sudo vula wg Interface autoclique query
+    sudo vula wg Interface vula query
 
-    sudo vula wg Interface autoclique peers
+    sudo vula wg Interface vula peers
 
-    sudo vula wg Interface autoclique _is_up
+    sudo vula wg Interface vula _is_up
 
     etc.
     """
@@ -466,7 +509,8 @@ class Interface(attrdict, yamlrepr_hl):
     @property
     def wg_showconf(self) -> str:
         """
-        Shows the current configuration of a given WireGuard interface, for use with `setconf'.
+        Shows the current configuration of a given WireGuard interface, for use
+        with `setconf'.
         """
         peers = list(self.peers)
         return "[Interface]\n" + (
@@ -542,12 +586,14 @@ class wg(object):
     @click.argument('interface', type=str)
     def showconf(self, interface):
         """
-        Shows the current configuration of a given WireGuard interface, for use with `setconf'
+        Shows the current configuration of a given WireGuard interface, for use
+        with `setconf'.
         """
         return Interface(interface).query().wg_showconf
 
     @DualUse.method(
-        short_help="Change the current configuration, add peers, remove peers, or change peers."
+        short_help="Change the current configuration, add peers, remove "
+        "peers, or change peers."
     )
     @click.option('--private-key', type=str)
     @click.option('--listen-port', type=int)
@@ -557,15 +603,22 @@ class wg(object):
     @click.pass_context
     def set(ctx, self, interface, args=(), **kwargs):
         """
-        Change the current configuration, add peers, remove peers, or change peers.
+        Change the current configuration, add peers, remove peers, or change
+        peers.
 
-        Usage: wg set <interface> [listen-port <port>] [fwmark <mark>] [private-key <base64 private key>] [peer <base64 public key> [remove] [preshared-key <base64 preshared key>] [endpoint <ip>:<port>] [persistent-keepalive <interval seconds>] [allowed-ips <ip1>/<cidr1>[,<ip2>/<cidr2>]...] ]...
+        Usage: wg set <interface> [listen-port <port>] [fwmark <mark>]
+        [private-key <base64 private key>] [peer <base64 public key> [remove]
+        [preshared-key <base64 preshared key>] [ endpoint <ip>:<port>]
+        [persistent-keepalive <interval seconds>] [allowed-ips
+        <ip1>/<cidr1>[,<ip2>/<cidr2>]...] ]...
 
         This is intended to behave very similarly to the normal wg tool, except
         it takes private keys on the commandline (and does not yet support
         reading them from files, as wg does). Yes, this is not a great idea,
         but it makes testing easier.
         """
+        # IPv6 analysis: not ipv6 ready.
+        # Please enhance this function to support ipv6
         dev = Interface(interface)
         kwargs = {k: v for k, v in kwargs.items() if v not in (None, ())}
         current = {}

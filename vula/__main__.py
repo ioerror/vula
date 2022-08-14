@@ -1,10 +1,10 @@
-import os
+import os  # noqa: F401
 import sys
 import pydbus
-from logging import DEBUG, INFO, WARN, Logger, basicConfig, getLogger
+from logging import DEBUG, INFO, WARN, basicConfig, getLogger  # noqa: F401
 
 import click
-from . import (
+from . import (  # noqa: F40
     configure,
     discover,
     publish,
@@ -17,7 +17,8 @@ from . import (
     engine,
     common,
 )
-from .click import Debuggable
+
+from .notclick import Debuggable
 from .constants import (
     _DATE_FMT,
     _LOG_FMT,
@@ -26,6 +27,8 @@ from .constants import (
     _PUBLISH_DBUS_NAME,
     _PUBLISH_DBUS_PATH,
 )
+
+from .frontend import ui
 
 
 @click.version_option()
@@ -91,6 +94,11 @@ def start(quick):
     )
 
 
+@main.command(short_help="Starts the graphical user interface")
+def gui():
+    ui.main()
+
+
 @main.command(short_help="Ensure that system is configured correctly")
 @click.option(
     '-n',
@@ -111,7 +119,7 @@ def repair(dry_run):
 @main.command()
 def rediscover():
     "Tell organize to ask discover for more peers"
-    organize = common.organize_dbus_if_active()
+    organize = common.organize_dbus_if_active()  # noqa: F811
     click.echo('Discovering on ' + organize.rediscover())
 
 

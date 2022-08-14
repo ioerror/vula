@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
 
 *swp
 
@@ -12,6 +13,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
+deb_dist/
 dist/
 downloads/
 eggs/
@@ -28,6 +30,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+*.tar.gz
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -143,3 +146,20 @@ paper/paper.bbl
 paper/paper.blg
 paper/paper.out
 paper/comment.cut
+
+# JetBrains IDE
+.idea/
+
+# Visual Studio Code
+.vscode
+
+# stampfiles used by podman makefile
+podman/.*-stamp
+
+# macOS generated files
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+*.DS_Store
+*.pcap

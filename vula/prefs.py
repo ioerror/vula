@@ -1,14 +1,10 @@
 from __future__ import annotations
-from logging import Logger, getLogger
-import time
 
 import click
-import pydbus
 import yaml
 from schema import Schema, Use, Optional
 from ipaddress import ip_network
 
-from .click import OrderedGroup
 from .common import (
     schemattrdict,
     yamlrepr_hl,
@@ -16,15 +12,11 @@ from .common import (
     organize_dbus_if_active,
     DualUse,
 )
-from .constants import (
-    _DATE_FMT,
-    _LOG_FMT,
-    _ORGANIZE_DBUS_NAME,
-    _ORGANIZE_DBUS_PATH,
-)
 
 
 class Prefs(yamlrepr_hl, schemattrdict):
+    # IPv6 analysis: not ipv6 ready
+    # Please enhance this class to support ipv6
 
     schema = Schema(
         {

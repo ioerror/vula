@@ -17,7 +17,14 @@ a debianized version of our Python package using the `pypi-install` tool.
 To install the dependencies required for building vula packages yourself, or
 for installing a debian package via `pypi-install`, run this command:
 
-* `sudo apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot gcc make python3-all python3-all-dev python3-click python3-cpuinfo python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-setuptools-scm python3-stdeb python3-systemd python3-toml python3-yaml python3-zeroconf python-all wireguard-tools`
+* `sudo apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot gcc make python3-all python3-all-dev python3-click python3-cpuinfo python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-setuptools-scm python3-stdeb python3-systemd python3-toml python3-yaml python3-zeroconf python3-babel python3-tk python-all wireguard-tools`
+* `sudo pip install sibc`
+
+You need `python3-click` module version 8.+, `apt` might install the latest version, 
+but will fail to install version 8.+. You need to remove the installed version and 
+reinstall the `click` module using `pypi`:
+* `sudo apt-get remove python3-click`
+* `sudo pypi-install click`
 
 # Install
 
@@ -98,32 +105,7 @@ These are steps which are automatically performed by the Debian package's
 [postinstall
 script](https://codeberg.org/vula/vula/src/branch/main/misc/python3-vula.postinst).
 
-## option 3: run vula in a podman container
-
-If you are using a Linux distribution that supports
-[`podman`](https://podman.io/), and can run it as root, you can run vula under
-Debian GNU/systemd in a container with access to your host's network namespace.
-Root access is required to grant the `CAP_NET_ADMIN` capability, but after that
-privleges are dropped inside the container.
-
-```
-git clone https://codeberg.org/vula/vula
-cd vula/podman
-make lan-start
-```
-
-After the container is started, you can spawn a shell inside of it where you
-will have access to the vula commandline tools by running [`make
-lan-shell`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-shell).
-To shut it down or delete it, run [`make
-lan-stop`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-stop)
-or [`make
-lan-clean`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-clean).
-See
-[podman/README](https://codeberg.org/vula/vula/src/branch/main/podman/README.md)
-for more information.
-
-## option 4: build an RPM
+## option 3: build an RPM
 
 We have only done minimal testing of vula on RPM-based systems, but, it is
 possible to type `make rpm` in the vula repo and generate an RPM (using
@@ -133,10 +115,29 @@ does not include a postinstall script. See the `Makefile` in this directory for
 hints on how to install the dependencies on Fedora.
 
 It is also possible to build an RPM in Fedora inside of a `podman` container by
-running `make dist=fedora34 rpm` in the `podman` directory, and to launch the
-host-networking vula container described in option 3 using Fedora instead of
-Debian by running [`make dist=fedora34
-lan-start`](https://codeberg.org/vula/vula/src/branch/main/podman/README.md#make-lan-start).
+running `make dist=fedora34 rpm` in the `podman` directory.
+
+On Fedora you can install the rpm-build package with `sudo dnf install rpm-build`
+and then build the package executing `make rpm` in the vula repo.
+
+Note that compatibility issues with RPM-based systems are collected in TODO.md.
+
+## option 4: install from AUR (only for arch based systems)
+
+Same as above only rudimentary testing of the functionality has been done on arch / manjaro.
+
+The current installation process requires packages from [AUR](https://aur.archlinux.org/).
+Currently one of the vula dependencies `python-sibc-git` is also available from AUR.
+Installing packages from AUR is inherently dangerous, always check the PKGBUILD files.
+
+The simplest installation is using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers) like `yay`.
+
+```
+yay -S python-sibc-git python-vula-git
+```
+
+In order to run `vula` commands as user you must be in a group called `sudo`. 
+On arch systems this is not a default group, you must add it manually.
 
 # Running vula
 
@@ -168,7 +169,27 @@ To see the preferences:
 To see commands for editing preferences:
 * `vula prefs --help`
 
+To start graphical user interface:
+* `vula gui`
+
 More documentation is coming soon. See
 [STATUS.md](https://codeberg.org/vula/vula/src/branch/main/STATUS.md) for more
 information about what currently works and doesn't.
 
+## vula GUI
+
+The graphical user interface uses Tkinter as a Python binding to the Tk GUI toolkit.
+
+### Screenshots
+
+#### Peers
+![peers](misc/tk_frontend/peers.png)
+
+#### Preferences
+![preferences](misc/tk_frontend/preferences.png)
+
+#### My verification key
+![my verification key](misc/tk_frontend/my_verification_key.png)
+
+#### My descriptor
+![my descriptor](misc/tk_frontend/my_descriptor.png)

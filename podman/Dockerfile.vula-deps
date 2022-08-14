@@ -9,7 +9,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 # but for now:
 RUN rm -f /etc/apt/apt.conf.d/docker-clean
 
-RUN apt update && apt upgrade -y && \
+RUN apt --fix-missing update && apt upgrade -y && \
     apt install -y --no-install-recommends \
     procps vim less git iproute2 iputils-ping dbus systemd
 

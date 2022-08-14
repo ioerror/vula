@@ -1,30 +1,15 @@
 from __future__ import annotations
-from typing import List
-from ipaddress import (
-    IPv4Network,
-    IPv4Address,
-    IPv6Address,
-    IPv4Address,
-    ip_address,
-)
-from base64 import b64decode, b64encode
-from nacl.signing import VerifyKey
-from schema import Schema, And, Use, Optional, Or, Regex
+
+from schema import Schema, Use, Optional
 from functools import reduce, wraps
 from threading import Lock
 import traceback
 import copy
 from .common import (
-    Bug,
     schemattrdict,
     yamlfile,
-    yamlrepr,
     yamlrepr_hl,
-    jsonrepr_hl,
-    jsonrepr,
-    serializable,
     raw,
-    bp,
 )
 
 
@@ -104,7 +89,7 @@ class Engine(schemattrdict, yamlfile):
     form of events and actions.
 
     An event engine using this class may be thought of as a pure function which
-    takes a current state and new event, and produces a new state.
+    takes a current state and a new event, and produces a new state.
 
     Subclasses should define @Engine.event methods and @Engine.action methods.
     Events should call one or more actions. Actions may mutate the state via
@@ -116,11 +101,12 @@ class Engine(schemattrdict, yamlfile):
     the engine state is allowed to be modified.
 
     If there are any exceptions during execution of the event and its actions,
-    or if the state after all of the actions have completed does not satisfy
-    the schema, then none of the event's actions' write operations are applied.
+    or if the state after all of the actions have been completed does not
+    satisfy the schema, then none of the event's actions' write operations
+    are applied.
 
     If the event does not have an error, after the new state is committed, the
-    triggers are executed and and their results are recorded in the event's
+    triggers are executed and their results are recorded in the event's
     result object. Triggers may modify state which exists outside of the state
     engine, and may also initiate new events.
 
@@ -128,9 +114,13 @@ class Engine(schemattrdict, yamlfile):
     event arguments and the resulting actions, writes, triggers, and trigger
     results, or contains the exception if one occurred.
 
-    This is all still subject to change and there may be comments which reflect
-    earlier states of development. Look at the vula.organize.OrganizeState
-    subclass of this to see how it is actually being used.
+    The state of the engine is only allowed to change through events which call
+    actions which in turn call write methods. The new state must depend solely
+    on the old state, and the event being processed. Therefore inputs from the
+    outside world such as, for instance, the system time, need to be contained
+    within an event to mutate the old state into the new state.  Similarly,
+    side effects should only happen in triggers which are run after the
+    successful processing of an event.
     """
 
     Result = Result

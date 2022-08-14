@@ -4,37 +4,33 @@
 """
 
 from base64 import b64encode
-from vula.common import b64_bytes
-from logging import INFO, basicConfig, getLogger
+from logging import getLogger, Logger
 import os
-from os import chmod, chown, geteuid, mkdir, system, stat
-from pwd import getpwnam
-from sys import stdout, platform
+from os import geteuid, mkdir, system
+from sys import platform
 import time
 import click
 from click.exceptions import Exit
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from cryptography.exceptions import UnsupportedAlgorithm
-import subprocess
 
 from .status import main as StatusCommand
 from .csidh import csidh_parameters, CSIDH
 
 try:
     from dbus import Boolean, Interface, SystemBus
-except:
+except ImportError:
     pass
 from nacl.signing import SigningKey
 from nacl.encoding import Base64Encoder
 
 try:
     from systemd import daemon
-except:
+except ImportError:
     pass
-from yaml import safe_dump, safe_load
 
-from .click import DualUse
+from .notclick import DualUse
 from .constants import (
     _WG_SERVICES,
     _ORGANIZE_KEYS_CONF_FILE,
@@ -64,6 +60,7 @@ class Configure(attrdict):
         self.log: Logger = getLogger()
         self.log.debug("Debug level logging enabled")
         self._csidh = None
+        self._ctx = ctx
 
     def _ensure_root(self):
         if geteuid() != 0:
@@ -75,7 +72,7 @@ class Configure(attrdict):
     def _ensure_linux(self):
         if platform.startswith("linux"):
             if daemon.booted() != 1:
-                log.error("not running systemd: manual configuration required")
+                self.log.error("no systemd: manual configuration required")
                 raise Exit(2)
 
     @DualUse.method()
@@ -232,11 +229,11 @@ class Configure(attrdict):
             system("systemctl restart systemd-sysusers")
             system("systemctl reload dbus")
         if platform.startswith("linux"):
-            # XXX: this line is left here to ease upgrades from systems where the
-            # wg-quick@vula service is in a degraded state. it should not ever
-            # be in a degraded state anymore after this code has run once, now that
-            # we've removed the call to "wg-quick up vula". so, after all
-            # existing installs have upgraded, we should remove this line:
+            # XXX: this line is left here to ease upgrades from systems where
+            # the wg-quick@vula service is in a degraded state. it should not
+            # ever be in a degraded state anymore after this code has run once,
+            # now that we've removed the call to "wg-quick up vula". so, after
+            # all existing installs have upgraded, we should remove this line:
             system("wg-quick down vula")
 
     @DualUse.method()
@@ -244,21 +241,22 @@ class Configure(attrdict):
         self._ensure_root()
         self.log.info("configuring nsswitch to respect our petname system")
         system(
-            "perl -pi -e 'm/vula /s || s/^(hosts:\\s+)/${1}vula /' /etc/nsswitch.conf"
+            "perl -pi -e 'm/vula /s || s/^(hosts:\\s+)/${1}vula /'"
+            " /etc/nsswitch.conf"
         )
 
     @DualUse.method()
     def systemd_restart(self):
         self._ensure_root()
         if platform.startswith("linux"):
-            _reconfigure_restart_systemd_services()
-            _reconfigure_restart_systemd_services(restart=True)
+            _reconfigure_restart_systemd_services()  # noqa: F821
+            _reconfigure_restart_systemd_services(restart=True)  # noqa: F821
             time.sleep(1.5)
         # FIXME: this causes a non-zero exit status sometimes, if the organize
         # service is "activating" instead of "active". the sleep could be
-        # increased, or we could perhaps hang around to find out what happened via
-        # some dbus event or something?
-        ctx.invoke(StatusCommand)
+        # increased, or we could perhaps hang around to find out what happened
+        # via some dbus event or something?
+        self._ctx.invoke(StatusCommand)
 
 
 main = Configure.cli

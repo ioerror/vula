@@ -1,7 +1,35 @@
+# TODO
+
+We should migrate everything in this TODO to codeberg issues.
+
+- URGENT pre pypi release: determine if missing requirements.txt breaks PyPI packaging
+
+- review Tk frontend more; fix scrolling bug there.
+
+- move DEPENDENCY.md to contrib?
+
+- move misc/install-mitm-deps.sh to contrib/mitm/ ?
+
+- review HACKING.md and ensure pipenv/pipx information is relevant/working/etc (narrator: it isn't)
+
+- setup codeberg CI
+
 - we need to research more to figure out what our minimum requirements actually
   are, and better define a way to install everything on older systems.
   pipx? docker?
 
+
+- install .desktop file for gui
+- figure out what it takes to use vula with userspace (golang) wg. (does pyroute2 help?)
+- delete some no-op tests from publish (and elsewhere)
+- figure out what could cause a NonUniqueNameException - (post-bfh merge we
+  ignore that exception now instead of crashing on it, but we don't know
+  when/why it actually happens. maybe we should make systemd not stop restarting
+  instead?)
+
+- rename notclick to click or clickutils or something
+- make tk frontend stop doing import *
+- check if tk frontend really needs to make a tempfile or if qrcode lib can just return an image
 - petnames are broken on Ubuntu 20.04 due to a permissions issue
 
 - stop calling sync from `get_new_system_state`, triggers should handle it
@@ -41,6 +69,8 @@
   - Implement an AEAD payload keyed by a DH between host keys and target
     system's keys to ensure a camera cannot meaningfully make use of a QR code
     on a screen.
+  - see `bfh-verify-against` feature branch for progress toward design and
+    implementation.
 
 - async csidh?
 
@@ -88,6 +118,8 @@
 
     - this requires new descriptors to be generated and signed even if nothing
       else has changed to bump the vf value up.
+    - see `bfh-expiration-of-unpinned-peer-feature` branch for progress toward
+      this feature.
 
 - we should have different events for peer and pref edits, instead of using
   `ev_USER_EDIT`, and then we should have triggers fired by the state engine to
@@ -104,7 +136,7 @@
   dbus), upon which organize can delete the interface and rules.
 
 - dbus policy XML needs to be cleaned up a lot; currently it has lots of
-  dupliation annd unnecessary stuff to establish some boundaries but then
+  duplication and unnecessary stuff to establish some boundaries but then
   negates most of them for development.
 
 - there should also be a prerm or postrm hook to remove our nsswitch config
@@ -123,6 +155,9 @@
   reunion-on-an-ethernet to automatically verify (and thus pin) any other peers
   using that passphrase. this will allow bidirectional pinning with headless
   peers (including routers).
+
+    - see `bfh-reunion-integration` feature branch for progress toward REUNION
+      integration.
 
 - write a cryptographic warnings page about CSIDH similar to this one about
   ntruprime:
@@ -178,6 +213,10 @@
 -- post-paper deadline
 -- easy
 
+- Continuous Documentation: automatically build, version, and host documentation with readthedocs
+-- there seems to be an issue with codeberg and RTD which has to be checked: https://codeberg.org/Codeberg/Community/issues/486
+
+
 - Alternative transport design
 -- post-paper deadline
 -- easy, boring, uninteresting, hateful
@@ -195,22 +234,16 @@
 - pip3 installable objects
 -- post-paper deadline
 
-- Gnome-widget
--- post-paper deadline
-
-- Standalone GUI (QT for portability reasons)
--- post-paper deadline
-
 - Monolith mode: a single sub-command which runs all needed services in threads
-  or processes without privilege seperation.
+  or processes without privilege separation.
 -- post-paper deadline
 
 - Publish service should have a limited lifetime and it should have a way to
   rotate CSIDH keys.
--- post-paper deadline?
+-- see branch `bfh-keyrotation-feature` for progress on this task.
 
 - vula should have a sub command called proxy mode. This should allow a
-  device which can use wireguard but cannot run other software to particiapte
+  device which can use wireguard but cannot run other software to participate
   in the protocol and then it should be able to push configuration changes to
   that machine.
 -- post paper deadline
@@ -288,10 +321,33 @@ ethernet" work via a gethostbyname interface? Maybe.
 - Add support for OpenBSD; see TODO.porting
 
 - Signatures should be over an exploded buffer with foo=bar; rather than just a
-  concatination of bar into a buffer. This will allow the signed buffer to be
+  concatenation of bar into a buffer. This will allow the signed buffer to be
   parsed and result in a key value pair where every byte can be used.
   Currently, we do a half-assed thing and we should do something smarter.
 
 - Discover and publish used to throw exceptions when they lost network
   connectivity. This problem has hopefully gone away but we should carefully
   investigate what happens in various scenarios to be sure.
+
+- For concerns regarding IPv6 compatibility consolidate README.ipv6.md
+
+- Increase test coverage
+
+- Add man page documentation
+
+- Add online documentation
+
+
+## Compatibility with RPM-based systems
+
+- To add the post-installation script to the RPM build, you can append the following parameter to the bdist_rpm command in the makefile:\n
+  `--post-install=misc/python3-vula.postinst`\
+  The RPM package then executes the post-installation script, but the script fails at importing vula-libnss.
+  When installing vula-libnss manually with `sudo pip install vula-libnss` it works again.
+
+- When installed on Fedora and run without root privileges, vula displays the following error message:\
+  `gi.repository.GLib.GError: g-dbus-error-quark: GDBus.Error:org.freedesktop.DBus.Error.AccessDenied: Sender is not authorized to send message (9)`
+
+- When manually executing the last post-installation step on openSUSE (`sudo systemctl enable --now vula-organize`), the following error message appears:\
+  `Failed to enable unit: Unit file vula-organize.service does not exist.`\
+  Vula cannot be used, if the organize service doesn't run.

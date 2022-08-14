@@ -1,13 +1,20 @@
 """
  vula-publish is a program that announces a WireGuard mDNS service as
  informed by Organize over dbus or as controlled by organize in monolith mode.
+
+>>> p = Publish()
+>>> type(p.zeroconfs)
+<class 'dict'>
+>>> type(p.log)
+<class 'logging.RootLogger'>
+
 """
 
 from logging import Logger, getLogger
 from platform import node
 
 import click
-from zeroconf import ServiceInfo, Zeroconf
+from zeroconf import ServiceInfo, Zeroconf, NonUniqueNameException
 
 import pydbus
 from gi.repository import GLib
@@ -38,7 +45,8 @@ class Publish(object):
         self.zeroconfs = {}
 
     def listen(self, new_announcements):
-        # First we remove all old zeroconf listeners that are not in our new instructions
+        # First we remove all old zeroconf listeners that are not in our new
+        # instructions
         for ip, zc in list(self.zeroconfs.items()):
             if ip not in new_announcements:
                 self.log.info("Removing old service announcement for %r", ip)
@@ -74,8 +82,13 @@ class Publish(object):
                     interfaces=list(map(str, comma_separated_IPs(ip_addr)))
                 )
                 self.log.debug("Registering vula service: %s", service_info)
-                zeroconf.register_service(service_info)
-                self.log.debug("Registered vula service.")
+                try:
+                    zeroconf.register_service(service_info)
+                    self.log.debug("Registered vula mDNS publishing service.")
+                except NonUniqueNameException:
+                    self.log.debug(
+                        "Unable to register vula mDNS publishing service."
+                    )
 
     @classmethod
     def daemon(cls):

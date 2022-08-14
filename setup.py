@@ -1,23 +1,32 @@
 import setuptools
 from setuptools.command.build_ext import build_ext as hookBuild_ext
 from subprocess import check_output
+
 import os
 import time
+
 from shutil import copy2
 from sys import platform
-from os import system
 from glob import glob
-from platform import machine
 
+try:
+    from babel.messages import frontend as babel
+    compile_catalog = babel.compile_catalog
+except ImportError:
+    compile_catalog=None
 try:
     from stdeb.command.sdist_dsc import sdist_dsc
     from stdeb.command.bdist_deb import bdist_deb
+
 
     class sdist_dsc_with_postinst(sdist_dsc):
         def run(self):
             res = super(sdist_dsc_with_postinst, self).run()
             print("Installing vula postinst")
-            copy2('misc/python3-vula.postinst', self.dist_dir+'/vula-{}/debian/'.format(version))
+            copy2(
+                'misc/python3-vula.postinst',
+                self.dist_dir + '/vula-{}/debian/'.format(version),
+            )
             return res
 
 except ImportError:
@@ -71,7 +80,18 @@ linux_data_files = [
         ['configs/dbus/local.vula.services.conf'],
     ),
     (
-        # "/etc/dbus-1/system-services/",
+        "/usr/share/applications",
+        [
+            "vula/frontend/desktop/vula.desktop"
+        ]
+    ),
+    (
+        "/usr/share/icons",
+        [
+            "vula/frontend/desktop/vula_gui_icon.png"
+        ]
+    ),
+    (
         "/usr/share/dbus-1/system-services/",
         [
             'configs/dbus/local.vula.organize.service',
@@ -94,7 +114,37 @@ linux_data_files = [
     ),
 ]
 
-our_data_files = linux_data_files
+# The locations for files on macOS. This differs from Linux in
+# that the files are stored in usr/local instead of usr/share.
+macos_data_files = [
+    (
+        "/usr/local/share/dbus-1/",
+        ['configs/dbus/local.vula.services.conf'],
+    ),
+    (
+        "/usr/local/dbus-1/system-services/",
+        [
+            'configs/dbus/local.vula.organize.service',
+            'configs/dbus/local.vula.publish.service',
+            'configs/dbus/local.vula.discover.service',
+        ],
+    ),
+    ("/usr/local/lib/sysusers.d/", ['configs/sysusers.d/vula.conf']),
+    (
+        "/usr/local/man/man1/",
+        glob('man/vula*1'),
+    ),
+    (
+        "",
+        ["misc/python3-vula.postinst"],
+    ),
+]
+
+# Uses the macOS specific paths for Darwin (macOS) systems
+if platform == "darwin":
+    our_data_files = macos_data_files
+else:
+    our_data_files = linux_data_files
 
 if platform.startswith("openbsd"):
     our_data_files = []
@@ -103,6 +153,7 @@ if platform.startswith("openbsd"):
 class print_version(hookBuild_ext):
     def run(self):
         print(version)
+
 
 setuptools.setup(
     name="vula",
@@ -129,10 +180,12 @@ setuptools.setup(
     },
     install_requires=requirements,
     data_files=our_data_files,
+    package_data={'vula': ['vula/locale/*/LC_MESSAGES/*.mo']},
     include_package_data=True,
     zip_safe=False,
     tests_require=["pytest"],
     cmdclass=dict(
+        compile_catalog=compile_catalog,
         bdist_deb=bdist_deb,
         sdist_dsc=sdist_dsc_with_postinst,
         man_pages=man_pages,
