@@ -3,6 +3,10 @@
 ![](docs/imgs/extension.png)
 
 ## Prerequisites
+
+This extension was developed tested on GNOME 41 and is currently not compatible
+with GNOME 42.
+
 ```
 sudo apt install gnome-tweaks gnome-shell-extensions  
 ```
