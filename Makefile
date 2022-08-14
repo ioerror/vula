@@ -85,6 +85,7 @@ sast-analysis:
 
 .PHONY: deps-graphs
 deps-graphs:
+	# this requires pipenv, pydeps, graphviz, ...
 	pipenv run pydeps --pylib-all --cluster --max-cluster-size 10 -o contrib/deps-graphs/precisely_linked.svg vula
 	pipenv run pydeps --pylib-all --cluster --keep-target-cluster --max-cluster-size 10 -o contrib/deps-graphs/all_clustered.svg vula
 	pipenv run pydeps --pylib-all --show-deps vula -o contrib/deps-graphs/unorganized.svg > contrib/deps-graphs/vula_deps.json
