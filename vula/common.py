@@ -31,18 +31,23 @@ memoize = lambda f: (
 )()
 
 
-def chown_like_dir(path):
+def chown_like_dir_if_root(path):
     """
-    Test on current directory
-    >>> chown_like_dir("./")
+    This chowns a file to have the same owner as its parent, if we are running
+    as root. Otherwise, it does nothing.
 
+    Normally vula is not run as root. The purpose of this function is to ensure
+    that files remain owned by their correct user (which is hopefully the owner
+    of the directory they reside in) if/when vula *is* run is root.
+
+    As of this writing, this function is only used by the organize daemon when
+    writing the hosts file.
+
+    FIXME: this should probably be used when writing the state file as well?
     """
     if os.getuid() == 0:
-        try:
-            dirstat = os.stat(os.path.dirname(os.path.realpath(path)))
-            os.chown(path, dirstat.st_uid, dirstat.st_gid)
-        except OSError:
-            print("Can not set ownership of " + path)
+        dirstat = os.stat(os.path.dirname(os.path.realpath(path)))
+        os.chown(path, dirstat.st_uid, dirstat.st_gid)
 
 
 def _safer_load(
@@ -321,7 +326,7 @@ class yamlfile(serializable):
                 yaml.safe_dump(self._dict(), default_style='', sort_keys=False)
             )
         if autochown:
-            chown_like_dir(path)
+            chown_like_dir_if_root(path)
 
     @classmethod
     def from_yaml_file(cls, path):

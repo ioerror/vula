@@ -33,7 +33,7 @@ from .common import (
     jsonrepr,
     addrs_in_subnets,
     raw,
-    chown_like_dir,
+    chown_like_dir_if_root,
     memoize,
 )
 from .engine import Engine, Result
@@ -697,7 +697,7 @@ class Organize(attrdict):
                 "\n".join("%s %s" % (ip, host) for host, ip in hosts.items())
                 + "\n"
             )
-        chown_like_dir(hosts_file)
+        chown_like_dir_if_root(hosts_file)
         return True
 
     @DualUse.method()
