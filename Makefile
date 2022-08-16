@@ -13,12 +13,16 @@ gettext-build:
 	python3 setup.py compile_catalog --directory vula/locale --locale en_US --domain ui
 	python3 setup.py compile_catalog --directory vula/locale --locale en_US --domain ui.view
 
+
+# This requires `apt install python3-build python3-venv`
 .PHONY: pypi-build
 pypi-build:
 	python3 -m build
 
+# This requires `apt install python3-build python3-venv`
 .PHONY: pypi-upload
 pypi-upload:
+	python3 -m twine check dist/*$(VERSION)*
 	python3 -m twine upload --repository pypi dist/*$(VERSION)*
 
 .PHONY: deb
