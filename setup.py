@@ -82,13 +82,13 @@ linux_data_files = [
     (
         "/usr/share/applications",
         [
-            "vula/frontend/desktop/vula.desktop"
+            "misc/linux-desktop/vula.desktop"
         ]
     ),
     (
         "/usr/share/icons",
         [
-            "vula/frontend/desktop/vula_gui_icon.png"
+            "misc/linux-desktop/vula_gui_icon.png"
         ]
     ),
     (
