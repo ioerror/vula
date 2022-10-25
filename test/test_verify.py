@@ -19,7 +19,20 @@ class TestVerifyCommands:
                 'hostname': 'aula.local.',
                 'e': 'False',
                 's': 'X' * 86 + '==',
-            }
+            },
+            '192.168.122.150': {
+                'r': '',
+                'pk': 'G' * 43 + '=',
+                'c': 'H' * 86 + '==',
+                'addrs': '192.168.122.150',
+                'vk': 'A' * 43 + '=',
+                'vf': '1638114786',
+                'dt': '86400',
+                'port': '5354',
+                'hostname': 'aula.local.',
+                'e': 'False',
+                's': 'X' * 86 + '==',
+            },
         }
 
         mockdbus = Mock()
@@ -57,3 +70,10 @@ class TestVerifyCommands:
         assert 'Y' * 43 + '=' not in output
         assert 'X' * 86 + '=' not in output
         assert 'Z' * 86 + '=' not in output
+
+    def test_my_descriptor(self, capsys):
+        verify = self.create_verify_commands()
+        verify.my_descriptor()
+        output = capsys.readouterr().out
+        assert 'Descriptor for 192.168.122.140:' in output
+        assert 'Descriptor for 192.168.122.150' in output

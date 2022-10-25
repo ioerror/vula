@@ -42,7 +42,7 @@ sast:
   script:
     - make sast-analysis
   artifacts:
-    when: always 
+    when: always
     paths:
       - ./report-*.txt
 
