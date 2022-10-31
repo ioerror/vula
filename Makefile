@@ -72,7 +72,7 @@ check-black:
 
 .PHONY: flake8
 flake8:
-	pipenv run flake8 $(FOLDER)
+	pipenv run flake8 --ignore=W503 $(FOLDER)
 
 .PHONY: mypy
 mypy:
