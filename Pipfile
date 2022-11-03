@@ -38,6 +38,7 @@ printy = "*"
 scapy = "*"
 pyshark = "*"
 atheris = "*"
+pygobject = "*"
 
 [requires]
 python_version = "3"
