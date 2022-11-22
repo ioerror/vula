@@ -1,0 +1,8 @@
+#!/usr/bin/xdg-open
+[Desktop Entry]
+Version=1.0
+Name=Vula Tray
+Type=Application
+Terminal=false
+Exec=sh -c 'vula tray'
+Icon=/usr/share/icons/vula_gui_icon.png

@@ -17,12 +17,13 @@ a debianized version of our Python package using the `pypi-install` tool.
 To install the dependencies required for building vula packages yourself, or
 for installing a debian package via `pypi-install`, run this command:
 
-* `sudo apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot gcc make python3-all python3-all-dev python3-click python3-cpuinfo python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-setuptools-scm python3-stdeb python3-systemd python3-toml python3-yaml python3-zeroconf python3-babel python3-tk python-all wireguard-tools`
+* `sudo apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot gcc make python3-all python3-all-dev python3-click python3-cpuinfo python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-setuptools-scm python3-stdeb python3-systemd python3-toml python3-yaml python3-zeroconf python3-babel python3-tk python-all wireguard-tools python3-sphinx python3-xlib python3-pillow gir1.2-ayatanaappindicator3-0.1`
 * `sudo pip install sibc`
 
-You need `python3-click` module version 8.+, `apt` might install the latest version, 
-but will fail to install version 8.+. You need to remove the installed version and 
+You need `python3-click` module version 8.+, `apt` might install the latest version,
+but will fail to install version 8.+. You need to remove the installed version and
 reinstall the `click` module using `pypi`:
+
 * `sudo apt-get remove python3-click`
 * `sudo pypi-install click`
 
@@ -37,10 +38,13 @@ packages from many packages available on the Python Package Index. This is
 currently our recommended way for users of Debian and Ubuntu to install vula
 and any Python dependencies which are not included with your distribution. On
 Debian 11 or Ubuntu 21.x, after running the above `apt` command, simply run
-these three commands:
+these four commands:
 
 ```
 sudo pypi-install sibc
+# DEB_BUILD_OPTIONS=nocheck skips running tests as pystray on PyPI doesn't
+# have them included and causes the build to fail.
+sudo DEB_BUILD_OPTIONS=nocheck pypi-install pystray
 sudo pypi-install vula_libnss
 sudo pypi-install vula
 ```
@@ -52,6 +56,12 @@ start the `vula-organize` service.
 On older distributions it may be necessary to `pypi-install` some other
 packages such as `zeroconf` and `pyroute2`. Accurate installation instructions
 for Ubuntu 20.04 should be restored here soon.
+
+For working system tray support on the Gnome desktop environment it may be
+necessary to install the Ubuntu AppIndicators extension:
+
+* `sudo apt-get install gnome-shell-extension-appindicator`
+* `gnome-extensions enable ubuntu-appindicators@ubuntu.com`
 
 ## option 1: build and install Debian Packages from a git checkout
 

@@ -16,6 +16,7 @@ from . import (  # noqa: F40
     wg,
     engine,
     common,
+    tray,
 )
 
 from .notclick import Debuggable

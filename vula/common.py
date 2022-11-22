@@ -11,6 +11,7 @@ from base64 import b64decode, b64encode
 import yaml
 import json
 import copy
+import re
 from ipaddress import ip_address, ip_network
 from pathlib import Path
 import pydbus
@@ -1127,6 +1128,19 @@ pprint_bytes = lambda b: sfmt(
 format_byte_stats = lambda stats: {
     k: pprint_bytes(v) for k, v in stats.items()
 }
+
+
+def escape_ansi(line: str) -> str:
+    """
+    Removes ANSI escape sequences from the string.
+
+    >>> escape_ansi("\033[0;31mclean\033[0m")
+    'clean'
+    >>> escape_ansi("clean")
+    'clean'
+    """
+    ansi_escape = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
+    return ansi_escape.sub('', line)
 
 
 if __name__ == "__main__":

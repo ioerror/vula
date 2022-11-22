@@ -1,5 +1,5 @@
 [build-system]
-requires= ["click", "cryptography", "hkdf", "pynacl", "pydbus", "pyroute2", "qrcode", "schema", "setuptools", "sibc", "pyyaml", "zeroconf"]
+requires= ["click", "cryptography", "hkdf", "pynacl", "pydbus", "pyroute2", "qrcode", "schema", "setuptools", "sibc", "pyyaml", "zeroconf", "pystray", "Pillow"]
 
 [tool.black]
 line-length = 79
