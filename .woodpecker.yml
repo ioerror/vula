@@ -1,0 +1,74 @@
+pipeline:
+
+  # --------------------- static analysis group ---------------------
+  check:
+    group: static-analysis
+    image: python:3.8.12-slim-bullseye
+    commands:
+      - PATH=$PATH:~/.local/bin
+      - apt update
+      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+      - python -m pip install --user pipx
+      - python -m pipx ensurepath
+      - pipx install pipenv
+      - pipenv install --dev --skip-lock
+      - make check
+
+  sast:
+    group: static-analysis
+    image: python:3.8.12-slim-bullseye
+    commands:
+      - PATH=$PATH:~/.local/bin
+      - apt update
+      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+      - python -m pip install --user pipx
+      - python -m pipx ensurepath
+      - pipx install pipenv
+      - pipenv install --dev --skip-lock
+      - make sast-analysis
+
+  # --------------------- test group ---------------------
+  pytest:
+    group: test
+    image: python:3.8.12-slim-bullseye
+    commands:
+      - PATH=$PATH:~/.local/bin
+      - apt update
+      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+      - python -m pip install --user pipx
+      - python -m pipx ensurepath
+      - pipx install pipenv
+      - pipenv install --dev --skip-lock
+      - make pytest
+  
+  pytest-coverage:
+    group: test
+    image: python:3.8.12-slim-bullseye
+    commands:
+      - PATH=$PATH:~/.local/bin
+      - apt update
+      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+      - python -m pip install --user pipx
+      - python -m pipx ensurepath
+      - pipx install pipenv
+      - pipenv install --dev --skip-lock
+      - make pytest-coverage
+  
+  ping-test:
+    group: test
+    image: quay.io/podman/stable:latest
+    commands:
+      - dnf install -y make python-setuptools git-core
+      - cd podman && make test-ping
+
+  # --------------------- build group ---------------------
+  build:
+    group: build
+    image: python:3.8.12-slim-bullseye
+    commands:
+      - . $(pipenv --venv)/bin/activate
+      - apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot git make python3-setuptools rpm
+      - make deb
+      - dpkg -I deb_dist/*.deb
+      - make rpm
+      - rpm -qpl dist/*.rpm
