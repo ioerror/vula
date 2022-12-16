@@ -1,0 +1,33 @@
+pipeline:
+  pytest:
+    group: test
+    image: python:3.8.12-slim-bullseye
+    commands:
+      - PATH=$PATH:~/.local/bin
+      - apt update
+      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+      - python -m pip install --user pipx
+      - python -m pipx ensurepath
+      - pipx install pipenv
+      - pipenv install --dev --skip-lock
+      - make pytest
+  
+  pytest-coverage:
+    group: test
+    image: python:3.8.12-slim-bullseye
+    commands:
+      - PATH=$PATH:~/.local/bin
+      - apt update
+      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+      - python -m pip install --user pipx
+      - python -m pipx ensurepath
+      - pipx install pipenv
+      - pipenv install --dev --skip-lock
+      - make pytest-coverage
+  
+  ping-test:
+    group: test
+    image: quay.io/podman/stable:latest
+    commands:
+      - dnf install -y make python-setuptools git-core
+      - cd podman && make test-ping
