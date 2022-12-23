@@ -2,8 +2,6 @@ pipeline:
   pytest:
     group: test
     image: python:3.8.12-slim-bullseye
-    environment:
-      - CI=true
     commands:
       - export CI=true
       - PATH=$PATH:~/.local/bin
@@ -18,8 +16,6 @@ pipeline:
   pytest-coverage:
     group: test
     image: python:3.8.12-slim-bullseye
-    environment:
-      - CI=true
     commands:
       - export CI=true
       - PATH=$PATH:~/.local/bin
