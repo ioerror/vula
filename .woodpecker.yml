@@ -2,6 +2,8 @@ pipeline:
   pytest:
     group: test
     image: python:3.8.12-slim-bullseye
+    environment:
+      - CI=true
     commands:
       - PATH=$PATH:~/.local/bin
       - apt update
@@ -15,6 +17,8 @@ pipeline:
   pytest-coverage:
     group: test
     image: python:3.8.12-slim-bullseye
+    environment:
+      - CI=true
     commands:
       - PATH=$PATH:~/.local/bin
       - apt update
@@ -29,7 +33,7 @@ pipeline:
   # a "podman inside docker container" setup. Will raise a `cannot clone: Operation not permitted` error.
   # 
   # We could try to replace the podman containers with qemu vm's in order to run the ping-test in a woodpecker pipeline.
-  # For now we comment the ping-test job out.
+  # For now, we comment the ping-test job out.
   # 
   # ping-test:
   #   group: test
