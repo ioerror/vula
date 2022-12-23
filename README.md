@@ -42,6 +42,8 @@ for a comparison of Vula to some related projects.
 
 ### Current status
 
+[![status-badge](https://ci.codeberg.org/api/badges/vula/vula/status.svg)](https://ci.codeberg.org/vula/vula)
+
 Vula is functional today, although it has some known issues documented in
 [`STATUS.md`](https://codeberg.org/vula/vula/src/branch/main/STATUS.md). It is
 ready for daily use by people who are proficient with Linux networking and the
