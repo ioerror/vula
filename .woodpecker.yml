@@ -5,6 +5,7 @@ pipeline:
     environment:
       - CI=true
     commands:
+      - export CI=true
       - PATH=$PATH:~/.local/bin
       - apt update
       - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
@@ -20,6 +21,7 @@ pipeline:
     environment:
       - CI=true
     commands:
+      - export CI=true
       - PATH=$PATH:~/.local/bin
       - apt update
       - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
