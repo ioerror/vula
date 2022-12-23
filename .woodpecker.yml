@@ -1,8 +1,11 @@
 pipeline:
+
+  # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   pytest:
     group: test
     image: python:3.8.12-slim-bullseye
     commands:
+      - export CI=true
       - PATH=$PATH:~/.local/bin
       - apt update
       - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
@@ -12,10 +15,12 @@ pipeline:
       - pipenv install --dev --skip-lock
       - make pytest
   
+  # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   pytest-coverage:
     group: test
     image: python:3.8.12-slim-bullseye
     commands:
+      - export CI=true
       - PATH=$PATH:~/.local/bin
       - apt update
       - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
@@ -25,9 +30,15 @@ pipeline:
       - pipenv install --dev --skip-lock
       - make pytest-coverage
   
-  ping-test:
-    group: test
-    image: quay.io/podman/stable:latest
-    commands:
-      - dnf install -y make python-setuptools git-core
-      - cd podman && make test-ping
+  # This job currently fails in a woodpecker pipeline because it seems that codberg-ci/woodpecker does not support
+  # a "podman inside docker container" setup. Will raise a `cannot clone: Operation not permitted` error.
+  # 
+  # We could try to replace the podman containers with qemu vm's in order to run the ping-test in a woodpecker pipeline.
+  # For now, we comment the ping-test job out.
+  # 
+  # ping-test:
+  #   group: test
+  #   image: quay.io/podman/stable:latest
+  #   commands:
+  #     - dnf install -y make python-setuptools git-core
+  #     - cd podman && make test-ping
