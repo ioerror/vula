@@ -25,9 +25,15 @@ pipeline:
       - pipenv install --dev --skip-lock
       - make pytest-coverage
   
-  ping-test:
-    group: test
-    image: quay.io/podman/stable:latest
-    commands:
-      - dnf install -y make python-setuptools git-core
-      - cd podman && make test-ping
+  # This job currently fails in a woodpecker pipeline because it seems that codberg-ci/woodpecker does not support
+  # a "podman inside docker container" setup. Will raise a `cannot clone: Operation not permitted` error.
+  # 
+  # We could try to replace the podman containers with qemu vm's in order to run the ping-test in a woodpecker pipeline.
+  # For now we comment the ping-test job out.
+  # 
+  # ping-test:
+  #   group: test
+  #   image: quay.io/podman/stable:latest
+  #   commands:
+  #     - dnf install -y make python-setuptools git-core
+  #     - cd podman && make test-ping
