@@ -1,4 +1,6 @@
 pipeline:
+
+  # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   pytest:
     group: test
     image: python:3.8.12-slim-bullseye
@@ -13,6 +15,7 @@ pipeline:
       - pipenv install --dev --skip-lock
       - make pytest
   
+  # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   pytest-coverage:
     group: test
     image: python:3.8.12-slim-bullseye
