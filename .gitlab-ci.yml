@@ -23,7 +23,7 @@ cache:
 before_script:
   - PATH=$PATH:~/.local/bin
   - apt update
-  - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git gir1.2-ayatanaappindicator3-0.1 xvfb xauth
+  - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git gir1.2-ayatanaappindicator3-0.1 xvfb xauth portaudio19-dev python3-pyaudio
   - python -m pip install --user pipx
   - python -m pipx ensurepath
   - pipx install pipenv
