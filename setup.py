@@ -92,6 +92,27 @@ linux_data_files = [
             "misc/linux-desktop/vula_gui_icon.png"
         ]
     ),
+        (
+        "/usr/share/icons/vula",
+        [
+            "misc/images/add_ip_to_peer_entry.png",
+            "misc/images/clipboard.png",
+            "misc/images/delete.png",
+            "misc/images/edit_name_entry.png",
+            "misc/images/pin_and_verify.png",
+            "misc/images/save.png",
+            "misc/images/show_qr.png",
+            "misc/images/next.png",
+            "misc/images/previous.png",
+            "misc/images/edit.png",
+            "misc/images/save_blue.png",
+            "misc/images/cancel.png",
+            "misc/images/help.png",
+            "misc/images/repair.png",
+            "misc/images/rediscover.png",
+            "misc/images/release_gateway.png",
+        ]
+    ),
     (
         "/usr/share/dbus-1/system-services/",
         [

@@ -1,200 +1,356 @@
-import tkinter as tk
-from functools import partial
-from tkinter import ttk, simpledialog
-from tkinter.constants import W
+from tkinter import (
+    Canvas,
+    Button,
+    PhotoImage,
+    Frame,
+    Label,
+)
 
+import math
 import gettext
 
-from vula.frontend import _WIDTH, _HEIGHT, DataProvider
+from vula.frontend import DataProvider, PeerType
+from vula.frontend.overlay import PeerDetailsOverlay, PopupMessage
+from vula.frontend.constants import (
+    BACKGROUND_COLOR,
+    BACKGROUND_COLOR_CARD,
+    FONT,
+    FONT_SIZE_HEADER_2,
+    FONT_SIZE_TEXT_M,
+    FONT_SIZE_TEXT_S,
+    FONT_SIZE_TEXT_XS,
+    IMAGE_BASE_PATH,
+    TEXT_COLOR_GREEN,
+    TEXT_COLOR_GREY,
+    TEXT_COLOR_HEADER_2,
+    TEXT_COLOR_PURPLE,
+    TEXT_COLOR_YELLOW,
+    TEXT_COLOR_WHITE,
+    FONT_SIZE_TEXT_L,
+)
+from typing import List
 
 _ = gettext.gettext
 
 
-class Peers(tk.Frame):
+class Peers(Frame):
     data = DataProvider()
 
-    gui_components = []
+    peer_frames: List[Frame] = []
 
     # need to save this numbers for updating the GUI,
     # as it takes quite long for dbus to make these changes
     num_peers = 0
-    num_peers_after = 0
     num_peers_after_remove = 0
 
-    def __init__(self, parent, controller):
-        ttk.Frame.__init__(self, parent, width=_WIDTH, height=_HEIGHT)
+    # navigation to show more pages with peers if needed
+    peer_page = 1
+    peers_per_page = 5
 
+    def __init__(self, parent: Frame) -> None:
+        Frame.__init__(self, parent)
         self.app = parent
 
-        # Make the frame resizeable
-        self.pack_propagate(0)
-        self.grid_propagate(0)
-
-        # Display title of Peers view
-        label = ttk.Label(self, text="Peers", font=("Arial", 20))
-        label.grid(row=0, column=0, padx=1, pady=1, sticky=W)
-        self.display_peers(False)
-
+        self.display_header()
+        self.display_peers()
+        self.display_buttons()
         self.update_loop()
 
-    def show_messagebox(self, peer_id, peer_name):
-        # show message to ask user if they really
-        # want to remove a peer and refresh view
-        box = tk.messagebox.askyesno(
-            _("Remove"),
-            _("Remove this peer: ") + peer_name + " ?",
+    def display_header(self) -> None:
+        self.title_frame = Frame(
+            self.app, bg=BACKGROUND_COLOR, width=400, height=40
+        )
+        title = Canvas(
+            self.title_frame,
+            bg=BACKGROUND_COLOR,
+            height=40,
+            width=400,
+            bd=0,
+            highlightthickness=0,
+            relief="ridge",
+        )
+        title.place(x=0, y=0)
+        title.create_text(
+            0,
+            0,
+            anchor="nw",
+            text="Peers",
+            fill=TEXT_COLOR_HEADER_2,
+            font=(FONT, FONT_SIZE_HEADER_2),
+        )
+        self.title_frame.grid(row=0, column=0, pady=(10, 0), sticky="w")
+
+    def display_buttons(self) -> None:
+        self.buttons_frame = Frame(
+            self.app, bg=BACKGROUND_COLOR, width=400, height=80
+        )
+        self.buttons_frame.grid(row=99, column=0, sticky="w", pady=10)
+
+        input_canvas = Canvas(
+            self.buttons_frame,
+            bg=BACKGROUND_COLOR,
+            height=80,
+            width=400,
+            bd=0,
+            highlightthickness=0,
+            relief="ridge",
+        )
+        input_canvas.place(x=0, y=0)
+
+        self.button_image_previous_page = PhotoImage(
+            file=IMAGE_BASE_PATH + 'previous.png'
+        )
+        self.button_previous_page = Button(
+            master=self.buttons_frame,
+            image=self.button_image_previous_page,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: self.previous_page(),
+            relief="flat",
         )
 
-        if box:
-            self.data.delete_peer(peer_id)
-            self.num_peers_after_remove = self.num_peers - 1
-            self.display_peers(True)
-            self.display_peers(False)
-
-    def pin_verify(self, peer_id, peer_name):
-        # pin an refresh view
-        self.data.pin_and_verify(peer_id, peer_name)
-        self.display_peers(True)
-        self.display_peers(False)
-
-    def edit_peer(self, peer_id):
-        dialog = simpledialog.askstring(
-            _("Edit peer name"), _("Enter new peer name")
+        self.button_image_next_page = PhotoImage(
+            file=IMAGE_BASE_PATH + 'next.png'
+        )
+        self.button_next_page = Button(
+            master=self.buttons_frame,
+            image=self.button_image_next_page,
+            borderwidth=0,
+            highlightthickness=0,
+            command=lambda: self.next_page(),
+            relief="flat",
         )
 
-        if dialog is not None:
-            try:
-                self.data.rename_peer(peer_id, dialog)
-                self.display_peers(True)
-                self.display_peers(False)
-            except Exception as e:
-                print(e)
-
-    def add_peer(self):
-        # show dialogs to add a new peer
-        dialog = simpledialog.askstring(
-            _("+ Add peer"),
-            _(
-                "Important: It may take a few minutes for new peers to be displayed!\n"  # noqa
-                + "Enter a verification key:"
-            ),
-        )
-
-        if dialog is not None:
-            dialog_ip = simpledialog.askstring(
-                _("+ Add peer"), _("Enter IP address")
+        if math.ceil(self.num_peers / self.peers_per_page) > 1:
+            self.button_next_page.place(
+                x=321.0, y=0.0, width=79.0, height=23.0
             )
-            if dialog_ip is not None:
-                try:
-                    self.data.add_peer(dialog, dialog_ip)
-                    self.num_peers_after = self.num_peers + 1
-                except Exception as e:
-                    print(e)
 
-    def update_loop(self):
-        # function to update the GUI after adding
-        # and removing peers (checks number of peers)
+    def next_page(self) -> None:
+        self.peer_page += 1
+
+        self.button_previous_page.place(
+            x=232.0, y=0.0, width=79.0, height=23.0
+        )
+        if self.peer_page == math.ceil(self.num_peers / self.peers_per_page):
+            self.button_next_page.place_forget()
+
+        self.clear_peers()
+        self.display_peers()
+
+    def previous_page(self) -> None:
+        self.peer_page -= 1
+
+        self.button_next_page.place(x=321.0, y=0.0, width=79.0, height=23.0)
+        if self.peer_page == 1:
+            self.button_previous_page.place_forget()
+
+        self.clear_peers()
+        self.display_peers()
+
+    def display_peers(self) -> None:
         peers = self.data.get_peers()
-        if len(peers) > 0:
-            if len(peers) == self.num_peers_after:
-                try:
-                    self.display_peers(True)
-                    self.display_peers(False)
-                    self.num_peers_after = 0
-                except Exception as e:
-                    print(e)
-
-            if len(peers) == self.num_peers_after_remove:
-                try:
-                    self.display_peers(True)
-                    self.display_peers(False)
-                    self.num_peers_after_remove = 0
-                except Exception as e:
-                    print(e)
-
-        # check every second if number of peers
-        # has changed.
-        self.after(1000, self.update_loop)
-
-    def display_peers(self, clear_gui):
-        if clear_gui:
-            peers = []
-            for c in self.gui_components:
-                c.destroy()
-            self.app.update()
-            self.gui_components.clear()
-        else:
-            peers = self.data.get_peers()
-            self.num_peers = len(peers)
-
+        self.num_peers = len(peers)
         counter = 1
 
-        if len(peers) == 0:
-            no_peers_label = ttk.Label(
-                self,
-                text=_("No peers found"),
-                font=("Arial", 12),
+        if self.num_peers == 0:
+            no_peers_label = Label(
+                self.app,
+                text="No Peers to display",
+                bg=BACKGROUND_COLOR,
+                fg=TEXT_COLOR_WHITE,
+                font=(FONT, FONT_SIZE_TEXT_L),
             )
-            no_peers_label.grid(
-                row=counter, column=0, padx=1, pady=1, sticky=W
-            )
-            self.gui_components.append(no_peers_label)
-            counter += 1
+            no_peers_label.grid(row=counter, column=0, sticky="w", pady=10)
 
-        # Loop over all peers and display the content from dbus
-        for peer in peers:
-            # needed to call the button commands with arguments
-            id = peer["id"]
-            # if name of peer was changed, we need other_names for pin_verify
-            if peer["other_names"]:
-                name = peer["other_names"]
-            else:
+        # Get slice of array for current page
+        # [0:5], [5, 10] etc.
+        peers_for_page = peers[
+            (self.peer_page - 1)
+            * self.peers_per_page : (self.peer_page - 1)
+            * self.peers_per_page
+            + self.peers_per_page
+        ]
+
+        for peer in peers_for_page:
+            peer_frame = Frame(
+                self.app, bg=BACKGROUND_COLOR, width=400, height=70
+            )
+            peer_frame.grid(row=counter, column=0, sticky="w", pady=10)
+
+            canvas = Canvas(
+                peer_frame,
+                bg=BACKGROUND_COLOR,
+                height=70,
+                width=400,
+                bd=0,
+                highlightthickness=0,
+                relief="ridge",
+            )
+
+            canvas.place(x=0, y=0)
+
+            self.round_rectangle(
+                canvas, 0, 0, 400, 70, r=30, fill=BACKGROUND_COLOR_CARD
+            )
+
+            if peer["name"]:
                 name = peer["name"]
-            remove_with_arg = partial(self.show_messagebox, id, name)
-            pin_with_arg = partial(self.pin_verify, id, name)
-            edit_name = partial(self.edit_peer, id)
+            else:
+                name = peer["other_names"]
 
-            # buttons for editing/removing peers
-            btn_remove_peer = ttk.Button(
-                self, text=_("Remove"), command=remove_with_arg
+            # Peer name
+            canvas.create_text(
+                20.0,
+                10.0,
+                anchor="nw",
+                text=name,
+                fill=TEXT_COLOR_GREEN,
+                font=(FONT, FONT_SIZE_TEXT_S),
             )
-            btn_remove_peer.grid(
-                row=counter, column=3, padx=1, pady=1, sticky=W
-            )
-            btn_edit = ttk.Button(self, text=_("Edit name"), command=edit_name)
-            btn_edit.grid(row=counter, column=2, padx=1, pady=1, sticky=W)
-            btn_pin = ttk.Button(
-                self, text=_("Pin and verify"), command=pin_with_arg
-            )
-            btn_pin.grid(row=counter, column=4, padx=1, pady=1, sticky=W)
-            self.gui_components.append(btn_remove_peer)
-            self.gui_components.append(btn_edit)
-            self.gui_components.append(btn_pin)
 
-            # peer information
-            for key, value in peer.items():
-                key = ttk.Label(
-                    self,
-                    text=str(key) + ":",
-                    font=("Arial", 12),
+            # Endpoint IP
+            canvas.create_text(
+                20.0,
+                40.0,
+                anchor="nw",
+                text=peer["endpoint"],
+                fill=TEXT_COLOR_GREY,
+                font=(FONT, FONT_SIZE_TEXT_XS),
+            )
+
+            # Status labels
+            if "enabled" in peer["status"]:
+                canvas.create_text(
+                    205.0,
+                    40.0,
+                    anchor="nw",
+                    text="enabled",
+                    fill=TEXT_COLOR_YELLOW,
+                    font=(FONT, FONT_SIZE_TEXT_M),
                 )
-                key.grid(row=counter, column=0, padx=1, pady=1, sticky=W)
-                value = ttk.Label(self, text=str(value), font=("Arial", 12))
-                value.grid(row=counter, column=1, padx=1, pady=1, sticky=W)
-                counter += 1
-                self.gui_components.append(value)
-                self.gui_components.append(key)
+            if "unpinned" not in peer["status"]:
+                canvas.create_text(
+                    270.0,
+                    40.0,
+                    anchor="nw",
+                    text="pinned",
+                    fill=TEXT_COLOR_PURPLE,
+                    font=(FONT, FONT_SIZE_TEXT_M),
+                )
+            if "unverified" not in peer["status"]:
+                canvas.create_text(
+                    325.0,
+                    40.0,
+                    anchor="nw",
+                    text="verified",
+                    fill=TEXT_COLOR_GREEN,
+                    font=(FONT, FONT_SIZE_TEXT_M),
+                )
 
-            # Add a separator to split the peers
-            sep = ttk.Separator(self, orient="horizontal")
-            sep.grid(row=counter, column=0, padx=20, pady=20, sticky=W)
+            canvas.bind("<Button-1>", lambda e=_, p=peer: self.open_details(p))
+
+            self.peer_frames.append(peer_frame)
             counter += 1
-            self.gui_components.append(sep)
 
-        # button for adding new peers
-        if not clear_gui:
-            btn_add = ttk.Button(
-                self, text=_("+ Add peer"), command=self.add_peer
-            )
-            btn_add.grid(row=counter, column=0, padx=1, pady=1, sticky=W)
-            self.gui_components.append(btn_add)
+    def open_details(self, peer: PeerType) -> None:
+        popup = PeerDetailsOverlay(self.app, peer)
+        result = popup.show()
+        if result == "delete":
+            self.num_peers_after_remove = self.num_peers - 1
+            self.peer_page = 1
+            self.clear_peers()
+            self.display_peers()
+        if (
+            result == "pin_and_verify"
+            or result == "rename"
+            or result == "additional_ip"
+        ):
+            self.clear_peers()
+            self.display_peers()
+
+    def update_loop(self) -> None:
+        # function to update the GUI after
+        # removing peers (checks number of peers)
+        peers = self.data.get_peers()
+        if len(peers) > 0:
+            if (
+                len(peers) == self.num_peers_after_remove
+                or len(peers) != self.num_peers
+            ):
+                try:
+                    self.clear_peers()
+                    self.display_peers()
+                    self.num_peers_after_remove = 0
+                except Exception:
+                    PopupMessage.showPopupMessage(
+                        "Error", "Could not update peers"
+                    )
+
+        # check every 5 seconds if number of peers
+        # has changed.
+        self.after(5000, self.update_loop)
+
+    def clear_peers(self) -> None:
+        for frame in self.peer_frames:
+            frame.destroy()
+        self.app.update()
+        self.peer_frames.clear()
+
+    def round_rectangle(
+        self,
+        canvas: Canvas,
+        x: int,
+        y: int,
+        w: int,
+        h: int,
+        r=25,
+        **kwargs,
+    ) -> None:
+        xr = x + r
+        yr = y + r
+        wr = w - r
+        hr = h - r
+        points = [
+            xr,
+            y,
+            xr,
+            y,
+            wr,
+            y,
+            wr,
+            y,
+            w,
+            y,
+            w,
+            yr,
+            w,
+            yr,
+            w,
+            hr,
+            w,
+            hr,
+            w,
+            h,
+            wr,
+            h,
+            wr,
+            h,
+            xr,
+            h,
+            xr,
+            h,
+            x,
+            h,
+            x,
+            hr,
+            x,
+            hr,
+            x,
+            yr,
+            x,
+            yr,
+            x,
+            y,
+        ]
+        canvas.create_polygon(points, **kwargs, smooth=True)
