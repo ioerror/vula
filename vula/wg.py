@@ -258,6 +258,16 @@ class Interface(attrdict, yamlrepr_hl):
     """
 
     def __init__(self, name, ipr=None):
+        """
+        >>> int = Interface("test interface")
+        >>> int.name
+        'test interface'
+        >>> int._ipr # doctest: +ELLIPSIS
+        <pyroute2.iproute.linux.IPRoute object at 0x...>
+        >>> Interface(42)
+        {}
+        <BLANKLINE>
+        """
         self.log: Logger = getLogger()
         self.name = name
         self._wg = PyRoute2WireGuard()
@@ -269,6 +279,17 @@ class Interface(attrdict, yamlrepr_hl):
 
     @property
     def _get_link(self):
+        """
+        >>> custom_ipr = IPRoute()
+        >>> link_name = custom_ipr.get_links(0)[0].get_attr('IFLA_IFNAME')
+        >>> int = Interface(link_name, custom_ipr)
+        >>> link_name == int._get_link.get_attr('IFLA_IFNAME')
+        True
+
+        >>> int = Interface("random interface name")
+        >>> int._get_link
+        {}
+        """
         res = self._ipr.get_links(ifname=self.name)
         if res:
             return res[0]

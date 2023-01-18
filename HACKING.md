@@ -97,8 +97,40 @@ Note: we are long overdue for running this.
 pipenv run flake8 vula
 ```
 
-### pytest
+### Testing with pytest
 
-Our test suite runs with `pytest`. Coverage can be computed with `pytest --cov
---cov-fail-under=100` but we haven't done that recently.
+The vula test suite runs with `pytest`. The preconfiguration is saved in the file `pytest.ini`. By default, all available unit and doctests in the project directory are executed.
 
+Run the whole test suite with pipenv:
+```
+pipenv run pytest
+```
+
+Use a key (e.g. method name) to target only a subset of all available tests:
+```
+pipenv run pytest -k "yamlfile"
+```
+
+Coverage can be computed with:
+```
+pipenv run pytest --cov --cov-fail-under=100
+```
+
+Generate a html report (in `htmlcov/index.html`) which shows missed lines and statements interactively:
+```
+pipenv run pytest --cov --cov-report=html
+```
+
+# CI/CD Setup
+
+Vula currently uses two different CICD services, [GitLab](https://gitlab.ti.bfh.ch/vula/vula/-/pipelines) and [Codeberg CI](https://ci.codeberg.org/vula/vula).
+
+### Pipeline configuration
+The configuration for the Coderg CI pipeline can be found in the file `.woodpecker.yml`, while the configuration for the GitLab pipeline can be found in a file called `.gitlab-ci.yml`.
+
+While GitLab is a proven solution for pipelines, the Codeberg CI project is still in a closed testing phase. It uses [Woodpecker CI](https://woodpecker-ci.org/) as CI solution, which does not have the same extensive set of functionality as Gitlab. Some notable differences:
+- We do not have caching functionality in our Codeberg CI pipeline like we have on GitLab.
+- We cannot use keywords like `before_script` functionality in Codeberg CI, therefore the configuratin does not look very DRY.
+- We cannot upload artifacts in Codeberg CI, all jobs are currently configured to print relevant results to stdout.
+- The "ping-test" job is commented out in our Codeberg CI pipeline because of "podman inside docker container" issues, check the comments in `woodpecker.yml` for more information.
+- Pipeline runetime on Codberg CI is much longer (probably resource limitations and missing caching), the maximum runtime seems to be 1 hour.

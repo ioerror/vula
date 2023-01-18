@@ -604,6 +604,14 @@ class constraint(object):
         )
 
     def validate(self, value):
+        """
+        >>> constraint.validate(int_range(6,9), 7)
+        7
+        >>> constraint.validate(int_range(6, 9), 5)
+        Traceback (most recent call last):
+        ValueError: int_range(6, 9) check failed on False
+        """
+        # import pdb; pdb.set_trace()
         value = self.constraint(value, *self.args, **self.kwargs)
         if value is not False:
             return value
