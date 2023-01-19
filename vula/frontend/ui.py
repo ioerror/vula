@@ -1,126 +1,264 @@
-from sys import platform
-
 import tkinter as tk
-from tkinter import ttk
+from tkinter import Canvas, Frame, PhotoImage, Button
 
 import gettext
-
 from vula import common
 from vula.frontend import DataProvider
+from vula.frontend.constants import (
+    FONT,
+    FONT_SIZE_HEADER,
+    FONT_SIZE_TEXT_L,
+    HEIGHT,
+    IMAGE_BASE_PATH,
+    TEXT_COLOR_HEADER,
+    TEXT_COLOR_WHITE,
+    WIDTH,
+    BACKGROUND_COLOR,
+    FONT_SIZE_TEXT_XL,
+)
+
 from vula.frontend.view import (
-    Peers,
     Prefs,
-    Information,
+    Peers,
+)
+from vula.frontend.overlay import (
+    VerificationKeyOverlay,
+    DescriptorOverlay,
+    HelpOverlay,
 )
 
 _ = gettext.gettext
 
 
 class App(tk.Tk):
-    def __init__(self, *args, **kwargs):
-        # Create instance of dataprovider
+    def __init__(self, *args, **kwargs) -> None:
         data = DataProvider()
-
         tk.Tk.__init__(self, *args, **kwargs)
 
-        # Create parent container
-        container = ttk.Frame(self)
-        container.pack(side="top", fill="both", expand=True)
+        self.geometry("{}x{}".format(WIDTH, HEIGHT))
+        self.config(bg=BACKGROUND_COLOR)
 
-        if not platform == "linux":
-            error_label = ttk.Label(self, text=_("Your OS is not supported"))
-            error_label.pack(
-                side="top", fill="both", expand=True, ipadx=30, ipady=30
-            )
-        else:
-            status_values = data.get_status()
-            if status_values is None:
-                error_label = ttk.Label(
-                    self, text=_("Vula service is not running")
-                )
-                error_label.pack(
-                    side="top", fill="both", expand=True, ipadx=30, ipady=30
-                )
-            else:
-                # Create Menu
-                menu = tk.Menu(self)
-                self.config(menu=menu)
+        # create all of the main containers
+        header_frame = Frame(
+            self, bg=BACKGROUND_COLOR, width=1200, height=50, pady=3
+        )
+        content_frame = Frame(
+            self, bg=BACKGROUND_COLOR, width=1200, height=600, padx=3, pady=3
+        )
+        footer_frame = Frame(
+            self, bg=BACKGROUND_COLOR, width=1200, height=150, pady=30, padx=30
+        )
+        bottom_frame = Frame(
+            self, bg=BACKGROUND_COLOR, width=600, height=50, pady=3
+        )
 
-                # Add several menu points
-                menu.add_command(
-                    label=_("Settings"),
-                    command=lambda: self.show_frame(Prefs),
-                )
+        # layout all of the main containers
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
-                menu.add_command(
-                    label=_("Peers"),
-                    command=lambda: self.show_frame(Peers),
-                )
+        header_frame.grid(row=0, sticky="ew")
+        content_frame.grid(row=1, sticky="nsew")
+        footer_frame.grid(row=2, sticky="e")
+        bottom_frame.grid(row=3, sticky="s")
 
-                menu.add_command(
-                    label=_("Information"),
-                    command=lambda: self.show_frame(Information),
-                )
+        # create the center widgets
+        content_frame.grid_rowconfigure(0, weight=1)
+        content_frame.grid_columnconfigure(1, weight=1)
 
-                # Add submenu with different command
-                commands = tk.Menu(menu)
-                commands.add_command(
-                    label=_("Rediscover"),
-                    command=lambda: self.rediscover(),
-                )
-                commands.add_command(
-                    label=_("Repair"), command=lambda: self.repair()
-                )
-                commands.add_command(
-                    label=_("Release Gateway"),
-                    command=lambda: self.release_gateway(),
-                )
-                menu.add_cascade(label=_("Actions"), menu=commands)
+        pref_frame = Frame(
+            content_frame,
+            bg=BACKGROUND_COLOR,
+            width=600,
+            height=600,
+            padx=3,
+            pady=3,
+        )
+        pref_frame.grid(row=0, column=0, sticky="ns")
+        pref_frame.grid_propagate(0)
+        self.prefs = Prefs(pref_frame)
 
-                # Get the status of the different vula processes
-                state = data.get_status()
+        peers_frame = Frame(
+            content_frame,
+            bg=BACKGROUND_COLOR,
+            width=600,
+            height=600,
+            padx=3,
+            pady=3,
+        )
+        peers_frame.grid(row=0, column=1, sticky="nsew")
+        peers_frame.grid_propagate(0)
+        self.peers_new = Peers(peers_frame)
 
-                # Display the status at the bottom
-                status_label = ttk.Label(
-                    self,
-                    text=f'Publish: {_(state["publish"])} '
-                    f'\t Discover: {_(state["discover"])} '
-                    f'\t Organize: {_(state["organize"])}',
-                    font=("Arial", 15),  # noqa: E501
-                )
-                status_label.pack(side="top", fill="both", expand=True)
-                self.frames = {}
+        peers_frame.grid_columnconfigure(0, weight=1)
 
-                # Loop over all frames and set padding on every side
-                for F in (
-                    Prefs,
-                    Peers,
-                    Information,
-                ):
-                    frame = F(container, self)
-                    self.frames[F] = frame
-                    frame.grid(row=0, column=0, padx=20, pady=20, sticky="we")
+        header = Canvas(
+            header_frame,
+            bg=BACKGROUND_COLOR,
+            height=50,
+            width=1200,
+            bd=0,
+            highlightthickness=0,
+            relief="ridge",
+        )
 
-                # Show Peers as default view
-                self.show_frame(Prefs)
+        header.place(x=0, y=0)
+        header.create_text(
+            30.0,
+            10.0,
+            anchor="nw",
+            text="Dashboard",
+            fill=TEXT_COLOR_HEADER,
+            font=(FONT, FONT_SIZE_HEADER),
+        )
 
-    def show_frame(self, cont):
-        frame = self.frames[cont]
-        frame.tkraise()
+        footer_frame.grid_rowconfigure(1, weight=1)
+        footer_frame.grid_columnconfigure(1, weight=1)
 
-    def rediscover(self):
+        vk_label = tk.Label(
+            footer_frame,
+            text="Verification Key:",
+            bg=BACKGROUND_COLOR,
+            fg=TEXT_COLOR_WHITE,
+            font=(FONT, FONT_SIZE_TEXT_L),
+        )
+        vk_label.grid(row=0, column=0, sticky="w")
+
+        self.button_image = PhotoImage(file=IMAGE_BASE_PATH + 'show_qr.png')
+        vk_button = tk.Button(
+            footer_frame,
+            text="Show QR",
+            image=self.button_image,
+            borderwidth=0,
+            highlightthickness=0,
+            relief="sunken",
+            background=BACKGROUND_COLOR,
+            activebackground=BACKGROUND_COLOR,
+            activeforeground=BACKGROUND_COLOR,
+            command=lambda: self.open_vk_qr_code(),
+        )
+        vk_button.grid(row=0, column=1)
+
+        desc_label = tk.Label(
+            footer_frame,
+            text="Descriptor:",
+            bg=BACKGROUND_COLOR,
+            fg=TEXT_COLOR_WHITE,
+            font=(FONT, FONT_SIZE_TEXT_L),
+        )
+        desc_label.grid(row=1, column=0, sticky="w")
+
+        desc = DescriptorOverlay(self)
+
+        desc_button = tk.Button(
+            footer_frame,
+            text="Show QR",
+            image=self.button_image,
+            borderwidth=0,
+            highlightthickness=0,
+            relief="sunken",
+            background=BACKGROUND_COLOR,
+            activebackground=BACKGROUND_COLOR,
+            activeforeground=BACKGROUND_COLOR,
+            command=lambda: desc.openNewWindow(),
+        )
+        desc_button.grid(row=1, column=1)
+
+        # Get the status of the different vula processes
+        state = data.get_status()
+
+        # Display the status at the bottom
+        status_label = tk.Label(
+            bottom_frame,
+            text=f'Publish: {_(state["publish"])} '
+            f'\t Discover: {_(state["discover"])} '
+            f'\t Organize: {_(state["organize"])}',
+            bg=BACKGROUND_COLOR,
+            fg=TEXT_COLOR_WHITE,
+            font=(FONT, FONT_SIZE_TEXT_XL),
+        )
+        status_label.grid(row=0, column=0)
+
+        # Add different command
+        self.button_image_rediscover = PhotoImage(
+            file=IMAGE_BASE_PATH + 'rediscover.png'
+        )
+        btn_Rediscover = Button(
+            bottom_frame,
+            text="Rediscover",
+            image=self.button_image_rediscover,
+            borderwidth=0,
+            highlightthickness=0,
+            relief="sunken",
+            background=BACKGROUND_COLOR,
+            activebackground=BACKGROUND_COLOR,
+            activeforeground=BACKGROUND_COLOR,
+            command=lambda: self.rediscover(),
+        )
+        self.button_image_repair = PhotoImage(
+            file=IMAGE_BASE_PATH + 'repair.png'
+        )
+        btn_Repair = Button(
+            bottom_frame,
+            text="Repair",
+            image=self.button_image_repair,
+            command=lambda: self.repair(),
+            borderwidth=0,
+            highlightthickness=0,
+            relief="sunken",
+            background=BACKGROUND_COLOR,
+            activebackground=BACKGROUND_COLOR,
+            activeforeground=BACKGROUND_COLOR,
+        )
+        self.button_image_gate = PhotoImage(
+            file=IMAGE_BASE_PATH + 'release_gateway.png'
+        )
+        btn_Release_Gateway = Button(
+            bottom_frame,
+            text="Release Gateway",
+            image=self.button_image_gate,
+            command=lambda: self.release_gateway(),
+            borderwidth=0,
+            highlightthickness=0,
+            relief="sunken",
+            background=BACKGROUND_COLOR,
+            activebackground=BACKGROUND_COLOR,
+            activeforeground=BACKGROUND_COLOR,
+        )
+
+        info_Help = HelpOverlay(self)
+
+        self.button_image_help = PhotoImage(file=IMAGE_BASE_PATH + 'help.png')
+        btn_Help = Button(
+            bottom_frame,
+            text="Help",
+            image=self.button_image_help,
+            command=lambda: info_Help.openNewWindow(),
+            borderwidth=0,
+            highlightthickness=0,
+            relief="sunken",
+            background=BACKGROUND_COLOR,
+            activebackground=BACKGROUND_COLOR,
+            activeforeground=BACKGROUND_COLOR,
+        )
+        btn_Rediscover.grid(row=0, column=1, pady=(20, 20), padx=(40, 20))
+        btn_Repair.grid(row=0, column=2, pady=(20, 20), padx=(20, 20))
+        btn_Release_Gateway.grid(row=0, column=3, pady=(20, 20), padx=(20, 20))
+        btn_Help.grid(row=0, column=4, pady=(20, 20), padx=(20, 20))
+
+    def rediscover(self) -> None:
         common.organize_dbus_if_active().rediscover()
 
-    def release_gateway(self):
+    def release_gateway(self) -> None:
         common.organize_dbus_if_active().release_gateway()
 
-    def repair(self):
-        res = common.organize_dbus_if_active().sync(True)
-        if res:
-            print(res)
+    def repair(self) -> None:
+        common.organize_dbus_if_active().sync(True)
+
+    def open_vk_qr_code(self) -> None:
+        VerificationKeyOverlay(self)
 
 
-def main():
+def main() -> None:
     try:
         app = App()
         app.title("Vula")
