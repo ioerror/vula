@@ -238,11 +238,11 @@ class Prefs(Frame):
                 if self.show_error(res) == 1:
                     return
             # int based prefs
-            """ elif type(values) == int:
+            elif type(values) == int:
                 int_value = str(self.widgets[pref].get("1.0", "end"))
                 res = self.data.set_pref(pref, int_value)
                 if self.show_error(res) == 1:
-                    return """
+                    return
 
         self.get_prefs()
         self.show_editable = False

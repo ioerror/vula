@@ -30,7 +30,7 @@ class Prefs(yamlrepr_hl, schemattrdict):
             'ephemeral_mode': Flexibool,
             'accept_default_route': Flexibool,
             Optional('overwrite_unpinned'): Flexibool,  # TODO
-            Optional('expire_time'): int,  # TODO
+            Optional('expire_time'): Use(int),  # TODO
             'record_events': Flexibool,
         }
     )
