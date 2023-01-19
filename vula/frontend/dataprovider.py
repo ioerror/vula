@@ -1,8 +1,7 @@
-import re
-
 import pydbus
 import yaml
 
+from vula.common import escape_ansi
 from vula.constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
 
 
@@ -11,12 +10,6 @@ class DataProvider:
         organize = pydbus.SystemBus().get(
             _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
         )
-
-        def escape_ansi(line):
-            ansi_escape = re.compile(
-                r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]"
-            )
-            return ansi_escape.sub('', line)
 
         # Get all peer ids from the dbus
         ids = organize.peer_ids("enabled")

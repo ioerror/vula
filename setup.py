@@ -82,7 +82,8 @@ linux_data_files = [
     (
         "/usr/share/applications",
         [
-            "misc/linux-desktop/vula.desktop"
+            "misc/linux-desktop/vula.desktop",
+            "misc/linux-desktop/vula-tray.desktop",
         ]
     ),
     (

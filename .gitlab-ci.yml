@@ -23,7 +23,7 @@ cache:
 before_script:
   - PATH=$PATH:~/.local/bin
   - apt update
-  - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+  - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git gir1.2-ayatanaappindicator3-0.1 xvfb xauth
   - python -m pip install --user pipx
   - python -m pipx ensurepath
   - pipx install pipenv
@@ -52,12 +52,12 @@ pytest:
   stage: Test
   allow_failure: false
   script:
-    - make pytest
+    - xvfb-run -- make pytest
 
 pytest-coverage:
   stage: Test
   script:
-    - make pytest-coverage
+    - xvfb-run -- make pytest-coverage
   artifacts:
     reports:
       coverage_report:
