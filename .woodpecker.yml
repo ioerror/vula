@@ -5,7 +5,7 @@ pipeline:
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   check:
     group: test-and-static-analysis
-    image: python:3.11.1-slim-bullseye
+    image: python:3.11.1-bullseye
     commands:
       - export CI=true
       - PATH=$PATH:~/.local/bin
@@ -20,7 +20,7 @@ pipeline:
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   sast:
     group: test-and-static-analysis
-    image: python:3.11.1-slim-bullseye
+    image: python:3.11.1-bullseye
     commands:
       - export CI=true
       - PATH=$PATH:~/.local/bin
@@ -35,7 +35,7 @@ pipeline:
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   pytest-coverage:
     group: test-and-static-analysis
-    image: python:3.11.1-slim-bullseye
+    image: python:3.11.1-bullseye
     commands:
       - export CI=true
       - PATH=$PATH:~/.local/bin
