@@ -25,7 +25,7 @@ echo "Installing on '$dist'"
 
 sibc_deps="dh-python python3-click python3-progress python3-mpmath python3-numpy python3-matplotlib python3-networkx python3-setuptools-scm python3-setuptools python3-cpuinfo python3-all build-essential fakeroot"
 
-vula_deps="wireguard-tools python3-yaml python3-click python3-nacl python3-schema python3-pip python3-pathtools make gcc python3-pydbus python3-pyroute2 python3-pytest-runner python3-pytest python3-toml python3-py python3-packaging python3-pluggy python3-hkdf python3-ifaddr python3-cryptography python3-dbus python3-pygments python3-systemd python3-qrcode python3-all python-all fakeroot build-essential dh-python debhelper python3-dev python3-zeroconf python3-stdeb python3-all-dev python3-babel python3-tk python3-sphinx python3-xlib python3-pillow gir1.2-ayatanaappindicator3-0.1"
+vula_deps="wireguard-tools python3-yaml python3-click python3-nacl python3-schema python3-pip python3-pathtools make gcc python3-pydbus python3-pyroute2 python3-pytest-runner python3-pytest python3-toml python3-py python3-packaging python3-pluggy python3-hkdf python3-ifaddr python3-cryptography python3-dbus python3-pygments python3-systemd python3-qrcode python3-all python-all fakeroot build-essential dh-python debhelper python3-dev python3-zeroconf python3-stdeb python3-all-dev python3-babel python3-tk python3-sphinx python3-xlib python3-pillow gir1.2-ayatanaappindicator3-0.1 python3-pyaudio"
 
 click_man_deps="python3-click-man click-man"
 
@@ -82,6 +82,9 @@ if [ "$dist" = "buster" ]; then
 #    pypi-install cryptography # doesn't work, but removing the version constraint altogether might?
 
 fi
+
+pypi-install ggwave
+# pip3 install ggwave
 
 pypi-install sibc
 # for latest version:

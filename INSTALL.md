@@ -46,6 +46,7 @@ sudo pypi-install sibc
 # have them included and causes the build to fail.
 sudo DEB_BUILD_OPTIONS=nocheck pypi-install pystray
 sudo pypi-install vula_libnss
+sudo pypi-install ggwave
 sudo pypi-install vula
 ```
 
