@@ -1,0 +1,73 @@
+\documentclass[a4paper,11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\hypersetup{pdfborder=0 0 0}
+
+
+\title{Vula Alternate Discovery}
+\author{Nicolo Lüscher, Yannick Stebler}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\chapter{Introduction}
+Vula currently discovers peers by broadcasting its own discriptor over mDNS. 
+If mDNS is blocked by default on a network, Vula has no way to automatically discover other peers. This branch provides a new, covert way to discover other peers by sending the descriptor as part of the normal ARP traffic over the network. This allows Vula to automatically discover new peers and is more difficult to block than mDNS. This document contains information about the new features and an analysis of the attack surface. 
+
+\chapter{General Considerations}
+The Vula Alternate Discovery project removes the dependency on mDNS. It provides an alternative way to connect to new peers automatically and without additional dependencies. The descriptor is simply broadcast over the network as part of several normal ARP packets.
+The project consists of two parts. The Alternate Discovery Publish and the Alternate Discovery Discover which are described in the following subsections:
+\section{Alternate Discovery Publish (sender)}
+Alternate Discovery Publish is the part of the project that takes its own descriptor. It then splits it into several ARP packets and sends them over the network to the Alternate Discovery Discover. 
+\section{Alternate Discovery Discover (receiver)}
+Alternate Discovery Discover sniffs on a network interface for all incoming ARP packets. As soon as it receives an ARP packet with a split descriptor, it starts to assemble it from the remaining ARP packets received one by one. The verified descriptor is then recorded as a new peer.
+\section{Dependencies}
+The Discovery Alternate project does not use any additional dependencies that are not part of the standard library. Thus, no new elements have been added to the code base.
+\section{Licensing}
+According to the GNU project (https://www.gnu.org/licenses/
+license-list.html) the MIT license (Expat license) is compatible with
+the GNU General Public License (GNU GPL), under which the Vula project is li-
+is licensed.
+And by the fact that no additional libraries were used. This means that we are quite free to use Vula and therefore also the Alternate Discovery project.
+\chapter{Security Considerations}
+Alternate discovery sends compressed, encrypted and segmented representations of the descriptor over the network. The encryption is quite weak and us used more as an obfuscation technique than a security feature. This however could be improved by future implementations of the protocol. This protocol also has raw socket privileges and can be used to sniff the traffic on a network, which might be a security concern.
+\section{Considered Attack Vectors}
+Alternate discovery can be used to send arbitrary descriptors to a Vula device. These descriptors are however not verified and have the same state as the ones sent by the traditional discovery method. It thus does not open another attack vector. By obfuscating and segmenting the data into multiple packets, the protocol could be considered more secure than the traditional mDNS Method. The packets are indistinguishable form normal ARP traffic other than the non-zero padding and the unusual frequency (normal ARP traffic does not generate 20 ARP requests in a short period of time). This means that the protocol should be hidden from normal network analysis and packet inspection.
+\newpage
+\section{Threat modeling and mitigations}
+Vula itself only provides protection against active attackers if the peers are verified. Vula alternate Discovery takes a descriptor, sends it across the network, and then adds it as a peer at another endpoint. 
+Therefore, we consider possible attacks on the receiver side of Vula alternate Discovery: 
+\begin{enumerate}
+    \item Deep packet inspection automated by router / switch / firewall
+    \item Manipulate the program function by sending a possible exploit to take control of the raw socket 
+    \item ARP packet inspections to read possible descriptors and connect to the peer itself
+\end{enumerate}
+To escape the possibility that in a network the mDNS service is disabled, and the related possibility of no longer automatically discovering new peers, Vula Alternate Discovery offers the possibility of performing an exchange of descriptors / peers via the ARP protocol. In order for an attacker to discover the descriptors exchanged on the network, the attacker must perform a deep packet inspection. In addition, Vula Alternate Discovery must provide a way so that automatically created packet inspections of routers / firewalls do not have a simple way to detect the packets and block them.
+\newline
+\newline
+To counter the first point, the descriptors were given some sort of encoding. This encription, which uses the MAC address of the sender as the key, is not so much used to encrypt the data securely, but rather as an obvuscator so that the data is not transmitted in plain text. This has the advantage that a check of the ARP packets by a router / firewall / switch can no longer lead to the fact that this detects the Alternate Discovery Packets and can thus block.
+\newline
+\newline
+To mitigate the second point, the rights of the two parts running as a service were limited to a minimum. A received ARP packet is always considered by the receiver and if a beginning of a descriptor is recognized, from the following packets this descriptor is created. The received descriptor should be checked for unicodes which could exploit the program.
+\newline
+\newline
+Currently, the third point is only very vaguely protected. The encryption of the descriptor is currently encrypted using the sender's Mac address as the key. This leads to the fact that the descriptor can be decrypted and read by all persons who receive the complete number of ARP packets. Thus, any person can also connect to all peers sent with a small effort. To defuse this possible attack surface it would be necessary to encrypt the data further and only end to end. 
+\chapter{Protocol}
+The sender sends its Vula descriptor over the network. It does this by issuing multiple fake ARB requests for a random IP address it gets form its ARP cache. The padding (or trailer) of this request gets filled with the actual information that is transmitted. This information is a compressed and encrypted version of the Vula descriptor.
+
+The receiver listens for incoming ARP traffic and searches for packets with non-zero padding. If it detects such a packet it then creates a packet stream of all packets coming from that source. It then tries to decrypt the packets. If it successfully decrypts a descriptor, it adds it into Vula via the organize dbus interface.
+
+\chapter{Proposed Solution}
+Both the sender and the receiver are running as systemd processes that aren't enabled by default. To enable them, type ´sudo systemctl start vula-publish-alt.service´ or ´sudo systemctl start vula-discover-alt.service´ respectively. The programs then can be controlled over their respective dbus interfaces.
+
+\subsubsection{local.vula.discoveralt} can be used to control the discovery process. Use the \textbf{start} method without any arguments to initiate the discovery process. The service will listen for incoming traffic and automatically insert the received desriptors into vula.
+
+
+\subsubsection{local.vula.publishalt} can be used to control the publishing process. The \textbf{start} method accepts an array of IP addresses as strings (eg. "192.168.1.1"). Those IP addresses represent the interfaces that the process publishes on.
+If the "eth0" interface for example has the IP address "192.168.1.4", you would pass '["192.168.1.4"]' as an argument to the start method. 
+It will then publish the descriptor associated with this IP every 90 seconds to the network that "eth0" is connected to.
+
+\end{document}

@@ -208,7 +208,7 @@ class Discover(object):
 #        return 0
 
 
-@click.command()
+@click.command(short_help="Layer 3 mDNS discovery daemon")
 @click.option(
     "-d",
     "--dbus/--no-dbus",

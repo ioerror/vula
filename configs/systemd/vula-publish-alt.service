@@ -1,0 +1,48 @@
+# sudo cp vula-publish-alt.service /etc/systemd/system/
+# sudo chmod 644 /etc/systemd/system/vula-publish-alt.service
+
+[Unit]
+Description=vula alt publish daemon
+After=network.target
+PartOf=vula-publish-alt.target
+
+[Service]
+Type=dbus
+BusName=local.vula.publishalt
+Slice=vula.slice
+TasksMax=24
+ExecStart=vula publish_alt
+Restart=always
+RestartSec=5s
+User=vula-publish-alt
+Group=vula
+TimeoutStartSec=infinity
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+# To make this actually deny traffic we need some stacked systemd slices with
+# the following set: IPAddressDeny=any
+# What is needed for this program to function is only multicast:
+IPAddressAllow=multicast
+PrivateTmp=yes
+#NoNewPrivileges=yes
+PrivateDevices=yes
+DevicePolicy=closed
+ProtectHome=read-only
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectKernelLogs=yes
+RestrictAddressFamilies=AF_PACKET AF_UNIX AF_NETLINK AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+InaccessiblePaths=/dev/shm
+#ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

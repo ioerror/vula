@@ -7,7 +7,9 @@ import click
 from . import (  # noqa: F40
     configure,
     discover,
+    discover_alt,
     publish,
+    publish_alt,
     organize,
     verify,
     status,
