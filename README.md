@@ -86,3 +86,8 @@ has some history about the name Vula.
 Vula is not associated with or endorsed by the
 [WireGuard](https://www.wireguard.com/) project. WireGuard is a registered
 trademark of [Jason A.  Donenfeld](https://www.zx2c4.com/).
+
+This project is funded through the [NGI Assure Fund](https://nlnet.nl/assure),
+a fund established by [NLnet](https://nlnet.nl) with financial support from the
+European Commission's [Next Generation Internet](https://ngi.eu) program. Learn
+more on the [NLnet project page](https://nlnet.nl/project/Vula#ack).
