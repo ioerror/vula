@@ -67,10 +67,15 @@ class VerifyAudio:
             output=True,
             frames_per_buffer=4096,
         )
-        stream.write(waveform, len(waveform) // 4)
-        stream.stop_stream()
-        stream.close()
-        self.py_audio.terminate()
+        try:
+            stream.write(waveform, len(waveform) // 4)
+            stream.stop_stream()
+        except SystemError as e:
+            click.echo(f"pyaudio error: {e}")
+            sys.exit(5)
+        finally:
+            stream.close()
+            self.py_audio.terminate()
 
     def receive_verification_key(self):
         stream = self.py_audio.open(
