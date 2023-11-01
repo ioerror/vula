@@ -23,7 +23,7 @@ pyaudio = ">=0.2.12"
 
 [dev-packages]
 babel = "*"
-black = "*"
+black = "==22.10.0"
 isort = "*"
 flake8 = "*"
 mypy = "*"

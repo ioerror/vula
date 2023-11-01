@@ -1,0 +1,48 @@
+# sudo cp vula-discover-alt.service /etc/systemd/system/
+# sudo chmod 644 /etc/systemd/system/vula-discover-alt.service
+
+[Unit]
+Description=vula service discovery alt daemon
+After=network.target
+PartOf=vula-discover-alt.target
+
+[Service]
+Type=dbus
+BusName=local.vula.discoveralt
+Slice=vula.slice
+TasksMax=24
+ExecStart=vula discover_alt
+Restart=always
+RestartSec=5s
+User=vula-discover-alt
+Group=vula
+TimeoutStartSec=infinity
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+# To make this actually deny traffic we need some stacked systemd slices with
+# the following set: IPAddressDeny=any
+# What is needed for this program to function is only multicast:
+IPAddressAllow=multicast
+PrivateTmp=yes
+#NoNewPrivileges=yes
+PrivateDevices=yes
+DevicePolicy=closed
+ProtectHome=read-only
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectKernelLogs=yes
+RestrictAddressFamilies=AF_PACKET AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+InaccessiblePaths=/dev/shm
+#ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

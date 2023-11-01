@@ -18,7 +18,6 @@ try:
     from stdeb.command.sdist_dsc import sdist_dsc
     from stdeb.command.bdist_deb import bdist_deb
 
-
     class sdist_dsc_with_postinst(sdist_dsc):
         def run(self):
             res = super(sdist_dsc_with_postinst, self).run()
@@ -67,10 +66,14 @@ linux_data_files = [
             "configs/systemd/vula.slice",
             "configs/systemd/vula.target",
             "configs/systemd/vula-discover.target",
+            "configs/systemd/vula-discover-alt.target",
             "configs/systemd/vula-publish.target",
+            "configs/systemd/vula-publish-alt.target",
             "configs/systemd/vula-organize-monolithic.target",
             "configs/systemd/vula-discover.service",
+            "configs/systemd/vula-discover-alt.service",
             "configs/systemd/vula-publish.service",
+            "configs/systemd/vula-publish-alt.service",
             "configs/systemd/vula-organize.service",
             "configs/systemd/vula-organize-monolithic.service",
         ],
@@ -119,6 +122,8 @@ linux_data_files = [
             'configs/dbus/local.vula.organize.service',
             'configs/dbus/local.vula.publish.service',
             'configs/dbus/local.vula.discover.service',
+            'configs/dbus/local.vula.publishalt.service',
+            'configs/dbus/local.vula.discoveralt.service',
         ],
     ),
     (
@@ -149,6 +154,9 @@ macos_data_files = [
             'configs/dbus/local.vula.organize.service',
             'configs/dbus/local.vula.publish.service',
             'configs/dbus/local.vula.discover.service',
+            'configs/dbus/local.vula.publish-alt.service',
+            'configs/dbus/local.vula.discover-alt.service',
+
         ],
     ),
     ("/usr/local/lib/sysusers.d/", ['configs/sysusers.d/vula.conf']),

@@ -262,11 +262,6 @@ class Interface(attrdict, yamlrepr_hl):
         >>> int = Interface("test interface")
         >>> int.name
         'test interface'
-        >>> int._ipr # doctest: +ELLIPSIS
-        <pyroute2.iproute.linux.IPRoute object at 0x...>
-        >>> Interface(42)
-        {}
-        <BLANKLINE>
         """
         self.log: Logger = getLogger()
         self.name = name

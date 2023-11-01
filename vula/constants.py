@@ -36,6 +36,8 @@ _DEFAULT_TABLE: int = 666
 _ORGANIZE_DBUS_NAME: str = "local.vula.organize"
 _DISCOVER_DBUS_NAME: str = "local.vula.discover"
 _PUBLISH_DBUS_NAME: str = "local.vula.publish"
+_DISCOVER_ALT_DBUS_NAME: str = "local.vula.discoveralt"
+_PUBLISH_ALT_DBUS_NAME: str = "local.vula.publishalt"
 
 # FIXME: these should not have the 1 in them, but pydbus publish() puts it
 # there.  we should figure out how to make it work with the 1 removed from the
@@ -43,6 +45,8 @@ _PUBLISH_DBUS_NAME: str = "local.vula.publish"
 _ORGANIZE_DBUS_PATH: str = "/local/vula/organize"
 _DISCOVER_DBUS_PATH: str = "/local/vula/discover"
 _PUBLISH_DBUS_PATH: str = "/local/vula/publish"
+_DISCOVER_ALT_DBUS_PATH: str = "/local/vula/discoveralt"
+_PUBLISH_ALT_DBUS_PATH: str = "/local/vula/publishalt"
 
 _LINUX_MAIN_ROUTING_TABLE = 254
 

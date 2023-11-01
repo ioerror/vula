@@ -104,7 +104,7 @@ class Publish(object):
         loop.run()
 
 
-@click.command()
+@click.command(short_help="Layer 3 mDNS publish daemon")
 def main(**kwargs):
     Publish.daemon(**kwargs)
 
