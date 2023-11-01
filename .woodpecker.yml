@@ -1,6 +1,6 @@
 # TODO: We don't have artifacts in woodpecker pipelines (There are plugins like https://woodpecker-ci.org/plugins/S3%20Plugin)
 #       so for now we should print out all results to stdout.
-pipeline:
+steps:
 
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   check:

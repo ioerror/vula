@@ -1,5 +1,5 @@
 [build-system]
-requires= ["click", "cryptography", "hkdf", "pynacl", "pydbus", "pyroute2", "qrcode", "schema", "setuptools", "sibc", "pyyaml", "zeroconf", "pystray", "Pillow",  "pyaudio", "ggwave"]
+requires= ["click", "cryptography", "hkdf", "pynacl", "pydbus", "pyroute2", "qrcode", "schema", "setuptools", "sibc", "pyyaml", "zeroconf", "pystray", "Pillow",  "pyaudio", "ggwave", "build"]
 
 [tool.black]
 line-length = 79
@@ -17,3 +17,10 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]

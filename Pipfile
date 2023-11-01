@@ -23,9 +23,9 @@ pyaudio = ">=0.2.12"
 
 [dev-packages]
 babel = "*"
-black = "22.12.0"
+black = "==22.12.0"
 isort = "*"
-flake8 = "*"
+flake8 = "==5.0.4"
 mypy = "*"
 packaging = "*"
 pylint = "*"
@@ -43,6 +43,7 @@ scapy = "*"
 pyshark = "*"
 atheris = "*"
 pygobject = "*"
+build = "*"
 
 [requires]
 python_version = "3"

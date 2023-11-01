@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 
 
+# fmt: off
 class TestX25519(TestCase):
 
     # This fails on OpenBSD
@@ -11,11 +12,28 @@ class TestX25519(TestCase):
         )
 
         keypair = X25519PrivateKey.generate()
-        self.assertIsInstance(
-            keypair,
-            cryptography.hazmat.backends.openssl.x25519._X25519PrivateKey,
-        )
+        try:
 
+            if (
+                type(keypair)
+                == cryptography.hazmat.backends.openssl.x25519._X25519PrivateKey  # noqa: E501
+            ):
+                self.assertIsInstance(
+                    keypair,
+                    cryptography.hazmat.backends.openssl.x25519._X25519PrivateKey,  # noqa: E501
+                )
+        except AttributeError:
+            if (
+                type(keypair)
+                == cryptography.hazmat.bindings._rust.openssl.x25519.X25519PrivateKey  # noqa: E501
+            ):
+                self.assertIsInstance(
+                    keypair,
+                    cryptography.hazmat.bindings._rust.openssl.x25519.X25519PrivateKey,  # noqa: E501
+                )
+
+
+# fmt: on
 
 if __name__ == '__main__':
     main()

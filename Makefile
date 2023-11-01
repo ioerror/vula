@@ -2,6 +2,9 @@ VERSION := $(shell python3 setup.py version|tail -n1)
 DEB_NAME := ./deb_dist/python3-vula_${VERSION}-1_all.deb
 RPM_NAME := ./dist/vula-$(VERSION)-1.noarch.rpm
 FOLDER = vula test podman
+PYBUILD_NAME := vula
+PYBUILD_SYSTEM := flit
+
 
 .PHONY: test
 test:
@@ -29,7 +32,9 @@ pypi-upload:
 deb: ${DEB_NAME}
 
 ${DEB_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py gettext-build
-	python3 setup.py --command-packages=stdeb.command sdist_dsc --compat=10 bdist_deb
+	python3 setup.py --command-packages=stdeb.command sdist_dsc --compat=10
+	sed -i 's/\-\-install-layout=deb//g' deb_dist/vula-$(VERSION)/debian/rules
+	cd deb_dist/vula-$(VERSION) && dpkg-buildpackage -rfakeroot -uc -us
 
 .PHONY: rpm
 rpm: ${RPM_NAME}
