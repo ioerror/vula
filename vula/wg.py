@@ -259,14 +259,13 @@ class Interface(attrdict, yamlrepr_hl):
 
     def __init__(self, name, ipr=None):
         """
-        >>> int = Interface("test interface")
-        >>> int.name
+        >>> iface = Interface("test interface")
+        >>> iface.name
         'test interface'
-        >>> int._ipr # doctest: +ELLIPSIS
+        >>> iface._ipr # doctest: +ELLIPSIS
         <pyroute2.iproute.linux.IPRoute object at 0x...>
-        >>> Interface(42)
-        {}
-        <BLANKLINE>
+        >>> len(Interface(42))
+        0
         """
         self.log: Logger = getLogger()
         self.name = name

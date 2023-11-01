@@ -29,7 +29,7 @@ pypi-upload:
 deb: ${DEB_NAME}
 
 ${DEB_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py gettext-build
-	python3 setup.py --command-packages=stdeb.command sdist_dsc bdist_deb
+	python3 setup.py --command-packages=stdeb.command sdist_dsc --compat=10 bdist_deb
 
 .PHONY: rpm
 rpm: ${RPM_NAME}
