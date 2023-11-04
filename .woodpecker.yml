@@ -5,12 +5,12 @@ steps:
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   check:
     group: test-and-static-analysis
-    image: python:3.11.1-bullseye
+    image: python:3.10-bullseye
     commands:
       - export CI=true
       - PATH=$PATH:~/.local/bin
       - apt update
-      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git portaudio19-dev
       - python -m pip install --user pipx
       - python -m pipx ensurepath
       - pipx install pipenv
@@ -20,12 +20,12 @@ steps:
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   sast:
     group: test-and-static-analysis
-    image: python:3.11.1-bullseye
+    image: python:3.10-bullseye
     commands:
       - export CI=true
       - PATH=$PATH:~/.local/bin
       - apt update
-      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git portaudio19-dev
       - python -m pip install --user pipx
       - python -m pipx ensurepath
       - pipx install pipenv
@@ -35,12 +35,12 @@ steps:
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   pytest-coverage:
     group: test-and-static-analysis
-    image: python:3.11.1-bullseye
+    image: python:3.10-bullseye
     commands:
       - export CI=true
       - PATH=$PATH:~/.local/bin
       - apt update
-      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git portaudio19-dev
       - python -m pip install --user pipx
       - python -m pipx ensurepath
       - pipx install pipenv
@@ -68,7 +68,7 @@ steps:
       - export CI=true
       - PATH=$PATH:~/.local/bin
       - apt update
-      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git
+      - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git portaudio19-dev
       - python -m pip install --user pipx
       - python -m pipx ensurepath
       - pipx install pipenv
