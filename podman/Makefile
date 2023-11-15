@@ -3,9 +3,8 @@ DEB_NAME := ../deb_dist/python3-vula_$(VERSION)-1_all.deb
 RPM_NAME := ../dist/vula-$(VERSION)-1.noarch.rpm
 NET_NAME := vula-net
 SO_NAME := /usr/local/lib64/python3.9/site-packages/lib/libnss_vula.so.2
-dist := bullseye
-#dists := buster focal hirsute bullseye impish fedora34 alpine
-dists := bullseye impish fedora34
+dist := bookworm
+dists := bookworm jammy mantic
 podman_args := --volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula --uts=private
 add_caps := --cap-add NET_ADMIN,NET_RAW
 test1 := vula-$(dist)-test1
@@ -25,20 +24,17 @@ help:
 
 build_args=
 
-ifeq ($(dist),buster)
-	build_args=--build-arg DISTRO=debian --build-arg VERSION=buster
-endif
 ifeq ($(dist),focal)
 	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=20.04
 endif
-ifeq ($(dist),hirsute)
-	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=21.04
+ifeq ($(dist),jammy)
+	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=22.04
 endif
-ifeq ($(dist),bullseye)
-	build_args=--build-arg DISTRO=debian --build-arg VERSION=bullseye
+ifeq ($(dist),mantic)
+	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=23.10
 endif
-ifeq ($(dist),impish)
-	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=21.10
+ifeq ($(dist),bookworm)
+	build_args=--build-arg DISTRO=debian --build-arg VERSION=bookworm
 endif
 
 installed_image_stamp=.dpkg-install-$(dist)-stamp
@@ -61,7 +57,7 @@ ifeq ($(dist),alpine)
 	pkgmgr=apk
 endif
 
-.deps-buster-stamp .deps-focal-stamp .deps-hirsute-stamp .deps-bullseye-stamp .deps-impish-stamp:
+.deps-bookworm-stamp .deps-focal-stamp .deps-jammy-stamp .deps-mantic-stamp:
 	cd .. && podman build -t vula-deps-$(dist) -f podman/Dockerfile.vula-deps $(build_args) .
 	touch .deps-$(dist)-stamp
 
@@ -341,7 +337,7 @@ testnet-mitm-clean-all: testnet-mitm-stop
 .PHONY: test-passive-adversary
 test-passive-adversary: testnet-mitm-start
 	sudo podman exec -it mallory python3 vula/mitm/test_passive_adversary.py banner Eve
-	sudo podman exec -itd mallory python3 vula/mitm/test_passive_adversary.py run $(shell sudo podman inspect vula-bullseye-test1 | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') $(shell sudo podman inspect vula-bullseye-test2 | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') 10 True
+	sudo podman exec -itd mallory python3 vula/mitm/test_passive_adversary.py run $(shell sudo podman inspect vula-bookworm-test1 | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') $(shell sudo podman inspect vula-bookworm-test2 | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') 10 True
 	sudo podman exec -it $(test2) ping -c 7 $(test1).local.
 	sleep 10
 	sudo podman exec -it mallory python3 vula/mitm/test_passive_adversary.py result
@@ -349,12 +345,12 @@ test-passive-adversary: testnet-mitm-start
 .PHONY: test-active-adversary
 test-active-adversary: testnet-mitm-start
 	sudo podman exec -it mallory python3 vula/mitm/test_passive_adversary.py banner Mallory
-	sudo podman exec -it vula-bullseye-test1 vula peer
+	sudo podman exec -it vula-bookworm-test1 vula peer
 	@-sudo podman exec -it $(test2) ping -c 1 $(test1).local.
-	sudo podman exec -itd mallory python3 -m vula.mitm.mdns_poison --ip $(shell sudo podman inspect mallory | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') --interesting-hosts vula-bullseye-test1,vula-bullseye-test2
+	sudo podman exec -itd mallory python3 -m vula.mitm.mdns_poison --ip $(shell sudo podman inspect mallory | grep 'IPAddress' | awk '{print $$2}' | sed '1d' | awk -F\" '{print $$2}') --interesting-hosts vula-bookworm-test1,vula-bookworm-test2
 	sleep 90
 	python3 ../vula/mitm/test_passive_adversary.py activeresult
-	sudo podman exec -it vula-bullseye-test1 vula peer
+	sudo podman exec -it vula-bookworm-test1 vula peer
 
 .PHONY: test-pytest
 test-pytest: testnet-start
@@ -434,14 +430,14 @@ clean-sudo:
 	@-podman rm mallory                     2>&1 | grep -v 'no container with name or ID'
 	@-podman stop mallory                   2>&1 | grep -v 'no container with name or ID'
 	@-podman rm mallory                     2>&1 | grep -v 'no container with name or ID'
-	@-sudo podman stop vula-bullseye-test1	2>&1 | grep -v 'no container with name or ID'
-	@-sudo podman stop vula-bullseye-test2	2>&1 | grep -v 'no container with name or ID'
-	@-sudo podman rm vula-bullseye-test1	2>&1 | grep -v 'no container with name or ID'
-	@-sudo podman rm vula-bullseye-test2	2>&1 | grep -v 'no container with name or ID'
-	@-sudo podman rmi vula-mallory-bullseye	2>&1 | grep -v 'no container with name or ID'
-	@-sudo podman rmi vula-bullseye			2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman stop vula-bookworm-test1	2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman stop vula-bookworm-test2	2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman rm vula-bookworm-test1	2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman rm vula-bookworm-test2	2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman rmi vula-mallory-bookworm	2>&1 | grep -v 'no container with name or ID'
+	@-sudo podman rmi vula-bookworm			2>&1 | grep -v 'no container with name or ID'
 	@-sudo podman network rm -f vula-net
-	@rm -vf .deps-bullseye-mitm
+	@rm -vf .deps-bookworm-mitm
 	@rm -vf ./podman/.test-passed-stamp
 	@rm -vf ./podman/.mallory-started-stamp
 	@-for dist in $(dists); do \
