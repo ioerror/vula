@@ -29,8 +29,8 @@ the LAN. Mallory is the malicious actor.
 4. Bob sends mDNS requests as multicast (5 & 6)
 Mallory sends Bob his mDNS response, using Alice’s hostname,but ensures that Alice does not get the response (7). 
 5. Alice’s mDNS response is either ignored by Bob or prevented from reaching Bob (8). 
-6. Alice and Mallory exchange the wireguard preshared keys PSK via CSIDH (9)
-7. Bob and Mallory exchange PSK via CSIDH(10)
+6. Alice and Mallory exchange the wireguard preshared keys PSK via CTIDH (9)
+7. Bob and Mallory exchange PSK via CTIDH(10)
 8. encrypted communication between Alice and Bob is routed via Mallory who can read and modify everything. (11, 12, 13, 14)
 
 For further details please view the diagram below.

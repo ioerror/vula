@@ -1,5 +1,30 @@
+[project]
+name = "vula"
+dynamic = ["version", "entry-points"]
+description = "Automatic local network encryption"
+readme = "README.md"
+requires-python = ">=3.10.4"
+keywords = ["post-quantum cryptography", "cryptography", "csidh", "ctidh", "WireGuard", "mDNS", "encryption", "post-quantum", "local-area network", "privacy", "security"]
+classifiers = ["Programming Language :: Python :: 3", "License :: OSI Approved :: GNU General Public License v3 (GPLv3)", "Operating System :: OS Independent"]
+authors = [ {email = "git@vula.link"}, {name = "Vula Authors"} ]
+maintainers = [ {email = "git@vula.link"}, {name = "Vula Authors"} ]
+dependencies = [ ]
+license = { text = "GPLv3" }
+
+[tool.setuptools.dynamic]
+version = {attr = "vula.__version__.__version__"}
+
 [build-system]
-requires= ["click", "cryptography", "hkdf", "pynacl", "pydbus", "pyroute2", "qrcode", "schema", "setuptools", "sibc", "pyyaml", "zeroconf", "pystray", "Pillow",  "pyaudio", "ggwave", "build"]
+requires = ["setuptools", "wheel", "build"]
+build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+test = ['pytest']
+audio = ['pyaudio', 'ggwave']
+
+[project.urls]
+Documentation = "https://codeberg.org/vula/vula"
+Source = "https://codeberg.org/vula/vula"
 
 [tool.black]
 line-length = 79

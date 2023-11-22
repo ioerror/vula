@@ -20,9 +20,10 @@ forward-secret point-to-point tunnels with
 [mDNS](https://tools.ietf.org/html/rfc6762) and
 [DNS-SD](https://tools.ietf.org/html/rfc6763) for local service announcements,
 and enhances the confidentiality of WireGuard tunnels by using
-[CSIDH](https://csidh.isogeny.org/), a post-quantum non-interactive key
-exchange primitive, to generate a peer-wise pre-shared key for each tunnel
-configuration.
+[CTIDH](https://ctidh.isogeny.org/software.html) implemented by
+[highctidh](https://codeberg.org/vula/highctidh), a post-quantum
+non-interactive key exchange primitive, to generate a peer-wise pre-shared key
+for each tunnel configuration.
 
 Vula's advantages over some other solutions include:
 

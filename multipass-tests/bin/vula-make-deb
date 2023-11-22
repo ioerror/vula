@@ -6,5 +6,5 @@ cd /home/ubuntu/vula
 sudo apt install -y fakeroot build-essential:native dh-python python3-all python-all debhelper
 sudo pip3 install stdeb
 python3 setup.py --command-packages=stdeb.command bdist_deb
-cd csidh-ext/csidh-velusqrt;
+cd ctidh-ext/highctidh;
 python3 setup.py --command-packages=stdeb.command bdist_deb

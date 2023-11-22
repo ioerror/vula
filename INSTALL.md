@@ -18,7 +18,7 @@ To install the dependencies required for building vula packages yourself, or
 for installing a debian package via `pypi-install`, run this command:
 
 * `sudo apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot gcc make python3-all python3-all-dev python3-click python3-cpuinfo python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-setuptools-scm python3-stdeb python3-systemd python3-toml python3-yaml python3-zeroconf python3-babel python3-tk python-all wireguard-tools python3-sphinx python3-xlib python3-pillow gir1.2-ayatanaappindicator3-0.1`
-* `sudo pip install sibc`
+* `sudo pip install highctidh`
 
 You need `python3-click` module version 8.+, `apt` might install the latest version,
 but will fail to install version 8.+. You need to remove the installed version and
@@ -41,7 +41,7 @@ Debian 11 or Ubuntu 21.x, after running the above `apt` command, simply run
 these four commands:
 
 ```
-sudo pypi-install sibc
+sudo pypi-install highctidh
 # DEB_BUILD_OPTIONS=nocheck skips running tests as pystray on PyPI doesn't
 # have them included and causes the build to fail.
 sudo DEB_BUILD_OPTIONS=nocheck pypi-install pystray
@@ -67,9 +67,9 @@ necessary to install the Ubuntu AppIndicators extension:
 ## option 1: build and install Debian Packages from a git checkout
 
 In addition to the dependencies in the `apt` command above, you will also need
-the [`sibc`](https://github.com/JJChiDguez/sibc) module. It can be installed
+the [`highctidh`](https://codeberg.org/vula/highctidh) module. It can be installed
 using `pypi-install` as shown above, or other ways as described in its
-[`README`](https://github.com/JJChiDguez/sibc#for-development).
+[`README.python.md`](https://codeberg.org/vula/highctidh/src/branch/main/README.python.md).
 
 ```
 git clone --recurse-submodules https://codeberg.org/vula/vula_libnss
@@ -86,7 +86,7 @@ make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb
 This option is not currently recommended, as a `pip install` of vula will place
 systemd and other configuration files in the wrong place. However, if you are
 interested in helping to get vula working on other distributions, `pip install
-sibc vula_libnss vula` is a place to start.
+highctidh vula_libnss vula` is a place to start.
 
 This option is available for advanced technical users - it requires manual
 setup of `[vula_libnss](https://codeberg.org/vula/vula_libnss)` after
@@ -138,14 +138,16 @@ Note that compatibility issues with RPM-based systems are collected in TODO.md.
 Same as above only rudimentary testing of the functionality has been done on arch / manjaro.
 
 The current installation process requires packages from [AUR](https://aur.archlinux.org/).
-Currently one of the vula dependencies `python-sibc-git` is also available from AUR.
+Currently one of the vula dependencies `python-highctidh` is not available from AUR.
 Installing packages from AUR is inherently dangerous, always check the PKGBUILD files.
 
 The simplest installation is using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers) like `yay`.
 
 ```
-yay -S python-sibc-git python-vula-git
+yay -S python-vula-git
 ```
+
+The `python-highctidh` module will need to be installed outside of AUR until it is packaged.
 
 In order to run `vula` commands as user you must be in a group called `sudo`. 
 On arch systems this is not a default group, you must add it manually.

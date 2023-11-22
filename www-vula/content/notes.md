@@ -11,8 +11,8 @@ dot link` requesting a copy of our current draft while it is under peer review.
 
 ## Cryptographic protocol visualization
 
-We have [modeled the Vula protocol](https://codeberg.org/vula/vula/src/branch/main/misc/vula.vp) using
-[Verifpal](https://verifpal.com/) ![Vula Verifpal model](/vula.png)
+We have [modeled the Vula protocol](./misc/vula.vp) using
+[Verifpal](https://verifpal.com/) ![Vula Verifpal model](./misc/vula.png)
 
 ## IPv4 and IPv6 limitations
 
@@ -49,26 +49,30 @@ Vula is designed as a transitionally secure post-quantum protocol, meaning that
 it does not currently resist active attacks using a quantum computer but rather
 is designed to resist an attacker that retains surveiled ciphertext in
 anticipation of having access to quantum computer at a later date. The vula
-protocol uses [CSIDH](https://csidh.isogeny.org/) to achieve non-interactive
+protocol uses [CTIDH](https://ctidh.isogeny.org/software.html) as implemented
+by [highctidh](https://codeberg.org/vula/highctidh) to achieve non-interactive
 post-quantum key agreement in much the same way that Curve25519 is used for
-contemporary security protections in the vula protocol. CSIDH is implemented in
-pure Python on the Montgomery curve by the [sibc
-library](https://github.com/JJChiDguez/sibc/). It is implemented with p512
+contemporary security protections in the vula protocol. Early versions of vula
+used CSIDH as implemented in pure Python on the Montgomery curve by the [sibc
+library](https://github.com/JJChiDguez/sibc/). It was implemented with p512
 using the hvelu formula in a dummy-free style, and it uses 10 as the exponent.
+CSIDH is now replaced by CTIDH and is now implemented with a Python library
+[highctidh](https://codeberg.org/vula/highctidh/) backed by a formally verified
+C implementation. CTIDH as used by vula has a 512-bit field size.
 
 Vula's post-quantum protection is not currently forward secret; that is to say,
 an attacker who records ciphertext and later has a quantum computer *and*
-somehow obtains a user's CSIDH secret key will be able to decrypt the traffic.
-Rotating the CSIDH key is possible, but this does not (yet) happen
+somehow obtains a user's CTIDH secret key will be able to decrypt the traffic.
+Rotating the CTIDH key is possible, but this does not (yet) happen
 automatically.
 
 CSIDH is a very new cryptographic primitive, having only been first published
 in 2018 and currently being studied by many people in the academic cryptography
-community. While we do not know of any feasible attacks against it today, it
-would be inappropriate to rely solely on such a new primitive. In the event
-that CSIDH were to be broken, the effect on vula would be a loss of
-post-quantum protection; security against attackers without quantum computers
-is not dependent on CSIDH in any way.
+community. CTIDH is even newer. While we do not know of any feasible attacks
+against it today, it would be inappropriate to rely solely on such a new
+primitive. In the event that CTIDH were to be broken, the effect on vula would
+be a loss of post-quantum protection; security against attackers without
+quantum computers is not dependent on CTIDH in any way.
 
 ## Default route encryption
 

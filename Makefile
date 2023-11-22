@@ -4,6 +4,7 @@ RPM_NAME := ./dist/vula-$(VERSION)-1.noarch.rpm
 FOLDER = vula test podman
 PYBUILD_NAME := vula
 PYBUILD_SYSTEM := flit
+DEB_BUILD_OPTIONS=nocheck
 
 
 .PHONY: test
@@ -34,7 +35,8 @@ deb: ${DEB_NAME}
 ${DEB_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py gettext-build
 	python3 setup.py --command-packages=stdeb.command sdist_dsc --compat=10
 	sed -i 's/\-\-install-layout=deb//g' deb_dist/vula-$(VERSION)/debian/rules
-	cd deb_dist/vula-$(VERSION) && dpkg-buildpackage -rfakeroot -uc -us
+	cd deb_dist/vula-$(VERSION) && DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage \
+					-rfakeroot -uc -us --sanitize-env
 
 .PHONY: rpm
 rpm: ${RPM_NAME}

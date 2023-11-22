@@ -57,7 +57,7 @@ from .constants import (
 from .configure import Configure
 
 from .notclick import DualUse
-from .csidh import hkdf, csidh_parameters, CSIDH
+from .csidh import hkdf, ctidh_parameters, ctidh
 from .peer import Descriptor, Peers, PeerCommands
 from .prefs import Prefs, PrefsCommands
 from .discover import Discover
@@ -567,7 +567,7 @@ class Organize(attrdict):
         self.log: Logger = getLogger()
         self.log.debug("Debug level logging enabled")
         self._configure = Configure(keys_conf_file=self.keys_file)
-        self._csidh_dh = None
+        self._ctidh_dh = None
         self._keys = self._configure.generate_or_read_keys()
         self.sys = Sys(self)
         self._state: OrganizeState = self._load_state()
@@ -579,19 +579,25 @@ class Organize(attrdict):
         if ctx.invoked_subcommand is None:
             self.run(monolithic=False)
 
-    def csidh_dh(self, pk):
-        if self._csidh_dh is None:
-            self.log.debug("Initializing CSIDH")
-            csidh = CSIDH(**csidh_parameters)
-            sk = self._keys.pq_csidhP512_sec_key
+    def ctidh_dh(self, pk):
+        if self._ctidh_dh is None:
+            self.log.debug("Initializing CTIDH")
+            _ctidh = ctidh(ctidh_parameters)
+            sk = bytes(self._keys.pq_ctidhP512_sec_key)
 
             @memoize
-            def _csidh_dh(pk):
-                self.log.debug("Generating CSIDH PSK for pk {}".format(pk))
-                return csidh.dh(sk, pk)
+            def _ctidh_dh(pk: bytes):
+                self.log.debug("Generating CTIDH PSK for pk {}".format(pk))
+                return _ctidh.dh(
+                    _ctidh.private_key_from_bytes(sk),
+                    _ctidh.public_key_from_bytes(pk),
+                )
 
-            self._csidh_dh = _csidh_dh
-        raw_key = self._csidh_dh(pk)
+            self._ctidh_dh = _ctidh_dh
+        raw_key = self._ctidh_dh(bytes(pk))
+        # XXX To ensure that even if CTIDH is broken, we should integrate a DH
+        # from a Curve-448 using a hybrid construction that is as secure as the
+        # most secure of either (ctidh, curve448)
         psk = hkdf(raw_key)
         return psk
 
@@ -606,10 +612,11 @@ class Organize(attrdict):
         self, ip_addrs: str, vf: int
     ) -> Descriptor:
         self.log.info("Constructing service descriptor id: %s", vf)
+        # XXX add Curve448 pk for hybrid DH
         return Descriptor(
             {
                 "pk": self._keys.wg_Curve25519_pub_key,
-                "c": self._keys.pq_csidhP512_pub_key,
+                "c": self._keys.pq_ctidhP512_pub_key,
                 "addrs": ip_addrs,
                 "vk": self._keys.vk_Ed25519_pub_key,
                 "vf": vf,

@@ -34,7 +34,7 @@ process:
 ## option 1: manually build and install Debian Packages
 
 * `sudo apt install --no-install-recommends wireguard wireguard-tools python3-yaml python3-click python3-nacl python3-schema python3-pip python3-pydbus python3-pyroute2 python3-pytest-runner python3-pytest python3-toml python3-py python3-packaging python3-pluggy python3-hkdf python3-ifaddr python3-cryptography python3-dbus python3-pygments python3-systemd python3-qrcode python3-all python-all fakeroot build-essential dh-python debhelper make gcc python3-all-dev python3-zeroconf`
-* `sudo pip3 install stdeb sibc` (note: unfortunately this step still requires installing stdeb, sibc, and its dependencies with pip as root - you can alternately build a deb of `sibc` but this procedure is not yet documented here. the stdeb version from Debian stable and Ubuntu 20.10 is insufficient, however.)
+* `sudo pip3 install stdeb highctidh` (note: unfortunately this step still requires installing stdeb, highctidh, and its dependencies with pip as root - you can alternately build a deb of `highctidh` but this procedure is not yet documented here. the stdeb version from Debian stable and Ubuntu 20.10 is insufficient, however.)
 * `git clone --recurse-submodules https://codeberg.org/vula/vula_libnss`
 * `cd vula_libnss`
 * `make deb && sudo dpkg -i deb_dist/python3-vula-libnss_*.deb`

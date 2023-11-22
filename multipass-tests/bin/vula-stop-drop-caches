@@ -3,7 +3,7 @@
 # down (which has the side effect of removing all peers and # routes).
 # it leaves the system with no services running, with the interface down, and
 # no peers known to organize.
-# The 3 keys ("vk" signing key, wg key, and csidh key) are not removed.
+# The 3 keys ("vk" signing key, wg key, and ctidh key) are not removed.
 
 if ip route get $(ip route |grep default|cut -f 3 -d " ")|grep 'dev vula'; then
     echo "It appears the host is routed over vula, so stop-drop-caches will abort now to avoid losing SSH access to VMs."

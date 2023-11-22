@@ -132,7 +132,7 @@ The following libraries are fully ipv6 compatible:
 * qrcode
 * schema
 * shutil
-* sibc.csidh
+* highctidh
 * socket
 * sys
 * systemd

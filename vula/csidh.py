@@ -1,26 +1,16 @@
 """
-*vula* CSIDH interface functions.
+*vula* CTIDH interface functions.
 """
 from hkdf import Hkdf
 from hashlib import sha512
 
-from sibc.csidh import CSIDH  # noqa: F401
+from highctidh import ctidh  # noqa: F401
 from typing import ByteString
 
 from .common import b64_bytes
 
-
-csidh_parameters = dict(
-    curvemodel='montgomery',
-    prime='p512',
-    formula='hvelu',
-    style='df',
-    exponent=10,
-    tuned=True,
-    uninitialized=False,
-    multievaluation=False,
-    verbose=False,
-)
+# ctidh field size
+ctidh_parameters = 512
 
 
 def hkdf(raw_key: ByteString) -> str:

@@ -155,9 +155,9 @@ class Sys(object):
         res = []
         if peer.enabled:
             self.log.debug("syncing enabled peer %s", peer.name)
-            csidh_psk = self.organize.csidh_dh(peer.descriptor.c)
+            ctidh_psk = self.organize.ctidh_dh(peer.descriptor.c)
             res.append(
-                self.wgi.apply_peerconfig(peer.wg_config(csidh_psk), dryrun)
+                self.wgi.apply_peerconfig(peer.wg_config(ctidh_psk), dryrun)
             )
             res.append(
                 self.sync_routes(

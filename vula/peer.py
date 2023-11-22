@@ -597,13 +597,13 @@ class Peer(schemattrdict):
     def endpoint(self):
         return "%s:%s" % (self.endpoint_addr, self.descriptor.port)
 
-    def wg_config(self: Peer, csidh_psk):
+    def wg_config(self: Peer, ctidh_psk):
         return attrdict(
             public_key=str(self.descriptor.pk),
             endpoint_addr=str(self.endpoint_addr),
             endpoint_port=self.descriptor.port,
             allowed_ips=list(map(str, self.allowed_ips)),
-            preshared_key=csidh_psk,
+            preshared_key=ctidh_psk,
         )
 
     def show(self, stats=None):

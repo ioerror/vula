@@ -4,7 +4,7 @@ from base64 import b64encode, b64decode
 from vula.peer import Descriptor
 from nacl.signing import SigningKey
 from nacl.encoding import Base64Encoder
-from vula.csidh import csidh_parameters, CSIDH
+from vula.ctidh import ctidh_parameters, ctidh
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
@@ -12,7 +12,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 class VulaKeys:
     def __init__(self):
         self._ed25519_keypair_gen()
-        self._csidh_keypair_gen()
+        self._ctidh_keypair_gen()
         self._x25519_keypair_gen()
 
     def _ed25519_keypair_gen(self):
@@ -26,12 +26,12 @@ class VulaKeys:
         verify_key = signing_key.verify_key
         self._ed25519_public = b64encode(verify_key.encode()).decode()
 
-    def _csidh_keypair_gen(self):
-        self._csidh = CSIDH(**csidh_parameters)
-        sk = self._csidh.secret_key()
-        pk = self._csidh.public_key(sk)
-        self._csidh_public = b64encode(pk).decode()
-        self._csidh_private = b64encode(sk).decode()
+    def _ctidh_keypair_gen(self):
+        self._ctidh = ctidh(ctidh_parameters)
+        sk = self._ctidh.generate_secret_key()
+        pk = self._ctidh.public_key(sk)
+        self._ctidh_public = b64encode(pk).decode()
+        self._ctidh_private = b64encode(sk).decode()
 
     def _x25519_keypair_gen(self):
         temp_key = X25519PrivateKey.generate()
@@ -51,17 +51,17 @@ class VulaKeys:
         self._x25519_private = private
         self._x25519_public = public
 
-    def get_csidh_private_raw(self) -> bytes:
-        return b64decode(self._csidh_private)
+    def get_ctidh_private_raw(self) -> bytes:
+        return b64decode(self._ctidh_private)
 
-    def get_csidh_private_b64(self) -> str:
-        return self._csidh_private
+    def get_ctidh_private_b64(self) -> str:
+        return self._ctidh_private
 
-    def get_csidh_public_raw(self) -> bytes:
-        return b64decode(self._csidh_public)
+    def get_ctidh_public_raw(self) -> bytes:
+        return b64decode(self._ctidh_public)
 
-    def get_csidh_public_b64(self) -> str:
-        return self._csidh_public
+    def get_ctidh_public_b64(self) -> str:
+        return self._ctidh_public
 
     def get_x25519_private_raw(self) -> bytes:
         return b64decode(self._x25519_private)
@@ -92,7 +92,7 @@ def forge_descriptor(
     vula_keys: VulaKeys, new_addrs: str, new_host: str, port: int
 ) -> Descriptor:
     """
-    :param vula_keys: ed25519, csidh, x25519
+    :param vula_keys: ed25519, ctidh, x25519
     :param new_addrs: 112.118.112.116, 111.118.111.110
     :param new_host: neo.local.
     :return: signed Descriptor
@@ -113,7 +113,7 @@ def forge_descriptor(
         addrs=new_addrs,
         hostname=new_host,
         pk=vula_keys.get_x25519_public_b64(),
-        c=vula_keys.get_csidh_public_b64(),
+        c=vula_keys.get_ctidh_public_b64(),
         port=port,
         dt=86400,
         vf=int(time.mktime(datetime.datetime.now().timetuple())),

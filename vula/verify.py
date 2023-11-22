@@ -3,7 +3,7 @@
  verify a peer or a set of vula peers.  This program's output is intended to
  be fed into the vula-organize daemon. It should authenticate an already
  known peer or peers and sets a bit to keep state that it has verified them.
- The QR code also includes a PSK and later will use CSIDH to automatically set
+ The QR code also includes a PSK and later will use CTIDH to automatically set
  a PSK on a pair-wise basis.
 
  The output of this program may be written to a pipe, a log file, a unix

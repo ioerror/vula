@@ -1032,10 +1032,8 @@ class KeyFile(yamlrepr_hl, schemattrdict, yamlfile):
 
     schema = Schema(
         {
-            "pq_csidhP512_sec_key": Or(
-                b64_bytes.with_len(37), b64_bytes.with_len(74)
-            ),
-            "pq_csidhP512_pub_key": b64_bytes.with_len(64),
+            "pq_ctidhP512_sec_key": b64_bytes.with_len(74),
+            "pq_ctidhP512_pub_key": b64_bytes.with_len(64),
             "vk_Ed25519_sec_key": b64_bytes.with_len(32),
             "vk_Ed25519_pub_key": b64_bytes.with_len(32),
             "wg_Curve25519_sec_key": b64_bytes.with_len(32),

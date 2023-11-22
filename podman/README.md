@@ -30,16 +30,22 @@ If you use a different distribution which is not in the default `dists` list,
 you can cleanup afterwards by specify it as the `dists` argument to the `make
 clean` target.
 
-
 | dist         | name             | pytest | ping test | PyPI packages required                                      | notes                                                                           |
 |--------------|------------------|--------|-----------|-------------------------------------------------------------|---------------------------------------------------------------------------------|
 | buster       | Debian 10        | ❌     | ❌        | sibc, vula\_libnss, stdeb, zeroconf, pyroute2, cryptography | conflicts with python3-cryptography, pyyaml, etc are not easily solved with pip |
 | focal        | Ubuntu 20.04 LTS | ✅     | ❌        | sibc, vula\_libnss, stdeb                                   | No multicast connectivity in podman containers                                  |
 | hirsute      | Ubuntu 21.04     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
-| **bullseye** | Debian 11        | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
-| **impish**   | Ubuntu 21.10     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
-| **fedora34** | Fedora 34        | ✅     | ✅        | sibc, vula\_libnss, pyroute2==0.5.14, pynacl                | manual setup required                                                           |
+| impish       | Ubuntu 21.10     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
+| jammy        | Ubuntu 22.04     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
+| **mantic**   | Ubuntu 23.10     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
+| bullseye     | Debian 11        | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
+| **bookworm** | Debian 12        | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
+| fedora34     | Fedora 34        | ✅     | ✅        | sibc, vula\_libnss, pyroute2==0.5.14, pynacl                | manual setup required                                                           |
 | alpine       | alpine:latest    | ✅     | ❌        | sibc, vula\_libnss, pyroute2==0.5.14                        | TODO                                                                            |
+
+The entries in **bold** in the table above are also the ones that have been
+tested recently, asof 2023; some of the earlier entries which were previously
+working have stopped due to external factors (such as PyPI removing an API).
 
 ## Packaging
 
@@ -47,7 +53,7 @@ clean` target.
 
 This target will build a `.deb` package of vula in `../deb_dist/` using the
 current checkout (including any uncommitted changes). It does not require root
-to run. By default, it will build using Debian `bullseye`; to build a deb using
+to run. By default, it will build using Debian `bookworm`; to build a deb using
 Ubuntu `impish` instead you can run `make clean deb dist=impish`.
 
 ### `make rpm`
@@ -59,7 +65,7 @@ for details.
 
 ## Test network
 
-### `make dist=bullseye test`
+### `make test`
 
 This will create a `vula-net` podman internal network, run vula in two
 containers connected to that network, and send a ping between them.  It will
@@ -69,8 +75,6 @@ pytest and ping, but will not restart the services in the containers.
 More advanced integration tests using podman should be implemented here,
 such as creating a router container which is in the internal network and also
 internet connected to test default route encryption functionality.
-
-The `dist=bullseye` argument can be omitted; `bullseye` is the default dist.
 
 ### `make retest`
 
@@ -83,7 +87,7 @@ This will launch a shell in the first testnet container.
 ### `make testnet-clean`
 
 This will stop and delete the testnet containers for the default distribution
-(`bullseye`), or another if specified with `dist=`.
+(`bookworm`), or another if specified with `dist=`.
 
 ### `make testnet-clean-all`
 
@@ -114,10 +118,10 @@ This example will create two test containers for each of three dists, and then
 spawn a shell from which six peers should (eventually) be visible when running
 `vula peer`:
 ```
-make dist=bullseye test
+make dist=bookworm test
 make dist=hirsute test
 make dist=impish test
-make dist=bullseye systemd-shell
+make dist=bookworm systemd-shell
 ```
 ## Vula Man-in-the-Middle Testing
 
@@ -142,11 +146,11 @@ Clean everything up
 * If you get lost in podman and stuff, here are some commands that might help.
   * ```sudo podman ps -a```
   * ```sudo podman image ls```
-  * ```sudo podman rmi vula-mallory-bullseye```
+  * ```sudo podman rmi vula-mallory-bookworm```
   * ```sudo podman rm mallory``` 
-  * ```sudo podman rm sudo podman rm vula-bullseye-test1``` 
-  * ```sudo podman rm sudo podman rm vula-bullseye-test2```
-  * ```sudo podman image rm vula-mallory-bullseye```
+  * ```sudo podman rm sudo podman rm vula-bookworm-test1``` 
+  * ```sudo podman rm sudo podman rm vula-bookworm-test2```
+  * ```sudo podman image rm vula-mallory-bookworm```
   * ```sudo podman network ls```
   * ```sudo podman exec -it mallory sh```
   * ```sudo podman image rm <25d0f69960f4> <09a2dc334328> <d40c1669cc17>```
@@ -157,7 +161,7 @@ Clean everything up
 ## Development mode
 
 The `test-*` make targets have the side effect of creating a podman image
-called `vula-$dist` (bullseye, by default), which by default contains a dpkg
+called `vula-$dist` (bookworm, by default), which by default contains a dpkg
 installation of vula. This image can be modified or replaced.
 
 ### `make editable-image`
@@ -190,6 +194,6 @@ default `dists` list, you can also specify them here to clean up after them,
 like this:
 
 ```
-make "dists=buster focal hirsute bullseye impish fedora34 alpine" clean-all
+make "dists=buster focal hirsute bookworm impish fedora34 alpine" clean-all
 ```
 
