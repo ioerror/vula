@@ -1,9 +1,9 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
 import gettext
+import tkinter as tk
+from tkinter import messagebox, ttk
+from typing import Literal
 
 from vula.frontend import DataProvider, PeerType
-from .popupMessage import PopupMessage
 from vula.frontend.constants import (
     BACKGROUND_COLOR,
     BACKGROUND_COLOR_ENTRY,
@@ -16,7 +16,8 @@ from vula.frontend.constants import (
     TEXT_COLOR_ORANGE,
     TEXT_COLOR_WHITE,
 )
-from typing import Literal
+
+from .popupMessage import PopupMessage
 
 _ = gettext.gettext
 

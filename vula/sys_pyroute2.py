@@ -1,10 +1,11 @@
-from ipaddress import ip_address, ip_network
-from pyroute2 import IPRoute
-from socket import AddressFamily
-from .wg import Interface as WgInterface
-from .constants import _LINUX_MAIN_ROUTING_TABLE, IPv4_GW_ROUTES
 import threading
-from pyroute2 import IPRSocket
+from ipaddress import ip_address, ip_network
+from socket import AddressFamily
+
+from pyroute2 import IPRoute, IPRSocket
+
+from .constants import _LINUX_MAIN_ROUTING_TABLE, IPv4_GW_ROUTES
+from .wg import Interface as WgInterface
 
 # FIXME: find where the larger canonical version of this table lives
 SCOPES = {0: 'global', 253: 'static'}

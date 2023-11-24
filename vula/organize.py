@@ -9,58 +9,55 @@ from __future__ import annotations
 
 import os
 import pdb
-from ipaddress import (
-    ip_address,
-    ip_network,
-)
-from logging import Logger, getLogger
-from platform import node
 import time
-
-from gi.repository import GLib
+from ipaddress import ip_address, ip_network
+from logging import Logger, getLogger
+from pathlib import Path
+from platform import node
 
 import click
 import pydbus
-from schema import Schema, And, Use, Optional as Optional_
-from pathlib import Path
+from gi.repository import GLib
+from schema import And
+from schema import Optional as Optional_
+from schema import Schema, Use
 
 from .common import (
+    addrs_in_subnets,
     attrdict,
-    schemattrdict,
     b64_bytes,
+    chown_like_dir_if_root,
+    jsonrepr,
+    memoize,
+    raw,
+    schemattrdict,
     yamlrepr,
     yamlrepr_hl,
-    jsonrepr,
-    addrs_in_subnets,
-    raw,
-    chown_like_dir_if_root,
-    memoize,
 )
-from .engine import Engine, Result
+from .configure import Configure
 from .constants import (
     _DEFAULT_INTERFACE,
     _DEFAULT_TABLE,
-    _FWMARK,
-    _IP_RULE_PRIORITY,
-    _DOMAIN,
-    _ORGANIZE_CONF_FILE,
-    _ORGANIZE_HOSTS_FILE,
-    _ORGANIZE_KEYS_CONF_FILE,
-    _ORGANIZE_DBUS_NAME,
     _DISCOVER_DBUS_NAME,
     _DISCOVER_DBUS_PATH,
+    _DOMAIN,
+    _FWMARK,
+    _IP_RULE_PRIORITY,
+    _ORGANIZE_CONF_FILE,
+    _ORGANIZE_DBUS_NAME,
+    _ORGANIZE_HOSTS_FILE,
+    _ORGANIZE_KEYS_CONF_FILE,
     _PUBLISH_DBUS_NAME,
     _PUBLISH_DBUS_PATH,
     _WG_PORT,
     IPv4_GW_ROUTES,
 )
-from .configure import Configure
-
-from .notclick import DualUse
-from .csidh import hkdf, ctidh_parameters, ctidh
-from .peer import Descriptor, Peers, PeerCommands
-from .prefs import Prefs, PrefsCommands
+from .csidh import ctidh, ctidh_parameters, hkdf
 from .discover import Discover
+from .engine import Engine, Result
+from .notclick import DualUse
+from .peer import Descriptor, PeerCommands, Peers
+from .prefs import Prefs, PrefsCommands
 from .publish import Publish
 from .sys import Sys
 

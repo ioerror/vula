@@ -8,10 +8,10 @@ import socket
 import struct
 import threading
 import time
-from typing import Optional
 import zlib
 from logging import Logger, getLogger
-from queue import Queue, Empty
+from queue import Empty, Queue
+from typing import Optional
 
 import click
 import nacl.secret

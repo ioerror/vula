@@ -1,54 +1,47 @@
 from __future__ import annotations
-import time
 
-import click
 import json
-
-from io import StringIO
-from datetime import timedelta
-
-from .notclick import shell_complete_helper
-
-from ipaddress import (
-    IPv4Address,
-    IPv6Address,
-    ip_network,
-)
-from nacl.signing import SigningKey, VerifyKey
-from nacl.exceptions import BadSignatureError
-
+import time
 from base64 import b64encode
-from schema import Schema, And, Regex, Use, Optional
+from datetime import timedelta
+from io import StringIO
+from ipaddress import IPv4Address, IPv6Address, ip_network
 from typing import List
 
-from .notclick import (
-    DualUse,
-    red,
-    green,
-    blue,
-    yellow,
-    bold,
-    echo_maybepager,
-)
-from .engine import Result
+import click
+from nacl.exceptions import BadSignatureError
+from nacl.signing import SigningKey, VerifyKey
+from schema import And, Optional, Regex, Schema, Use
+
 from .common import (
     Bug,
     ConsistencyError,
+    Flexibool,
+    Length,
     attrdict,
-    schemattrdict,
-    serializable,
     b64_bytes,
     comma_separated_IPs,
     comma_separated_Nets,
+    format_byte_stats,
     int_range,
-    Flexibool,
-    yamlrepr,
-    yamlrepr_hl,
+    organize_dbus_if_active,
     queryable,
     schemadict,
-    Length,
-    organize_dbus_if_active,
-    format_byte_stats,
+    schemattrdict,
+    serializable,
+    yamlrepr,
+    yamlrepr_hl,
+)
+from .engine import Result
+from .notclick import (
+    DualUse,
+    blue,
+    bold,
+    echo_maybepager,
+    green,
+    red,
+    shell_complete_helper,
+    yellow,
 )
 
 _qrcode = None

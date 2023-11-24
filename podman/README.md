@@ -32,16 +32,16 @@ clean` target.
 
 | dist         | name             | pytest | ping test | PyPI packages required                                      | notes                                                                           |
 |--------------|------------------|--------|-----------|-------------------------------------------------------------|---------------------------------------------------------------------------------|
-| buster       | Debian 10        | ❌     | ❌        | sibc, vula\_libnss, stdeb, zeroconf, pyroute2, cryptography | conflicts with python3-cryptography, pyyaml, etc are not easily solved with pip |
-| focal        | Ubuntu 20.04 LTS | ✅     | ❌        | sibc, vula\_libnss, stdeb                                   | No multicast connectivity in podman containers                                  |
-| hirsute      | Ubuntu 21.04     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
-| impish       | Ubuntu 21.10     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
-| jammy        | Ubuntu 22.04     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
-| **mantic**   | Ubuntu 23.10     | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
-| bullseye     | Debian 11        | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
-| **bookworm** | Debian 12        | ✅     | ✅        | sibc, vula\_libnss                                          |                                                                                 |
-| fedora34     | Fedora 34        | ✅     | ✅        | sibc, vula\_libnss, pyroute2==0.5.14, pynacl                | manual setup required                                                           |
-| alpine       | alpine:latest    | ✅     | ❌        | sibc, vula\_libnss, pyroute2==0.5.14                        | TODO                                                                            |
+| buster       | Debian 10        | ❌     | ❌        | highctidh, vula\_libnss, stdeb, zeroconf, pyroute2, cryptography | conflicts with python3-cryptography, pyyaml, etc are not easily solved with pip |
+| focal        | Ubuntu 20.04 LTS | ✅     | ❌        | highctidh, vula\_libnss, stdeb                                   | No multicast connectivity in podman containers                                  |
+| hirsute      | Ubuntu 21.04     | ✅     | ✅        | highctidh, vula\_libnss                                          |                                                                                 |
+| impish       | Ubuntu 21.10     | ✅     | ✅        | highctidh, vula\_libnss                                          |                                                                                 |
+| jammy        | Ubuntu 22.04     | ✅     | ✅        | highctidh, vula\_libnss                                          |                                                                                 |
+| **mantic**   | Ubuntu 23.10     | ✅     | ✅        | highctidh, vula\_libnss                                          |                                                                                 |
+| bullseye     | Debian 11        | ✅     | ✅        | highctidh, vula\_libnss                                          |                                                                                 |
+| **bookworm** | Debian 12        | ✅     | ✅        | highctidh, vula\_libnss                                          |                                                                                 |
+| fedora34     | Fedora 34        | ✅     | ✅        | highctidh, vula\_libnss, pyroute2==0.5.14, pynacl                | manual setup required                                                           |
+| alpine       | alpine:latest    | ✅     | ❌        | highctidh, vula\_libnss, pyroute2==0.5.14                        | TODO                                                                            |
 
 The entries in **bold** in the table above are also the ones that have been
 tested recently, asof 2023; some of the earlier entries which were previously

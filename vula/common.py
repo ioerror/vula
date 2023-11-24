@@ -2,26 +2,29 @@
 *vula* common functions.
 """
 from __future__ import annotations
+
+import copy
+import json
 import os
 import pdb
-from logging import Logger, getLogger
-from typing import Any, Dict, Optional
-from schema import Schema, And, Use, Or, SchemaError
-from base64 import b64decode, b64encode
-import yaml
-import json
-import copy
 import re
+from base64 import b64decode, b64encode
 from ipaddress import ip_address, ip_network
+from logging import Logger, getLogger
 from pathlib import Path
-import pydbus
+from typing import Any, Dict, Optional
+
 import click
-from .notclick import DualUse, Exit  # noqa: F401
+import pydbus
+import yaml
+from schema import And, Or, Schema, SchemaError, Use
+
 from .constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
+from .notclick import DualUse, Exit  # noqa: F401
 
 try:
     import pygments
-    from pygments import lexers, formatters  # noqa: F401
+    from pygments import formatters, lexers  # noqa: F401
 except ImportError:
     pygments = None
 

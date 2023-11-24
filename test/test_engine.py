@@ -1,8 +1,9 @@
 import unittest
+
 import schema
 
-from vula.organize import OrganizeState, SystemState
 from vula.common import raw
+from vula.organize import OrganizeState, SystemState
 
 from .test_peer import desc, mkk
 
@@ -377,8 +378,8 @@ class TestOrganizeEngine(unittest.TestCase):
             'SET', ['peers', mkk('bobvk'), 'petname'], 'alice.local'
         )
 
-        import schema
         import packaging.version as pkgv
+        import schema
 
         if pkgv.parse(schema.__version__) < pkgv.parse('0.7.3'):
             self.assertEqual(

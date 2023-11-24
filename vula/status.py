@@ -1,9 +1,9 @@
-from logging import getLogger
-from sys import platform
 import time
 from datetime import timedelta
-import click
+from logging import getLogger
+from sys import platform
 
+import click
 import pydbus
 
 try:
@@ -12,12 +12,9 @@ except ImportError:
     daemon = None
 
 from click.exceptions import Exit
-from .notclick import green, red, yellow
 
-from .constants import (
-    _ORGANIZE_DBUS_NAME,
-    _ORGANIZE_DBUS_PATH,
-)
+from .constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
+from .notclick import green, red, yellow
 
 
 @click.command(short_help="Print status")

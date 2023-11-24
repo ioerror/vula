@@ -53,7 +53,7 @@ would still need to be cross compiled and packaged into wheel packages.
 
  - [ ] Gi (pyobject and pycairo)
  - [ ] PyNaCl
- - [ ] sibc
+ - [ ] highctidh
  - [ ] cryptography
 
 The supported wheel tags are the following:

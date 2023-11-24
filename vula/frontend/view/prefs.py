@@ -1,35 +1,34 @@
-import tkinter as tk
 import gettext
-
+import tkinter as tk
 from tkinter import (
-    Canvas,
-    Label,
     Button,
-    Text,
-    Frame,
-    Scrollbar,
-    Widget,
+    Canvas,
     Event,
+    Frame,
+    Label,
     PhotoImage,
+    Scrollbar,
+    Text,
+    Widget,
 )
 from tkinter.constants import W
-from vula.frontend.overlay import PopupMessage
+
+from vula.frontend import DataProvider, PrefsType
 from vula.frontend.constants import (
     BACKGROUND_COLOR,
     BACKGROUND_COLOR_CARD,
     FONT,
     FONT_SIZE_HEADER_2,
     FONT_SIZE_TEXT_XL,
+    IMAGE_BASE_PATH,
     TEXT_COLOR_BLACK,
     TEXT_COLOR_GREEN,
     TEXT_COLOR_GREY,
     TEXT_COLOR_HEADER_2,
     TEXT_COLOR_RED,
     TEXT_COLOR_WHITE,
-    IMAGE_BASE_PATH,
 )
-
-from vula.frontend import DataProvider, PrefsType
+from vula.frontend.overlay import PopupMessage
 
 _ = gettext.gettext
 

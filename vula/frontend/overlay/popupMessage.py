@@ -4,8 +4,8 @@ from vula.frontend.constants import (
     BACKGROUND_COLOR,
     BACKGROUND_COLOR_ERROR,
     FONT,
-    TEXT_COLOR_WHITE,
     FONT_SIZE_TEXT_XL,
+    TEXT_COLOR_WHITE,
 )
 
 

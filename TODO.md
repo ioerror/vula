@@ -2,6 +2,8 @@
 
 We should migrate everything in this TODO to codeberg issues.
 
+- Update files such as `contrib/README.macOS.md` to reflect sibc to highctidh change
+
 - Update misc/vula.vp to replace csidh with ctidh to reduce confusion; proof otherwise holds
 
 - URGENT pre pypi release: determine if missing requirements.txt breaks PyPI packaging

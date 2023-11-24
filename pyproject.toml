@@ -48,4 +48,6 @@ filterwarnings = [
     "error",
     "ignore::UserWarning",
     "ignore::DeprecationWarning",
+    "ignore::_BetaConfiguration",
+    "ignore::package distutils is deprecated:DeprecationWarning",
 ]

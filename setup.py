@@ -1,13 +1,16 @@
-import setuptools
-from setuptools.command.build_ext import build_ext as hookBuild_ext
-from subprocess import check_output
+from warnings import filterwarnings
+
+filterwarnings("ignore")
 
 import os
 import time
-
-from shutil import copy2
-from sys import platform
 from glob import glob
+from shutil import copy2
+from subprocess import check_output
+from sys import platform
+
+import setuptools
+from setuptools.command.build_ext import build_ext as hookBuild_ext
 
 try:
     from babel.messages import frontend as babel
@@ -15,8 +18,8 @@ try:
 except ImportError:
     compile_catalog=None
 try:
-    from stdeb.command.sdist_dsc import sdist_dsc
     from stdeb.command.bdist_deb import bdist_deb
+    from stdeb.command.sdist_dsc import sdist_dsc
 
     class sdist_dsc_with_postinst(sdist_dsc):
         def run(self):
@@ -196,7 +199,7 @@ setuptools.setup(
     license="GPLv3",
     url="https://codeberg.org/vula/vula",
     packages=setuptools.find_packages(),
-    keywords="WireGuard, mDNS, encryption, post-quantum, local-area network",
+    keywords="WireGuard, mDNS, encryption, post-quantum, local-area network, CTIDH, CSIDH, Curve25519",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",

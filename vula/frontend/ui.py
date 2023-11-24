@@ -1,31 +1,27 @@
-import tkinter as tk
-from tkinter import Canvas, Frame, PhotoImage, Button
-
 import gettext
+import tkinter as tk
+from tkinter import Button, Canvas, Frame, PhotoImage
+
 from vula import common
 from vula.frontend import DataProvider
 from vula.frontend.constants import (
+    BACKGROUND_COLOR,
     FONT,
     FONT_SIZE_HEADER,
     FONT_SIZE_TEXT_L,
+    FONT_SIZE_TEXT_XL,
     HEIGHT,
     IMAGE_BASE_PATH,
     TEXT_COLOR_HEADER,
     TEXT_COLOR_WHITE,
     WIDTH,
-    BACKGROUND_COLOR,
-    FONT_SIZE_TEXT_XL,
-)
-
-from vula.frontend.view import (
-    Prefs,
-    Peers,
 )
 from vula.frontend.overlay import (
-    VerificationKeyOverlay,
     DescriptorOverlay,
     HelpOverlay,
+    VerificationKeyOverlay,
 )
+from vula.frontend.view import Peers, Prefs
 
 _ = gettext.gettext
 

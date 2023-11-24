@@ -1,9 +1,10 @@
-from unittest.mock import Mock
 from unittest import mock
+from unittest.mock import Mock
+
 from nacl.signing import SigningKey
-from vula.common import attrdict
 
 import vula.wg
+from vula.common import attrdict
 
 
 class TestInterface:

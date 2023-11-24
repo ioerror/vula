@@ -2,10 +2,10 @@ import tkinter as tk
 
 from vula.frontend.constants import (
     BACKGROUND_COLOR,
+    FONT,
     FONT_SIZE_TEXT_XL,
     FONT_SIZE_TEXT_XXL,
     TEXT_COLOR_WHITE,
-    FONT,
 )
 
 

@@ -1,7 +1,8 @@
 import unittest
+from base64 import b64decode, b64encode
+from ipaddress import IPv4Address, IPv6Address
+
 import schema
-from ipaddress import IPv6Address, IPv4Address
-from base64 import b64encode, b64decode
 
 from vula.common import yamlrepr
 from vula.peer import Descriptor

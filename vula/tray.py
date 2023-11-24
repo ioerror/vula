@@ -3,13 +3,13 @@ from base64 import b64decode
 from io import BytesIO
 from threading import Thread
 from time import sleep
-from typing import List, NoReturn, Optional, Any
+from typing import Any, List, NoReturn, Optional
 
 import click
-from PIL import Image
-from Xlib.error import DisplayNameError
 from gi.repository import GLib
+from PIL import Image
 from pydbus import SystemBus
+from Xlib.error import DisplayNameError
 
 from vula.common import escape_ansi
 from vula.constants import (

@@ -1,16 +1,13 @@
 from __future__ import annotations
 
-from schema import Schema, Use, Optional
+import copy
+import traceback
 from functools import reduce, wraps
 from threading import Lock
-import traceback
-import copy
-from .common import (
-    schemattrdict,
-    yamlfile,
-    yamlrepr_hl,
-    raw,
-)
+
+from schema import Optional, Schema, Use
+
+from .common import raw, schemattrdict, yamlfile, yamlrepr_hl
 
 
 class Result(yamlrepr_hl, schemattrdict):

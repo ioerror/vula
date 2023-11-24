@@ -9,29 +9,30 @@ this module.
 """
 
 from __future__ import annotations
-from logging import Logger, getLogger
+
 import time
-from typing import Tuple
+from base64 import b64decode, b64encode  # noqa: F401
 from datetime import timedelta
-import click
-from pyroute2 import (
-    WireGuard as PyRoute2WireGuard,
-    IPRoute,
-)
-from pyroute2.netlink import nla as netlink_atom
-from base64 import b64encode, b64decode  # noqa: F401
 from ipaddress import ip_address, ip_network
-from schema import Schema, And, Or, Use, Optional
+from logging import Logger, getLogger
+from typing import Tuple
+
+import click
+from pyroute2 import IPRoute
+from pyroute2 import WireGuard as PyRoute2WireGuard
+from pyroute2.netlink import nla as netlink_atom
+from schema import And, Optional, Or, Schema, Use
+
 from .common import (
-    attrdict,
     DualUse,
-    schemattrdict,
+    attrdict,
     b64_bytes,
     comma_separated_Nets,
-    serializable,
-    jsonrepr_hl,
-    yamlrepr_hl,
     format_byte_stats,
+    jsonrepr_hl,
+    schemattrdict,
+    serializable,
+    yamlrepr_hl,
 )
 
 

@@ -1,8 +1,8 @@
+import gettext
+
 import pkg_resources
 
 from .qr_code_label import QRCodeLabel
-
-import gettext
 
 locale_path = pkg_resources.resource_filename('vula', 'locale')
 lang_translations = gettext.translation(

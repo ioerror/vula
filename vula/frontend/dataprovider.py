@@ -1,9 +1,10 @@
+from typing import List, TypedDict
+
 import pydbus
 import yaml
 
 from vula.common import escape_ansi
 from vula.constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
-from typing import TypedDict, List
 
 
 class PeerType(TypedDict):

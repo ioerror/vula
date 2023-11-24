@@ -2,10 +2,10 @@ import hashlib
 import socket
 import threading
 import time
-from typing import Optional
 import zlib
 from logging import Logger, getLogger
 from queue import Empty, Queue
+from typing import Optional
 
 import click
 import nacl.secret

@@ -3,7 +3,6 @@ vula constant values
 """
 from typing import List
 
-
 _LOG_FMT: str = "%(asctime)s: %(message)s"
 _DATE_FMT: str = "%Y-%m-%d-%H:%M:%S"
 _WG_INTERFACE: str = "vula"

@@ -24,9 +24,9 @@ echo "Installing on '$dist'"
 # FIXME: some of these probably aren't needed anymore
 highcitdh_deps="dh-python python3-build python3-setuptools python3-stdeb python3-venv python3-wheel python3-pip python3-all-dev flit fakeroot gcc clang git make"
 
-vula_deps="wireguard-tools python3-yaml python3-click python3-nacl python3-schema python3-pip python3-pathtools make gcc python3-pydbus python3-pyroute2 python3-pytest-runner python3-pytest python3-toml python3-py python3-packaging python3-pluggy python3-hkdf python3-ifaddr python3-cryptography python3-dbus python3-pygments python3-systemd python3-qrcode python3-all fakeroot build-essential dh-python debhelper python3-dev python3-zeroconf python3-all-dev python3-babel python3-tk python3-sphinx python3-xlib python3-pillow gir1.2-ayatanaappindicator3-0.1 python3-pyaudio python3-stdeb"
+vula_deps="wireguard-tools python3-yaml python3-click python3-nacl python3-schema python3-pip python3-pathtools make gcc python3-pydbus python3-pyroute2 python3-pytest-runner python3-pytest python3-toml python3-py python3-packaging python3-pluggy python3-hkdf python3-ifaddr python3-cryptography python3-dbus python3-pygments python3-systemd python3-qrcode python3-all fakeroot build-essential dh-python debhelper python3-dev python3-zeroconf python3-all-dev python3-build python3-babel python3-tk python3-sphinx python3-xlib python3-pillow gir1.2-ayatanaappindicator3-0.1 python3-pyaudio python3-stdeb"
 
-# just for pipx installing stdeb from git, so we can pypi-install sibc and vula_libnss
+# just for pipx installing stdeb from git, so we can pypi-install vula_libnss
 vula_deps="$vula_deps git"
 
 click_man_deps="python3-click-man click-man"

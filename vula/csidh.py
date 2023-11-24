@@ -1,11 +1,11 @@
 """
 *vula* CTIDH interface functions.
 """
-from hkdf import Hkdf
 from hashlib import sha512
+from typing import ByteString
 
 from highctidh import ctidh  # noqa: F401
-from typing import ByteString
+from hkdf import Hkdf
 
 from .common import b64_bytes
 

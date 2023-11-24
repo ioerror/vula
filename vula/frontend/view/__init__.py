@@ -1,9 +1,9 @@
+import gettext
+
 import pkg_resources
 
 from .peers import Peers
 from .prefs import Prefs
-
-import gettext
 
 locale_path = pkg_resources.resource_filename('vula', 'locale')
 lang_translations = gettext.translation(

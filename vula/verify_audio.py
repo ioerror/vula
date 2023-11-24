@@ -1,8 +1,8 @@
-import click
 import hashlib
 import os
-
 import sys
+
+import click
 
 try:
     import ggwave

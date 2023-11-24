@@ -3,40 +3,37 @@
  WireGuard device with *wg-quick*.
 """
 
-from base64 import b64encode
-from logging import getLogger, Logger
 import os
+import time
+from base64 import b64encode
+from logging import Logger, getLogger
 from os import geteuid, mkdir, system
 from sys import platform
-import time
+
 import click
 from click.exceptions import Exit
+from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
-from cryptography.exceptions import UnsupportedAlgorithm
 
+from .csidh import ctidh, ctidh_parameters
 from .status import main as StatusCommand
-from .csidh import ctidh_parameters, ctidh
 
 try:
     from dbus import Boolean, Interface, SystemBus
 except ImportError:
     pass
-from nacl.signing import SigningKey
 from nacl.encoding import Base64Encoder
+from nacl.signing import SigningKey
 
 try:
     from systemd import daemon
 except ImportError:
     pass
 
+from .common import KeyFile, attrdict
+from .constants import _ORGANIZE_KEYS_CONF_FILE, _WG_SERVICES
 from .notclick import DualUse
-from .constants import (
-    _WG_SERVICES,
-    _ORGANIZE_KEYS_CONF_FILE,
-)
-
-from .common import attrdict, KeyFile
 
 
 @DualUse.object(

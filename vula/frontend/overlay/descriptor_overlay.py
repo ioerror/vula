@@ -1,11 +1,9 @@
+import gettext
 import json
 import tkinter as tk
 
-import gettext
-
 from vula.frontend import DataProvider
 from vula.frontend.components import QRCodeLabel
-from vula.peer import Descriptor
 from vula.frontend.constants import (
     BACKGROUND_COLOR,
     FONT,
@@ -14,6 +12,7 @@ from vula.frontend.constants import (
     TEXT_COLOR_HEADER,
     TEXT_COLOR_WHITE,
 )
+from vula.peer import Descriptor
 
 _ = gettext.gettext
 

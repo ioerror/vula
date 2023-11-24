@@ -1,10 +1,8 @@
 import tempfile
 import tkinter as tk
 from tkinter import ttk
-from vula.frontend.constants import (
-    BACKGROUND_COLOR,
-    TEXT_COLOR_WHITE,
-)
+
+from vula.frontend.constants import BACKGROUND_COLOR, TEXT_COLOR_WHITE
 
 try:
     import qrcode

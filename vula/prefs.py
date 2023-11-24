@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-import click
-import yaml
-from schema import Schema, Use, Optional
 from ipaddress import ip_network
 
+import click
+import yaml
+from schema import Optional, Schema, Use
+
 from .common import (
-    schemattrdict,
-    yamlrepr_hl,
+    DualUse,
     Flexibool,
     organize_dbus_if_active,
-    DualUse,
+    schemattrdict,
+    yamlrepr_hl,
 )
 
 

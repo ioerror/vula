@@ -1,21 +1,15 @@
-from tkinter import (
-    Canvas,
-    Button,
-    PhotoImage,
-    Frame,
-    Label,
-)
-
-import math
 import gettext
+import math
+from tkinter import Button, Canvas, Frame, Label, PhotoImage
+from typing import List
 
 from vula.frontend import DataProvider, PeerType
-from vula.frontend.overlay import PeerDetailsOverlay, PopupMessage
 from vula.frontend.constants import (
     BACKGROUND_COLOR,
     BACKGROUND_COLOR_CARD,
     FONT,
     FONT_SIZE_HEADER_2,
+    FONT_SIZE_TEXT_L,
     FONT_SIZE_TEXT_M,
     FONT_SIZE_TEXT_S,
     FONT_SIZE_TEXT_XS,
@@ -24,11 +18,10 @@ from vula.frontend.constants import (
     TEXT_COLOR_GREY,
     TEXT_COLOR_HEADER_2,
     TEXT_COLOR_PURPLE,
-    TEXT_COLOR_YELLOW,
     TEXT_COLOR_WHITE,
-    FONT_SIZE_TEXT_L,
+    TEXT_COLOR_YELLOW,
 )
-from typing import List
+from vula.frontend.overlay import PeerDetailsOverlay, PopupMessage
 
 _ = gettext.gettext
 

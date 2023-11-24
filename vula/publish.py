@@ -10,21 +10,17 @@
 
 """
 
+from ipaddress import ip_address
 from logging import Logger, getLogger
 from platform import node
 
 import click
-from zeroconf import ServiceInfo, Zeroconf, NonUniqueNameException
-
 import pydbus
 from gi.repository import GLib
-from ipaddress import ip_address
+from zeroconf import NonUniqueNameException, ServiceInfo, Zeroconf
 
-from .constants import (
-    _LABEL,
-    _PUBLISH_DBUS_NAME,
-)
 from .common import comma_separated_IPs
+from .constants import _LABEL, _PUBLISH_DBUS_NAME
 
 
 class Publish(object):

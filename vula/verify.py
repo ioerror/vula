@@ -26,22 +26,20 @@ try:
 except ImportError:
     qrcode = None
 
-import click
 import hashlib
 import json
+import sys
+
+import click
 import pydbus
 import yaml
 from click.exceptions import Exit
 from gi.repository import GLib
 
-import sys
 from .common import escape_ansi
-from .constants import (
-    _ORGANIZE_DBUS_NAME,
-    _ORGANIZE_DBUS_PATH,
-)
+from .constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
 from .engine import Result
-from .notclick import DualUse, red, green, bold
+from .notclick import DualUse, bold, green, red
 from .peer import Descriptor
 from .verify_audio import VerifyAudio
 

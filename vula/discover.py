@@ -13,27 +13,24 @@
  addresses for the local network segment are used as WireGuard peers.
 """
 
+from ipaddress import ip_address as ip_addr_parser
 from logging import Logger, getLogger
 from typing import Optional
+
 import click
-from click.exceptions import Exit
-from pyroute2 import IPRoute
-
 import pydbus
+from click.exceptions import Exit
 from gi.repository import GLib
-
+from pyroute2 import IPRoute
 from zeroconf import ServiceBrowser, ServiceInfo, ServiceListener, Zeroconf
 
-from ipaddress import ip_address as ip_addr_parser
-
-from .peer import Descriptor
-
 from .constants import (
+    _DISCOVER_DBUS_NAME,
     _LABEL,
     _ORGANIZE_DBUS_NAME,
     _ORGANIZE_DBUS_PATH,
-    _DISCOVER_DBUS_NAME,
 )
+from .peer import Descriptor
 
 
 class WireGuardServiceListener(ServiceListener):

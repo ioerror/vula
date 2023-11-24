@@ -1,21 +1,21 @@
+import gettext
 import json
 import tkinter as tk
 
-import gettext
-
-from .popupMessage import PopupMessage
 from vula.frontend import DataProvider
 from vula.frontend.components import QRCodeLabel
-from vula.peer import Descriptor
 from vula.frontend.constants import (
     BACKGROUND_COLOR,
     FONT,
     FONT_SIZE_HEADER,
     FONT_SIZE_TEXT_L,
+    IMAGE_BASE_PATH,
     TEXT_COLOR_HEADER,
     TEXT_COLOR_WHITE,
-    IMAGE_BASE_PATH,
 )
+from vula.peer import Descriptor
+
+from .popupMessage import PopupMessage
 
 _ = gettext.gettext
 

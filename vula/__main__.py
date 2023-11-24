@@ -1,27 +1,26 @@
 import os  # noqa: F401
 import sys
-import pydbus
 from logging import DEBUG, INFO, WARN, basicConfig, getLogger  # noqa: F401
 
 import click
+import pydbus
+
 from . import (  # noqa: F40
+    common,
     configure,
     discover,
     discover_alt,
-    publish,
-    publish_alt,
+    engine,
     organize,
-    verify,
-    status,
     peer,
     prefs,
-    wg,
-    engine,
-    common,
+    publish,
+    publish_alt,
+    status,
     tray,
+    verify,
+    wg,
 )
-
-from .notclick import Debuggable
 from .constants import (
     _DATE_FMT,
     _LOG_FMT,
@@ -30,8 +29,8 @@ from .constants import (
     _PUBLISH_DBUS_NAME,
     _PUBLISH_DBUS_PATH,
 )
-
 from .frontend import ui
+from .notclick import Debuggable
 
 
 @click.version_option()
