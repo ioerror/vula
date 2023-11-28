@@ -104,4 +104,4 @@ steps:
       - dpkg -I deb_dist/*.deb
       - make rpm
       - rpm -qpl dist/*.rpm
-      - make pypi-build
+      - make wheel
