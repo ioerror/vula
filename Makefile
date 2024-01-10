@@ -52,7 +52,6 @@ pytest-coverage:
 clean:
 	-rm -rf build/ dist/ vula.egg-info deb_dist vula_libnss
 	-rm vula-*.tar.gz
-	-rm Pipefile.lock
 	find vula/locale -type f -name \*.mo -delete
 
 format: black
