@@ -4,7 +4,6 @@ steps:
 
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   check:
-    group: test-and-static-analysis
     image: python:3.10-bookworm
     commands:
       - export CI=true
@@ -21,7 +20,7 @@ steps:
 
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   test:
-    group: test-and-static-analysis
+    depends_on: [check]
     image: python:3.10-bookworm
     commands:
       - export CI=true
@@ -40,7 +39,7 @@ steps:
 
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   sast:
-    group: test-and-static-analysis
+    depends_on: [check]
     image: python:3.10-bookworm
     commands:
       - export CI=true
@@ -57,7 +56,7 @@ steps:
 
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   pytest-coverage:
-    group: test-and-static-analysis
+    depends_on: [check]
     image: python:3.10-bookworm
     commands:
       - export CI=true
@@ -87,7 +86,7 @@ steps:
 
   # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   build:
-    group: test-and-static-analysis
+    depends_on: [test]
     image: python:3.10-bookworm
     commands:
       - export CI=true
