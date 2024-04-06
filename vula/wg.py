@@ -361,7 +361,7 @@ class Interface(attrdict, yamlrepr_hl):
         try:
             res: Tuple = self._wg.info(self.name)
         except Exception as ex:
-            self.log.debug("Failed to query interface %r: %r", self.name, ex)
+            self.log.warn("Failed to query interface %r: %r", self.name, ex)
             return self
 
         res = {
