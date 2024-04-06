@@ -590,7 +590,8 @@ class comma_separated_Nets(comma_separated_IPs):
         )
 
 
-class constraint(object):
+class Constraint(object):
+    "Constraint objects validate data"
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
@@ -618,12 +619,17 @@ class constraint(object):
         # import pdb; pdb.set_trace()
         value = self.constraint(value, *self.args, **self.kwargs)
         if value is not False:
+            # FIXME: this is weird, we can't have constraints which allow the value False?
             return value
         else:
             raise ValueError("%s check failed on %r" % (self, value))
 
+    def constraint(self):
+        "Constraint subclasses must implement this method"
+        raise NotImplementedError
 
-class Length(constraint):
+
+class Length(Constraint):
     """
     Constraint to check if a string length is equal to, min or max a given
     value.
@@ -632,8 +638,10 @@ class Length(constraint):
     @staticmethod
     def constraint(value, length=None, min=None, max=None):
         """
-        Validates min and max length of a given string.
-        Returns the value of constraints are met else an error is raised.
+        Validates length of a given string. Min and/or Max can be specified, or
+        a precise length.
+
+        Returns the value if constraints are met else an error is raised.
 
         >>> Length.constraint("Test", min = 3, max = 5)
         'Test'
@@ -667,7 +675,7 @@ class Length(constraint):
         return value
 
 
-class int_range(constraint):
+class int_range(Constraint):
     @staticmethod
     def constraint(value, min, max):
         """
