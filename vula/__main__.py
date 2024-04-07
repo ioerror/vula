@@ -50,8 +50,6 @@ from .notclick import Debuggable
     'log_level',
     flag_value=INFO,
     help="Set log level INFO",
-    default=True,
-    show_default=True,
 )
 @click.group(cls=Debuggable, scope=globals(), invoke_without_command=True)
 @click.pass_context
