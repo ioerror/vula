@@ -37,8 +37,8 @@ pipenv install black flake8 isort mypy pytest pytest-cov --dev --skip-lock
 ```
 
 Alternately, you can use our
-[multipass-tests](https://codeberg.org/vula/vula/src/branch/main/multipass-tests/README.md)
-scripts to easily run vula on a network of virtual machines.
+[podman test network](https://codeberg.org/vula/vula/src/branch/main/podman/README.md)
+to easily run vula in a containerized virtual network.
 
 ## Use common tools to inspect and interact with the `vula` codebase
 
