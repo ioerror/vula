@@ -1,5 +1,7 @@
 # TODO
 
+Add route before configuring wireguard peer? or validate curve points in descriptor validation?
+
 We should migrate everything in this TODO to codeberg issues.
 
 - Update files such as `contrib/README.macOS.md` to reflect sibc to highctidh change
