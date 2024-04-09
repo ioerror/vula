@@ -7,7 +7,8 @@ set -e
 apt install -y --no-install-recommends flit
 git clone https://codeberg.org/vula/highctidh/
 cd highctidh;
-git checkout v1.0.2024010701
+git checkout v1.0.2024012400
+cd src
 VERSION=`cat VERSION`;
 time make -f Makefile.packages deb
 ls -al *
