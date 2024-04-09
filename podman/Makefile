@@ -241,7 +241,7 @@ deps-systemd-shell: .deps-$(dist)-stamp
 testnet-start: .testnet-started-$(dist)-stamp
 .testnet-started-$(dist)-stamp: $(installed_image_stamp)
 	-make NET_NAME=$(NET_NAME) .create-network
-	sed -i 's/"cniVersion": "1.0.0",/"cniVersion": "0.4.0",/' ~/.config/cni/net.d/vula-net.conflist
+	-sed -i 's/"cniVersion": "1.0.0",/"cniVersion": "0.4.0",/' ~/.config/cni/net.d/vula-net.conflist
 	for c in $(test_hosts); do \
 		podman create $(podman_args) --name $$c --hostname $$c --network $(NET_NAME) $(add_caps) vula-$(dist); \
 		podman start $$c; \
