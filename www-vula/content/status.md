@@ -37,26 +37,27 @@ the most important issues to be aware of when using vula today are these:
   is improving, however, and we plan to provide strong protections against
   active attackers while using IPv6 in the near future.
 
-* Coexistence with other usage of wireguard is currently a bit complicated.
-  Activating another WireGuard interface using a typical `wg-quick`
-  configuration after `vula` is running will cause `wg-quick` to insert its
-  policy routing rules with a lower `pref` value (meaning, a higher priority)
-  which will circumvent vula's rule and prevent traffic to vula peers
-  from being protected. This can be worked around by editing the other
-  connection's `wg-quick` config to set `Table = off` and to have `PostUp` and
-  `PostDown` lines to perform all of the steps `wg-quick` normally performs,
-  but with the addition of `pref` arguments in the `ip rule add` commands
-  specifying `pref` values greater than vula's (666). Additionally, the
-  `wg-quick`-managed interface should have its `Mtu` set it 1340, to allow for
-  the overhead of running it over a vula gateway, and, at least in some
-  configurations, a route to the other wireguard endpoint must be added (which can
-  be done using the `vula peer addr add` command). With all of this carefully
-  configured, if the route to the remote peer endpoint is added to a `pinned`
-  gateway peer, this configuration can persist and the normal wireguard
-  configuration can continue working while roaming on and off of a network with
-  a vula gateway.  This will be handled much more smoothly in the future, and
-  the documentation of the current situation should improve in the nearer
-  future.
+* Coexistence with other usage of another VPN with a default route set over it
+  is currently a bit complicated. VPNs other than wireguard have not been
+  adequately investigated, but other wireguard configurations can be made to
+  cooexist with vula by following the steps described in next paragraph.
+
+  Activating a WireGuard interface using a typical `wg-quick` configuration
+  after `vula` is already running will cause `wg-quick` to insert its policy
+  routing rules with a lower `pref` value (meaning, a higher priority) which
+  will circumvent vula's rule and prevent traffic to vula peers from being
+  protected. This can be worked around by editing the other connection's
+  `wg-quick` config to set `Table = off` and to have `PostUp` and `PostDown`
+  lines to perform all of the steps `wg-quick` normally performs, but with the
+  addition of `pref` arguments in the `ip rule add` commands specifying `pref`
+  values greater than vula's (666). Additionally, the `wg-quick`-managed
+  interface should have its `Mtu` set it 1340, to allow for the overhead of
+  running it over a vula gateway.  Lastly, for inbound packets from the other
+  VPN arriving on the vula interface to be received by the wireguard listener,
+  it is necessary to run `sysctl -w net.ipv4.conf.all.rp_filter=0` and `sysctl
+  -w net.ipv4.conf.vula.rp_filter=0` to disable the reverse-path filter for the
+  vula interface. The documentation for `rp_filter` is
+[here](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/networking/ip-sysctl.rst?h=v6.1#n1555). This should be handled automatically in the future.
 
 * The `vula verify` subcommands, including QR code scanning, have bitrotted and
   are currently non-functional. Peers can be marked as `pinned` and `verified`
