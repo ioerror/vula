@@ -591,7 +591,7 @@ class comma_separated_Nets(comma_separated_IPs):
 
 
 class Constraint(object):
-    "Constraint objects validate data"
+    "Abstract base class for Schema validation directives"
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
@@ -599,20 +599,21 @@ class Constraint(object):
     def __repr__(self):
         """
         Function to return constraint object.
-        >>> constraint({4:3})
-        constraint({4: 3})
+        >>> Constraint({4:3})
+        Constraint({4: 3})
         """
         # FIXME: add kwargs to repr
         return "%s(%s)" % (
             type(self).__name__,
             ", ".join(map(repr, self.args)),
         )
+        return f"{type(self).__name__}({', '.join(map(repr, self.args))})"
 
     def validate(self, value):
         """
-        >>> constraint.validate(int_range(6,9), 7)
+        >>> Constraint.validate(int_range(6,9), 7)
         7
-        >>> constraint.validate(int_range(6, 9), 5)
+        >>> Constraint.validate(int_range(6, 9), 5)
         Traceback (most recent call last):
         ValueError: int_range(6, 9) check failed on False
         """
