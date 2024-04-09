@@ -880,12 +880,12 @@ Flexibool = And(
                 if v.lower() in ('true', 'yes', 'on', '1', 'y', 'j', 'ja')
                 else 0
                 if v.lower() in ('false', 'no', 'off', '0', 'n', 'nein', 'nej')
-                else 'error'
+                else repr(v)
             ),
         ),
     ),
     Use(IntBool),
-    error="invalid value {!r}; must be one of "
+    error="can't use {} as a boolean; must be one of "
     "<true|false|1|0|on|off|yes|no|ja|nein|nej|y|j|n>",
 )
 
