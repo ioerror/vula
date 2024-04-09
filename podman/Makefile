@@ -65,7 +65,7 @@ endif
 	touch .deps-$(dist)-stamp
 
 .deps-fedora34-stamp:
-	podman run --name vula-tmp -it fedora:34 dnf -y install systemd
+	podman run --replace --name vula-tmp -it fedora:34 dnf -y install systemd
 	podman commit vula-tmp vula-deps-$(dist)
 	podman rm vula-tmp
 	podman run $(podman_args) --name vula-tmp --detach vula-deps-$(dist) $(systemd_path)
@@ -80,7 +80,7 @@ endif
 	touch $@
 
 .deps-alpine-stamp:
-	podman run --name vula-tmp --detach alpine:latest sleep 3600
+	podman run --replace --name vula-tmp --detach alpine:latest sleep 3600
 	#podman exec -it vula-tmp apk add gcc py3-setuptools
 	#
 	podman exec -it vula-tmp apk add \
@@ -124,7 +124,7 @@ $(RPM_NAME): .deps-$(dist)-stamp
 .dpkg-install-$(dist)-stamp: .deps-$(dist)-stamp $(DEB_NAME)
 	# Now going to build a new image with vula installed via dpkg.
 	# first, create new vula container:
-	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
+	podman run --replace --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
 	# install the deb:
 	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp dpkg -i deb_dist/$(DEB_NAME)
 	# stop container:
@@ -137,7 +137,7 @@ $(RPM_NAME): .deps-$(dist)-stamp
 .rpm-install-$(dist)-stamp: .deps-$(dist)-stamp $(RPM_NAME)
 	# Now going to build a new image with vula installed via rpm.
 	# first, create new vula container:
-	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
+	podman run --replace --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
 	# install the rpm:
 	podman exec vula-tmp rpm -i dist/$(RPM_NAME)
 	# install vula_libnss and configure it to be used
@@ -153,7 +153,7 @@ $(RPM_NAME): .deps-$(dist)-stamp
 # for Alpine Linux's apk package format
 .apk-install-$(dist)-stamp: .deps-$(dist)-stamp
 	# we currently install on apk systems... using setup.py install.
-	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) sleep 86400
+	podman run --replace --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) sleep 86400
 	podman exec -it vula-tmp python3 setup.py install
 	podman stop vula-tmp
 	podman commit vula-tmp vula-$(dist)
@@ -196,7 +196,7 @@ $(pkgmgr)-image:
 editable-image: .editable-$(dist)-image-stamp
 .editable-$(dist)-image-stamp: $(installed_image_stamp)
 	# create new vula container
-	podman run --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
+	podman run --replace --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
 	# install in editable mode
 	podman exec vula-tmp python3 setup.py install
 	podman exec vula-tmp python3 setup.py develop
