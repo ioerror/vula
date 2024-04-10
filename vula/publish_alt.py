@@ -27,7 +27,6 @@ from .constants import (
 
 
 class Publish_Alt:
-
     dbus = '''
     <node>
       <interface name='local.vula.publishalt1.Control'>

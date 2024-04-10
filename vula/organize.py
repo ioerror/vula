@@ -120,7 +120,6 @@ class SystemState(schemattrdict):
 
 
 class OrganizeState(Engine, yamlrepr_hl):
-
     schema = Schema(
         And(
             Use(dict),
@@ -283,7 +282,6 @@ class OrganizeState(Engine, yamlrepr_hl):
 
     @Engine.event
     def event_INCOMING_DESCRIPTOR(self, descriptor):
-
         if str(descriptor.pk) == str(self.system_state.our_wg_pk):
             return self.action_IGNORE(descriptor, "has our wg pk")
 
@@ -313,7 +311,6 @@ class OrganizeState(Engine, yamlrepr_hl):
         conflicting_peers = self.peers.conflicts_for_descriptor(descriptor)
 
         if conflicting_peers:
-
             for conflicting_peer in conflicting_peers:
                 if conflicting_peer.pinned:
                     return self.action_REJECT(
@@ -820,7 +817,6 @@ class Organize(attrdict):
             main_loop.run()
 
     def _instruct_zeroconf(self):
-
         descriptors = {}
         vf: int = int(time.time())
         for net, ips in self.state.system_state.current_subnets.items():
@@ -872,7 +868,6 @@ class Organize(attrdict):
         return str(peer.descriptor) if peer else ''
 
     def process_descriptor_string(self: Organize, descriptor: str):
-
         self.log.debug("about to parse descriptor: %r", descriptor)
         try:
             descriptor = Descriptor.parse(descriptor)
@@ -893,7 +888,6 @@ class Organize(attrdict):
         return self.process_descriptor(descriptor)
 
     def process_descriptor(self: Organize, descriptor: Descriptor):
-
         if not descriptor.verify_signature():
             self.log.info(
                 "Discarded descriptor with invalid signature: %r"

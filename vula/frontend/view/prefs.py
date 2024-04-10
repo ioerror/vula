@@ -50,7 +50,6 @@ class Prefs(Frame):
         self.hide_save_cancel()
 
     def display_frames(self) -> None:
-
         # Frames, Canvas and Scrollbars
         self.top_frame = Frame(
             self.frame,
@@ -320,7 +319,6 @@ class Prefs(Frame):
 
             # list based preferences
             if type(value) == list:
-
                 if self.show_editable:
                     value_text = Text(
                         self.pref_content_frame,
@@ -415,7 +413,6 @@ class Prefs(Frame):
 
             # int based preference
             elif type(value) == int:
-
                 if self.show_editable:
                     value_text = Text(
                         self.pref_content_frame,

@@ -24,7 +24,6 @@ from .constants import _LABEL, _PUBLISH_DBUS_NAME
 
 
 class Publish(object):
-
     dbus = '''
     <node>
       <interface name='local.vula.publish1.Listen'>
@@ -36,7 +35,6 @@ class Publish(object):
     '''
 
     def __init__(self):
-
         self.log: Logger = getLogger()
         self.zeroconfs = {}
 

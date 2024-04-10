@@ -46,7 +46,6 @@ class PeerDetailsOverlay(tk.Toplevel):
         self.display_peer_details()
 
     def display_peer_details(self) -> None:
-
         self.top_frame = tk.Frame(
             self,
             bg=BACKGROUND_COLOR,

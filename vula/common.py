@@ -290,7 +290,6 @@ class serializable(dict):
 
 
 class schemadict(ro_dict, serializable):
-
     schema = NotImplemented
     default = None
 
@@ -389,7 +388,6 @@ class jsonrepr(serializable):
 
 
 if pygments is not None:
-
     #    from pygments.style import Style
     #    from pygments.token import ( Keyword, Name, Comment, String,
     #        Error, Number, Operator, Generic,)
@@ -402,7 +400,6 @@ if pygments is not None:
 
     class yamlrepr_hl(yamlrepr):
         def __repr__(self):
-
             # aaa = list(
             #    pygments.lexers.YamlLexer().get_tokens_unprocessed(
             #        yaml.dump(self._dict(), default_style='', sort_keys=False)
@@ -592,6 +589,7 @@ class comma_separated_Nets(comma_separated_IPs):
 
 class Constraint(object):
     "Abstract base class for Schema validation directives"
+
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
@@ -1041,7 +1039,6 @@ def addrs_in_subnets(addrs, subnets):
 
 
 class KeyFile(yamlrepr_hl, schemattrdict, yamlfile):
-
     schema = Schema(
         {
             "pq_ctidhP512_sec_key": b64_bytes.with_len(74),
@@ -1055,7 +1052,6 @@ class KeyFile(yamlrepr_hl, schemattrdict, yamlfile):
 
 
 def organize_dbus_if_active():
-
     """
     Returns a dbus proxy to organize, if it is running. Exits otherwise.
 

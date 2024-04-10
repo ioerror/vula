@@ -20,7 +20,6 @@ from .common import BSSID, ESSID, MACaddr, schemattrdict, yamlrepr
 
 
 class Network(schemattrdict, yamlrepr):
-
     schema = Schema(
         {
             Optional_('essid'): {ESSID: bool},

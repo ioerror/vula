@@ -85,7 +85,6 @@ class WireGuardServiceListener(ServiceListener):
 
 
 class Discover(object):
-
     dbus = '''
     <node>
       <interface name='local.vula.discover1.Listen'>
@@ -97,7 +96,6 @@ class Discover(object):
     '''
 
     def __init__(self):
-
         self.callbacks = []
         self.browsers = {}
         self.log: Logger = getLogger()
@@ -107,7 +105,6 @@ class Discover(object):
             callback(value)
 
     def listen_on_ip_or_if(self, ip_address, interface):
-
         """
         Deprecated.
 
@@ -168,7 +165,6 @@ class Discover(object):
 
     @classmethod
     def daemon(cls, use_dbus, ip_address, interface):
-
         """
         This method implements the non-monolithic daemon mode where we run
         Discover in its own process (as we deploy on GNU/systemd).

@@ -55,7 +55,6 @@ def _wg_interface_list():
 
 
 class PeerConfig(schemattrdict, serializable):
-
     schema = Schema(
         {
             Optional('unspec'): object,
@@ -392,7 +391,6 @@ class Interface(attrdict, yamlrepr_hl):
         cur = self._peers_by_pubkey.get(new["public_key"])
         res = []
         if cur:
-
             if new.get('remove'):
                 res.append(
                     '# removing wireguard peer %s' % (new['public_key'],)

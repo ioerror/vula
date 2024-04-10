@@ -58,7 +58,6 @@ class Sys(object):
         self._stop_monitor = True
 
     def _monitor(self):
-
         ip = IPRSocket()
         ip.bind()
         while True:
@@ -95,7 +94,6 @@ class Sys(object):
         ip.close()
 
     def _get_system_state(self):
-
         "WIP"
 
         addrs = self.ipr.get_addr()
@@ -347,7 +345,6 @@ class Sys(object):
                     )
                 )
         if not self.organize.peers.limit(use_as_gateway=True, enabled=True):
-
             default_routes = [
                 r
                 for r in current_routes

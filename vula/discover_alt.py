@@ -24,7 +24,6 @@ PAYLOAD_MAX_SIZE = 18
 
 
 class Discover_Alt:
-
     dbus = '''
     <node>
       <interface name='local.vula.discoveralt1.Control'>
@@ -307,7 +306,6 @@ class Discover_Alt:
 def main(
     insert_into_vula: bool, max_age: int, arp_code: int, packet_max_length: int
 ) -> None:
-
     Discover_Alt.daemon(insert_into_vula, max_age, arp_code, packet_max_length)
 
 
