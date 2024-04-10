@@ -618,7 +618,8 @@ class Constraint(object):
         # import pdb; pdb.set_trace()
         value = self.constraint(value, *self.args, **self.kwargs)
         if value is not False:
-            # FIXME: this is weird, we can't have constraints which allow the value False?
+            # FIXME: this is weird, we can't have constraints which allow the
+            # value False?
             return value
         else:
             raise ValueError("%s check failed on %r" % (self, value))
