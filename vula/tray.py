@@ -12,7 +12,7 @@ from pydbus import SystemBus
 
 try:
     from Xlib.error import DisplayNameError
-except:
+except ModuleNotFoundError:
 
     class DisplayNameError(Exception):
         pass
