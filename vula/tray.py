@@ -9,7 +9,14 @@ import click
 from gi.repository import GLib
 from PIL import Image
 from pydbus import SystemBus
-from Xlib.error import DisplayNameError
+
+try:
+    from Xlib.error import DisplayNameError
+except:
+
+    class DisplayNameError(Exception):
+        pass
+
 
 from vula.common import escape_ansi
 from vula.constants import (

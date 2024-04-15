@@ -21,6 +21,7 @@ build-backend = "setuptools.build_meta"
 [project.optional-dependencies]
 test = ['pytest']
 audio = ['pyaudio', 'ggwave']
+gui = ['pystray']
 
 [project.urls]
 Documentation = "https://codeberg.org/vula/vula"
