@@ -123,11 +123,11 @@
         },
         "highctidh": {
             "hashes": [
-                "sha256:e05610c1419137cd0de34f4d1ac72b471388517936d9af78b07c9fd96616450c"
+                "sha256:56f0b346d51f9e91ec51e04527a9da1999ac6876f32bf7897c7ee46cc62d271c"
             ],
             "index": "pypi",
             "markers": "python_full_version >= '3.9.6'",
-            "version": "==1.0.2024010701"
+            "version": "==1.0.2024050500"
         },
         "hkdf": {
             "hashes": [
