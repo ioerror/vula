@@ -68,7 +68,12 @@ class WireGuardServiceListener(ServiceListener):
         info: Optional[ServiceInfo] = zeroconf.get_service_info(s_type, name)
         if info is None:
             return
-        data = {k.decode(): v.decode() for k, v in info.properties.items()}
+        data = {}
+        # We expect zeroconf info.properties.items() to return bytes or None
+        # We then convert each item to be strings by decoding as utf-8 or we
+        # return an empty string if an item is None
+        for k, v in info.properties.items():
+           data[k.decode()] = v.decode() if v is not None else ''
 
         try:
             desc = Descriptor(data)
