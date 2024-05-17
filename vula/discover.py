@@ -73,7 +73,7 @@ class WireGuardServiceListener(ServiceListener):
         # We then convert each item to be strings by decoding as utf-8 or we
         # return an empty string if an item is None
         for k, v in info.properties.items():
-           data[k.decode()] = v.decode() if v is not None else ''
+            data[k.decode()] = v.decode() if v is not None else ''
 
         try:
             desc = Descriptor(data)
