@@ -33,6 +33,31 @@ class TestWireGuardServiceListener:
 
         callback.assert_called_once()
 
+    def test_add_service_calls_callback_newer_zeroconf(self):
+        # later versions of zeroconf return None instead empty string.
+        # this tests for that.
+        callback = MagicMock()
+        props = {
+            b'addrs': b'192.168.2.1',
+            b'pk': b'EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM=',
+            b'c': b'T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYxKXg2qNL+'
+            + b'0ut3sSVTYjzFGZSCO6n80SRaR+BIeOCg==',
+            b'hostname': b'myhost',
+            b'port': b'5054',
+            b'vk': b'EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM=',
+            b'dt': b'34',
+            b'vf': b'42',
+            b'r': None,
+            b'e': b'1',
+        }
+        zeroconf = MagicMock()
+        zeroconf.get_service_info().properties = props
+        listener = vula.discover.WireGuardServiceListener(callback)
+
+        listener.add_service(zeroconf, "test_type", "test_name")
+
+        callback.assert_called_once()
+
     def test_add_service_no_service_info(self):
         callback = MagicMock()
         zeroconf = MagicMock()
