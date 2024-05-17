@@ -87,12 +87,10 @@ endif
 		py3-click py3-cryptography py3-ifaddr py3-matplotlib py3-networkx \
 		py3-numpy py3-packaging py3-pathtools py3-pip py3-pluggy py3-progress \
 		py3-py py3-pydbus py3-pygments py3-pynacl py3-pyroute2 py3-pytest py3-pytest-runner \
-		py3-qrcode py3-setuptools py3-toml py3-yaml py3-zeroconf python3-babel python3-tk \
-		gcc make musl-dev nss-dev musl-nscd-dev \
-		apkbuild-pypi
-		# libressl-dev musl-dev libffi-dev
-	# note: pinned pyroute may not be necessary anymore FIXME
-	podman exec -it vula-tmp pip install highctidh vula_libnss hkdf schema pyroute2==0.5.14 # cpuinfo mpmath
+		py3-qrcode py3-setuptools py3-toml py3-yaml py3-zeroconf py3-babel python3-tkinter \
+		gcc make musl-dev nss-dev musl-nscd-dev apkbuild-pypi py3-pyroute2
+	# podman exec -it vula-tmp apk add --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/ highctidh # alpine highctidh doesnt work yet
+	podman exec -it vula-tmp pip install --break-system-packages hkdf schema highctidh
 	podman stop vula-tmp
 	podman commit vula-tmp vula-deps-$(dist)
 	podman rm vula-tmp
