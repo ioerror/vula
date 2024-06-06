@@ -4,7 +4,7 @@ RPM_NAME := ../dist/vula-$(VERSION)-1.noarch.rpm
 NET_NAME := vula-net
 SO_NAME := /usr/local/lib64/python3.9/site-packages/lib/libnss_vula.so.2
 dist := bookworm
-dists := bookworm jammy mantic
+dists := bookworm jammy mantic noble
 podman_args := --volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula --uts=private
 add_caps := --cap-add NET_ADMIN,NET_RAW
 test1 := vula-$(dist)-test1
@@ -33,6 +33,9 @@ endif
 ifeq ($(dist),mantic)
 	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=23.10
 endif
+ifeq ($(dist),noble)
+	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=24.04
+endif
 ifeq ($(dist),bullseye)
 	build_args=--build-arg DISTRO=debian --build-arg VERSION=bullseye
 endif
@@ -60,7 +63,7 @@ ifeq ($(dist),alpine)
 	pkgmgr=apk
 endif
 
-.deps-bullseye-stamp .deps-bookworm-stamp .deps-focal-stamp .deps-jammy-stamp .deps-mantic-stamp:
+.deps-bullseye-stamp .deps-bookworm-stamp .deps-focal-stamp .deps-jammy-stamp .deps-mantic-stamp .deps-noble-stamp:
 	cd .. && podman build -t vula-deps-$(dist) -f podman/Dockerfile.vula-deps $(build_args) .
 	touch .deps-$(dist)-stamp
 
