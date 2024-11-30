@@ -74,23 +74,26 @@ class SystemState(schemattrdict):
     schema = Schema(
         dict(
             current_subnets={Optional_(Use(ip_network)): [Use(ip_address)]},
+            current_interfaces={Optional_(str): [Use(ip_address)]},
             our_wg_pk=b64_bytes.with_len(32),
             gateways=[Use(ip_address)],
         )
     )
 
     default = dict(
-        our_wg_pk=b'\x00' * 32,
         current_subnets={},
+        current_interfaces={},
+        our_wg_pk=b'\x00' * 32,
         gateways=[],
     )
 
     @classmethod
     def read(cls, organize):
-        subnets, gateways = organize.sys._get_system_state()
+        subnets, interfaces, gateways = organize.sys._get_system_state()
         return cls(
             gateways=gateways,
             current_subnets=subnets,
+            current_interfaces=interfaces,
             our_wg_pk=organize.our_wg_pk,
         )
 
@@ -818,7 +821,9 @@ class Organize(attrdict):
     def _instruct_zeroconf(self):
         descriptors = {}
         vf: int = int(time.time())
-        for net, ips in self.state.system_state.current_subnets.items():
+        ips_to_publish = []
+        for iface, ips in self.state.system_state.current_interfaces.items():
+            ips_to_publish.extend(list(map(str,ips)))
             desc = {
                 k: str(v)
                 for k, v in self._construct_service_descriptor(
@@ -827,15 +832,14 @@ class Organize(attrdict):
                 ._dict()
                 .items()
             }
-            for ip in ips:
-                descriptors[str(ip)] = desc
-        current_ips = list(map(str, self.state.system_state.current_ips))
+            descriptors[iface] = desc
+        current_ips = sorted(map(str, self.state.system_state.current_ips))
         self.log.info(
             "discovering on {ips} and publishing {pub}".format(
                 ips=current_ips,
                 pub='on same'
-                if list(descriptors.keys()) == current_ips
-                else descriptors,
+                if ips_to_publish == current_ips
+                else ips_to_publish,
             )
         )
         self.discover.listen(current_ips)
