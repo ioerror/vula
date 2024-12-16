@@ -1,18 +1,11 @@
 #!/bin/bash
 set -e
-
-# pypi-install highctidh
-# for latest version:
-# pip3 install git+https://codeberg.org/vula/highctidh/
 apt install -y --no-install-recommends flit
 git clone https://codeberg.org/vula/highctidh/
 cd highctidh;
-git checkout v1.0.2024012400
-cd src
-VERSION=`cat VERSION`;
-time make -f Makefile.packages deb
+git checkout v1.0.2024092800
+make deb
 ls -al *
 ls -al dist/
 dpkg -i `pwd`/dist/python3-highctidh*.deb
-
 echo "OK: highctidh installed on $(hostname)"

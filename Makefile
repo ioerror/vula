@@ -1,9 +1,10 @@
 export PIPENV_VERBOSITY=-1
 export PYTHONWARNINGS=ignore
-VERSION := $(shell python3 setup.py version|tail -n1)
+VERSION := $(shell cat vula/__version__.py |cut -f 2 -d'"')
 ARCH := $(shell uname -m)
-DEB_NAME := ./deb_dist/python3-vula_${VERSION}-1_all.deb
-RPM_NAME := ./dist/vula-$(VERSION)-1.noarch.rpm
+TGZ_NAME := vula-${VERSION}.tar.gz
+DEB_NAME := python3-vula_${VERSION}-1_all.deb
+RPM_NAME := vula-$(VERSION)-1.noarch.rpm
 FOLDER = vula test podman
 PYBUILD_NAME := vula
 PYBUILD_SYSTEM := flit
@@ -17,7 +18,7 @@ DEB_BUILD_OPTIONS=nocheck
 version:
 	echo "vula ${VERSION} on ${ARCH}"
 
-gettext-build:
+./vula/locale/en_US/LC_MESSAGES/ui.mo: ./vula/locale/en_US/LC_MESSAGES/ui.po
 	python3 setup.py compile_catalog --directory vula/locale --locale de_DE --domain ui
 	python3 setup.py compile_catalog --directory vula/locale --locale de_DE --domain ui.view
 	python3 setup.py compile_catalog --directory vula/locale --locale en_US --domain ui
@@ -33,25 +34,27 @@ pypi-upload:
 	python3 -m twine check dist/*$(VERSION)*
 	python3 -m twine upload --repository pypi dist/*$(VERSION)*
 
-deb: ${DEB_NAME}
+./dist/${TGZ_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py ./vula/locale/en_US/LC_MESSAGES/ui.mo
+	python3 -m build
 
-${DEB_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py gettext-build
-	python3 setup.py --command-packages=stdeb.command sdist_dsc --compat=10
-	sed -i 's/\-\-install-layout=deb//g' deb_dist/vula-$(VERSION)/debian/rules
-	cd deb_dist/vula-$(VERSION) && DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage \
-					-rfakeroot -uc -us --sanitize-env
+deb: ./dist/${DEB_NAME}
 
-rpm: ${RPM_NAME}
+./dist/${DEB_NAME}: ./dist/${TGZ_NAME}
+	cd dist && rm -rvf "vula-${VERSION}" && tar xf ${TGZ_NAME} \
+        && cd vula-${VERSION} && cp -rvp ../../debian ./debian && \
+        DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -rfakeroot -uc -us --sanitize-env && \
+		cd .. && rm -rf vula-${VERSION}
 
-${RPM_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py
+rpm: ./dist/${RPM_NAME}
+
+./dist/${RPM_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py
 	python3 setup.py --command-packages=stdeb.command bdist_rpm
 
 pytest-coverage:
 	pipenv run pytest --cov --cov-report xml --cov-report html --cov-report term
 
 clean:
-	-rm -rf build/ dist/ vula.egg-info deb_dist vula_libnss
-	-rm vula-*.tar.gz
+	-rm -rf build/ dist/
 	find vula/locale -type f -name \*.mo -delete
 
 format: black

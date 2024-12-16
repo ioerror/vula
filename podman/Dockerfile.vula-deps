@@ -15,9 +15,9 @@ RUN apt --fix-missing update && apt upgrade -y && \
 
 COPY /misc/install-debian-deps.sh /install-debian-deps.sh
 
-COPY /misc/install-highctidh.sh /install-highctidh.sh
-
 RUN bash install-debian-deps.sh
+
+COPY /misc/install-highctidh.sh /install-highctidh.sh
 
 RUN bash install-highctidh.sh
 
