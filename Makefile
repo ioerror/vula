@@ -45,10 +45,11 @@ deb: ./dist/${DEB_NAME}
         DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -rfakeroot -uc -us --sanitize-env && \
 		cd .. && rm -rf vula-${VERSION}
 
-rpm: ./dist/${RPM_NAME}
-
-./dist/${RPM_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py
-	python3 setup.py --command-packages=stdeb.command bdist_rpm
+# stdeb is EOL so we don't have a way to build an RPM currently.
+#rpm: ./dist/${RPM_NAME}
+#
+#./dist/${RPM_NAME}: vula vula/*py vula/frontend/*py vula/frontend/view/*py configs configs/* configs/*/* setup.py
+#	python3 setup.py --command-packages=stdeb.command bdist_rpm
 
 pytest-coverage:
 	pipenv run pytest --cov --cov-report xml --cov-report html --cov-report term

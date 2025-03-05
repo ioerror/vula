@@ -29,6 +29,11 @@ reinstall the `click` module using `pypi`:
 
 # Install
 
+FIXME: As of 2025, these install instructions have largely bitrotted.
+
+`make deb` works now (without stdeb, which is EOL); the rest of these
+instructions should be reviewed and updated.
+
 ## option 0: dpkg installation via PyPI
 
 The
