@@ -17,24 +17,7 @@ try:
     compile_catalog = babel.compile_catalog
 except ImportError:
     compile_catalog=None
-try:
-    from stdeb.command.bdist_deb import bdist_deb
-    from stdeb.command.sdist_dsc import sdist_dsc
 
-    class sdist_dsc_with_postinst(sdist_dsc):
-        def run(self):
-            res = super(sdist_dsc_with_postinst, self).run()
-            print("Installing vula postinst")
-            copy2(
-                'misc/python3-vula.postinst',
-                self.dist_dir + '/vula-{}/debian/'.format(version),
-            )
-            return res
-
-except ImportError:
-    sdist_dsc = None
-    sdist_dsc_with_postinst = None
-    bdist_deb = None
 try:
     from click_man.commands.man_pages import man_pages
 except ImportError:
@@ -219,8 +202,6 @@ setuptools.setup(
     tests_require=["pytest"],
     cmdclass=dict(
         compile_catalog=compile_catalog,
-        bdist_deb=bdist_deb,
-        sdist_dsc=sdist_dsc_with_postinst,
         man_pages=man_pages,
         version=print_version,
     ),

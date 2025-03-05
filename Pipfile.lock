@@ -1416,13 +1416,6 @@
             "markers": "python_version >= '3.7'",
             "version": "==5.0.1"
         },
-        "stdeb": {
-            "hashes": [
-                "sha256:08c22c9c03b28a140fe3ec5064b53a5288279f22e596ca06b0be698d50c93cf2"
-            ],
-            "index": "pypi",
-            "version": "==0.10.0"
-        },
         "stdlib-list": {
             "hashes": [
                 "sha256:6519c50d645513ed287657bfe856d527f277331540691ddeaf77b25459964a14",

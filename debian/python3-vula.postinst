@@ -1,0 +1,43 @@
+#!/bin/bash
+
+VULA_ORGANIZE_DIR=/var/lib/vula-organize/
+VULA_KEYS="${VULA_ORGANIZE_DIR}"/keys.yaml
+VULA_NSSLIB=$(python3 -c 'import vula_libnss; print(vula_libnss.__path__[0]+"/../lib/libnss_vula.so.2")')
+VULA_NSSLIB_INSTALL="/lib/libnss_vula.so.2"
+
+systemctl daemon-reload
+systemctl reload dbus
+systemctl restart systemd-sysusers
+
+if [ ! -d "${VULA_ORGANIZE_DIR}" ]; then
+  echo "Creating vula organize daemon state directory"
+  mkdir -p "${VULA_ORGANIZE_DIR}"
+fi
+
+if [ -f ${VULA_NSSLIB_INSTALL} ]; then
+  echo "Found ${VULA_NSSLIB_INSTALL}!"
+else
+  if [ -f ${VULA_NSSLIB} ]; then
+    # This is for when vula_nsslib is installed from the PyPI package using the
+    # "pip install" command, rather than using dpkg.
+    echo "Installing ${VULA_NSSLIB}..."
+    cp -v ${VULA_NSSLIB} ${VULA_NSSLIB_INSTALL}
+  else
+    echo "Expected to find ${VULA_NSSLIB}; it is missing!"
+    echo "Manual install of vula_nsslib needed!"
+  fi
+fi
+
+echo "Configuring nsswitch"
+vula configure nsswitch
+
+if [ "$VULA_POSTINST_DONT_START" = "" ]; then
+    echo "Enabling and starting vula-organize systemd service"
+    systemctl enable --now vula-organize
+else
+    echo "Enabling vula-organize systemd service but not starting it now"
+    systemctl enable vula-organize
+fi
+
+
+exit 0

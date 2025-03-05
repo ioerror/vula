@@ -1,10 +1,10 @@
-VERSION := $(shell cd ..; python3 setup.py version|tail -n1)
-DEB_NAME := ../deb_dist/python3-vula_$(VERSION)-1_all.deb
+VERSION := $(shell cat ../vula/__version__.py |cut -f 2 -d'"')
+DEB_NAME := ../dist/python3-vula_$(VERSION)-1_all.deb
 RPM_NAME := ../dist/vula-$(VERSION)-1.noarch.rpm
 NET_NAME := vula-net
 SO_NAME := /usr/local/lib64/python3.9/site-packages/lib/libnss_vula.so.2
 dist := bookworm
-dists := bookworm jammy mantic
+dists := bookworm jammy mantic noble
 podman_args := --volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula --uts=private
 add_caps := --cap-add NET_ADMIN,NET_RAW
 test1 := vula-$(dist)-test1
@@ -33,6 +33,9 @@ endif
 ifeq ($(dist),mantic)
 	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=23.10
 endif
+ifeq ($(dist),noble)
+	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=24.04
+endif
 ifeq ($(dist),bullseye)
 	build_args=--build-arg DISTRO=debian --build-arg VERSION=bullseye
 endif
@@ -40,7 +43,6 @@ ifeq ($(dist),bookworm)
 	build_args=--build-arg DISTRO=debian --build-arg VERSION=bookworm
 endif
 
-installed_image_stamp=.dpkg-install-$(dist)-stamp
 systemd_path=/bin/systemd
 bin_sh=bash
 pkgmgr=dpkg
@@ -60,7 +62,13 @@ ifeq ($(dist),alpine)
 	pkgmgr=apk
 endif
 
-.deps-bullseye-stamp .deps-bookworm-stamp .deps-focal-stamp .deps-jammy-stamp .deps-mantic-stamp:
+ifeq ($(wildcard .editable-$(dist)-image-stamp),) 
+    installed_image_stamp=.$(pkgmgr)-install-$(dist)-stamp
+else 
+    installed_image_stamp=.editable-$(dist)-image-stamp
+endif
+
+.deps-bullseye-stamp .deps-bookworm-stamp .deps-focal-stamp .deps-jammy-stamp .deps-mantic-stamp .deps-noble-stamp: # Dockerfile.vula-deps ../misc/install-highctidh.sh ../misc/install-debian-deps.sh
 	cd .. && podman build -t vula-deps-$(dist) -f podman/Dockerfile.vula-deps $(build_args) .
 	touch .deps-$(dist)-stamp
 
@@ -110,7 +118,7 @@ deb:
 	make dist=$(dist) $(DEB_NAME)
 
 $(DEB_NAME): .deps-$(dist)-stamp
-	podman run --rm $(podman_args) --network none -it vula-deps-$(dist) make deb
+	podman run --rm $(podman_args) -it vula-deps-$(dist) make deb
 
 .PHONY: rpm
 rpm:
@@ -124,7 +132,7 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	# first, create new vula container:
 	podman run --replace --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
 	# install the deb:
-	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp dpkg -i deb_dist/$(DEB_NAME)
+	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp dpkg -i dist/$(DEB_NAME)
 	# stop container:
 	podman stop vula-tmp
 	# save container as new image, over old one if it exists:
@@ -168,7 +176,7 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	podman commit vula-mitm-deps-tmp vula-mitm-deps-$(dist)
 	podman run --name vula-mitm-tmp $(podman_args) --network none --detach vula-mitm-deps-$(dist) $(systemd_path)
 	# install the deb:
-	podman exec -e VULA_POSTINST_DONT_START=1 vula-mitm-tmp dpkg -i deb_dist/$(DEB_NAME)
+	podman exec -e VULA_POSTINST_DONT_START=1 vula-mitm-tmp dpkg -i dist/$(DEB_NAME)
 	# Disable the running vula services
 	podman exec vula-mitm-tmp systemctl disable vula-organize
 	podman exec vula-mitm-tmp systemctl disable vula-publish
@@ -191,20 +199,24 @@ $(pkgmgr)-image:
 	make dist=$(dist) .$(pkgmgr)-install-$(dist)-stamp
 
 .PHONY: editable-image
-editable-image: .editable-$(dist)-image-stamp
-.editable-$(dist)-image-stamp: $(installed_image_stamp)
+editable-image: .editable-$(dist)-image-stamp testnet-clean
+.editable-$(dist)-image-stamp: .deps-$(dist)-stamp
 	# create new vula container
 	podman run --replace --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
 	# install in editable mode
+	# note: running python setup.py is deprecated. we're supposed to do this instead now:
+	# podman exec vula-tmp pip install --break-system-packages --editable .
+	# .... but that doesn't install the entry point. so we use setup.py still:
 	podman exec vula-tmp python3 setup.py install
 	podman exec vula-tmp python3 setup.py develop
 	podman exec vula-tmp chmod 755 .. # so that systemd users can read it
 	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp ./misc/python3-vula.postinst
-#
+
 	# stop container
 	podman stop vula-tmp
 	# save container as new image
 	podman commit vula-tmp vula-$(dist)
+	touch $@
 
 .PHONY: .create-network
 .create-network:
@@ -254,7 +266,7 @@ testnet-stop:
 	@rm -vf .testnet-started-$(dist)-stamp
 
 .PHONY: testnet-restart
-testnet-restart: testnet-stop testnet-start
+testnet-restart: testnet-stop clean-containers testnet-start
 
 .PHONY: retest
 retest: testnet-restart test
@@ -277,7 +289,7 @@ testnet-shell: testnet-start
 	podman exec -it $(test1) $(bin_sh)
 
 .PHONY: test
-test: testnet-start
+test: .testnet-started-$(dist)-stamp
 	podman ps
 	-make test-pytest
 	@-for c in $(test_hosts); do \
