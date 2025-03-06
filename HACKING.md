@@ -126,11 +126,33 @@ pipenv run pytest --cov --cov-report=html
 Vula currently uses two different CICD services, [GitLab](https://gitlab.ti.bfh.ch/vula/vula/-/pipelines) and [Codeberg CI](https://ci.codeberg.org/vula/vula).
 
 ### Pipeline configuration
-The configuration for the Coderg CI pipeline can be found in the file `.woodpecker.yml`, while the configuration for the GitLab pipeline can be found in a file called `.gitlab-ci.yml`.
+The configuration for the Codeberg CI pipeline can be found in the file `.woodpecker.yml`, while the configuration for the GitLab pipeline can be found in a file called `.gitlab-ci.yml`.
 
 While GitLab is a proven solution for pipelines, the Codeberg CI project is still in a closed testing phase. It uses [Woodpecker CI](https://woodpecker-ci.org/) as CI solution, which does not have the same extensive set of functionality as Gitlab. Some notable differences:
 - We do not have caching functionality in our Codeberg CI pipeline like we have on GitLab.
 - We cannot use keywords like `before_script` functionality in Codeberg CI, therefore the configuratin does not look very DRY.
 - We cannot upload artifacts in Codeberg CI, all jobs are currently configured to print relevant results to stdout.
 - The "ping-test" job is commented out in our Codeberg CI pipeline because of "podman inside docker container" issues, check the comments in `woodpecker.yml` for more information.
-- Pipeline runetime on Codberg CI is much longer (probably resource limitations and missing caching), the maximum runtime seems to be 1 hour.
+- Pipeline runetime on Codeberg CI is much longer (probably resource limitations and missing caching), the maximum runtime seems to be 1 hour.
+
+The Codeberg CI may be run locally by checking out the woodpecker git repo and
+building the `woodpecker-cli` program. It may be built as a standalone binary
+to be installed in your path (e.g.: `~/bin/`) or as a Debian package to be
+installed systemwide. One method to run locally works as follows:
+```
+git clone https://github.com/woodpecker-ci/woodpecker
+cd woodpecker
+make vendor
+make release-cli
+make bundle-cli
+# Install the locally built Debian package:
+sudo dpkg -i dist/woodpecker-cli_0.0.0_amd64.deb
+```
+
+Use `woodpecker-cli` to run locally:
+```
+woodpecker-cli exec .woodpecker.yml
+```
+
+If you would like to add a git hook, we provide the same command as a shell
+script in `misc/run-woodpecker-ci-locally.sh`.
