@@ -28,5 +28,4 @@ steps:
       - . $(pipenv --venv)/bin/activate
       - make wheel
       - make deb
-      - dpkg -I deb_dist/*.deb
-
+      - dpkg -I dist/*.deb
