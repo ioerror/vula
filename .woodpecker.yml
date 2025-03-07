@@ -1,70 +1,32 @@
 # TODO: We don't have artifacts in woodpecker pipelines (There are plugins like https://woodpecker-ci.org/plugins/S3%20Plugin)
 #       so for now we should print out all results to stdout.
+# Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
+
+when:
+  event: [push, tag, pull_request, manual]
+
 steps:
 
-  # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
-  check:
+  check_test:
     image: python:3.10-bookworm
     commands:
       - export CI=true
-      - ./misc/install-debian-deps.sh
-      - ./misc/install-highctidh.sh
+      - PATH=$PATH:~/.local/bin
+      - ./misc/install-ci-deps.sh
+      - . $(pipenv --venv)/bin/activate
       - make check
-
-  # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
-  test:
-    depends_on: [check]
-    image: python:3.10-bookworm
-    commands:
-      - export CI=true
-      - ./misc/install-debian-deps.sh
-      - ./misc/install-highctidh.sh
-      - apt install -y --no-install-recommends xvfb xauth
       - xvfb-run -- pipenv run pytest -v 
-  
-
-  # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
-  sast:
-    depends_on: [check]
-    image: python:3.10-bookworm
-    commands:
-      - export CI=true
-      - ./misc/install-debian-deps.sh
-      - ./misc/install-highctidh.sh
+      - xvfb-run -- pipenv run pytest --cov
       - make sast-analysis
 
-  # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
-  pytest-coverage:
-    depends_on: [check]
-    image: python:3.10-bookworm
-    commands:
-      - export CI=true
-      - ./misc/install-debian-deps.sh
-      - ./misc/install-highctidh.sh
-      - apt install -y --no-install-recommends xvfb xauth
-      - xvfb-run -- pipenv run pytest --cov
-  
-  # This job currently fails in a woodpecker pipeline because it seems that codberg-ci/woodpecker does not support
-  # a "podman inside docker container" setup. Will raise a `cannot clone: Operation not permitted` error.
-  # 
-  # We could try to replace the podman containers with qemu vm's in order to run the ping-test in a woodpecker pipeline.
-  # For now, we comment the ping-test job out.
-  # 
-  # ping-test:
-  #   group: test
-  #   image: quay.io/podman/stable:latest
-  #   commands:
-  #     - dnf install -y make python-setuptools git-core
-  #     - cd podman && make test-ping
-
-  # Override default CI env variable for now (see https://github.com/pypa/pipenv/issues/5554)
   build:
-    depends_on: [test]
     image: python:3.10-bookworm
     commands:
       - export CI=true
-      - ./misc/install-debian-deps.sh
-      - ./misc/install-highctidh.sh
+      - PATH=$PATH:~/.local/bin
+      - ./misc/install-ci-deps.sh
+      - . $(pipenv --venv)/bin/activate
       - make wheel
       - make deb
       - dpkg -I deb_dist/*.deb
+
