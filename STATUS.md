@@ -52,10 +52,6 @@ the most important issues to be aware of when using vula today are these:
   the documentation of the current situation should improve in the nearer
   future.
 
-* The `vula verify` subcommands, including QR code scanning, have bitrotted and
-  are currently non-functional. Peers can be marked as `pinned` and `verified`
-  using the `vula peer set` command for now.
-
 ### Troubleshooting
 
 The `vula repair` command will ensure that all peers have the correct routes
