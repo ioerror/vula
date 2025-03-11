@@ -71,7 +71,7 @@ class VerifyCommands(object):
         click.echo(green(bold("Your VK is: ")) + str(self.vk))
         qr = qrcode.QRCode()
         qr.add_data(data="local.vula:vk:" + str(self.vk))
-        qr.print_ascii()
+        qr.print_tty()
 
     @DualUse.method()
     def my_descriptor(self):
@@ -79,7 +79,7 @@ class VerifyCommands(object):
             click.echo(green(bold("Descriptor for {}: ".format(ip))))
             qr = qrcode.QRCode()
             qr.add_data(data="local.vula:desc:" + str(desc))
-            qr.print_ascii()
+            qr.print_tty()
             click.echo(repr(str(desc)))
 
     @DualUse.method()
