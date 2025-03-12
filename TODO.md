@@ -17,13 +17,9 @@ We should migrate everything in this TODO to codeberg issues.
 - move misc/install-mitm-deps.sh to contrib/mitm/ ?
 
 - review HACKING.md and ensure pipenv/pipx information is relevant/working/etc (narrator: it isn't)
-
-- setup codeberg CI
-
 - we need to research more to figure out what our minimum requirements actually
   are, and better define a way to install everything on older systems.
   pipx? docker?
-
 
 - install .desktop file for gui
 - figure out what it takes to use vula with userspace (golang) wg. (does pyroute2 help?)
@@ -321,8 +317,6 @@ priority, as `wg-quick` does, will cause us to leak presently.
 
 Think about combining vula with the reunion protocol. Could "reunion on an
 ethernet" work via a gethostbyname interface? Maybe.
-
-- need to install new packages on debian: python3-opencv
 
 - Add support for OpenBSD; see TODO.porting
 

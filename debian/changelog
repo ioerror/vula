@@ -1,3 +1,9 @@
+vula (0.2.2025031100-1) unstable; urgency=medium
+
+  * Upgrade to 0.2.2025031100
+
+ -- Vula Authors <security@vula.link>  Wed, 12 Mar 2025 22:08:19 +0100
+
 vula (0.2.2024041500-1) unstable; urgency=low
 
   * source package automatically created by stdeb 0.10.0
