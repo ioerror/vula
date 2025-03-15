@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import pdb
 import time
+from functools import lru_cache
 from ipaddress import ip_address, ip_network
 from logging import Logger, getLogger
 from pathlib import Path
@@ -28,7 +29,6 @@ from .common import (
     b64_bytes,
     chown_like_dir_if_root,
     jsonrepr,
-    memoize,
     raw,
     schemattrdict,
     yamlrepr,
@@ -51,6 +51,7 @@ from .constants import (
     _PUBLISH_DBUS_PATH,
     _WG_PORT,
     IPv4_GW_ROUTES,
+    _LRU_CACHE_MAX_SIZE,
 )
 from .csidh import ctidh, ctidh_parameters, hkdf
 from .discover import Discover
@@ -582,7 +583,7 @@ class Organize(attrdict):
             _ctidh = ctidh(ctidh_parameters)
             sk = bytes(self._keys.pq_ctidhP512_sec_key)
 
-            @memoize
+            @lru_cache(maxsize=_LRU_CACHE_MAX_SIZE)
             def _ctidh_dh(pk: bytes):
                 self.log.debug("Generating CTIDH PSK for pk {}".format(pk))
                 return _ctidh.dh(

@@ -7,6 +7,9 @@ _LOG_FMT: str = "%(asctime)s: %(message)s"
 _DATE_FMT: str = "%Y-%m-%d-%H:%M:%S"
 _WG_INTERFACE: str = "vula"
 
+# Set an upper boundary of 1kB for the cache
+_LRU_CACHE_MAX_SIZE: int = 1024
+
 _WG_SERVICES: List = [
     "vula-publish.service",
     "vula-organize.service",
