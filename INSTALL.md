@@ -17,7 +17,7 @@ a debianized version of our Python package using the `pypi-install` tool.
 To install the dependencies required for building vula packages yourself, or
 for installing a debian package via `pypi-install`, run this command:
 
-* `sudo apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot gcc make python3-all python3-all-dev python3-click python3-cpuinfo python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-setuptools-scm python3-stdeb python3-systemd python3-toml python3-yaml python3-zeroconf python3-babel python3-tk python-all wireguard-tools python3-sphinx python3-xlib python3-pillow gir1.2-ayatanaappindicator3-0.1 python3-opencv`
+* `sudo apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot gcc make python3-all python3-all-dev python3-click python3-cpuinfo python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-setuptools-scm python3-systemd python3-toml python3-yaml python3-zeroconf python3-babel python3-tk python-all wireguard-tools python3-sphinx python3-xlib python3-pillow gir1.2-ayatanaappindicator3-0.1 python3-opencv`
 * `sudo pip install highctidh`
 
 You need `python3-click` module version 8.+, `apt` might install the latest version,
@@ -29,39 +29,17 @@ reinstall the `click` module using `pypi`:
 
 # Install
 
-FIXME: As of 2025, these install instructions have largely bitrotted.
+`make deb` produces a Debian package.
 
-`make deb` works now (without stdeb, which is EOL); the rest of these
-instructions should be reviewed and updated.
+## option 0: quick install
 
-## option 0: dpkg installation via PyPI
-
-The
-[`pypi-install`](https://pypi.org/project/stdeb/#pypi-install-command-line-command)
-command, provided by the `python3-stdeb` package, can create and install `.deb`
-packages from many packages available on the Python Package Index. This is
-currently our recommended way for users of Debian and Ubuntu to install vula
-and any Python dependencies which are not included with your distribution. On
-Debian 11 or Ubuntu 21.x, after running the above `apt` command, simply run
-these four commands:
 
 ```
-sudo pypi-install highctidh
-# DEB_BUILD_OPTIONS=nocheck skips running tests as pystray on PyPI doesn't
-# have them included and causes the build to fail.
-sudo DEB_BUILD_OPTIONS=nocheck pypi-install pystray
-sudo pypi-install vula_libnss
-sudo pypi-install ggwave
-sudo pypi-install vula
+./misc/quick-install.sh
 ```
 
-Installing the deb will automatically configure `nsswitch`, restart
-`systemd-sysusers`, reload `dbus`, etc, and will tell `systemd` to enable and
-start the `vula-organize` service.
 
-On older distributions it may be necessary to `pypi-install` some other
-packages such as `zeroconf` and `pyroute2`. Accurate installation instructions
-for Ubuntu 20.04 should be restored here soon.
+## option 1: build and install Debian Packages from a git checkout
 
 For working system tray support on the Gnome desktop environment it may be
 necessary to install the Ubuntu AppIndicators extension:
@@ -69,21 +47,23 @@ necessary to install the Ubuntu AppIndicators extension:
 * `sudo apt-get install gnome-shell-extension-appindicator`
 * `gnome-extensions enable ubuntu-appindicators@ubuntu.com`
 
-## option 1: build and install Debian Packages from a git checkout
-
 In addition to the dependencies in the `apt` command above, you will also need
 the [`highctidh`](https://codeberg.org/vula/highctidh) module. It can be installed
 using `pypi-install` as shown above, or other ways as described in its
 [`README.python.md`](https://codeberg.org/vula/highctidh/src/branch/main/README.python.md).
 
 ```
+git clone https://codeberg.org/vula/highctidh/
+cd highctidh/
+make deb && sudo dpkg -i dist/python3-highctidh_*.deb
+cd ..
 git clone --recurse-submodules https://codeberg.org/vula/vula_libnss
-cd vula_libnss
-make deb && sudo dpkg -i deb_dist/python3-vula-libnss_*.deb
+cd vula_libnss/
+make deb && sudo dpkg -i dist/python3-vula-libnss_*.deb
 cd ../
 git clone https://codeberg.org/vula/vula
 cd vula
-make deb && sudo dpkg -i deb_dist/python3-vula_*_all.deb
+make deb && sudo dpkg -i dist/python3-vula_*_all.deb
 ```
 
 ## option 2: build a wheel and install with pip

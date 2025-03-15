@@ -3,7 +3,7 @@
 set -e;
 
 sudo apt update;
-sudo apt install -y --no-install-recommends \
+sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
   build-essential ca-certificates clang coreutils debhelper dh-python dpkg-dev \
   fakeroot flit gcc git gnome-shell-extension-appindicator make python3 \
   python3-all-dev python3-babel python3-build python3-click python3-cpuinfo \
@@ -17,6 +17,21 @@ sudo apt install -y --no-install-recommends \
   python3-tk python3-toml python3-venv python3-wheel python3-xlib python3-yaml \
   python3-zeroconf sudo time wireguard-tools;
 
+# pymonocypher
+sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
+  cython3 build-essential python3 python3-venv python3-build debhelper-compat \
+  pybuild-plugin-pyproject python3-all-dev python3-numpy;
+
+# reunion
+sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
+  build-essential python3 python3-venv flit dh-python debhelper git \
+  pybuild-plugin-pyproject python3-setuptools python3-hkdf;
+
+# ggwave
+sudo DEBIAN_FRONTEND=noninteractive apt install cython3 build-essential \
+  debhelper-compat dh-python python3-all-dev python3-build python3-cogapp \
+  python3-venv;
+
 if [ ! -d highctidh ];
 then
   git clone https://www.codeberg.org/vula/highctidh;
@@ -29,12 +44,44 @@ then
 else
   cd vula_libnss && git pull && cd ..;
 fi
+if [ ! -d ggwave ];
+then
+  git clone --recursive https://www.github.com/ioerror/ggwave
+else
+  cd ggwave && git pull && cd ..;
+fi
+if [ ! -d pymonocypher ];
+then
+  git clone --recursive https://github.com/jetperch/pymonocypher/
+else
+  cd pymonocypher && git pull && cd ..;
+fi
+if [ ! -d reunion ];
+then
+  git clone --recursive https://www.codeberg.org/rendezvous/reunion
+else
+  cd reunion && git pull && cd ..;
+fi
 make clean && make deb
 export CC=gcc;
 cd vula_libnss && make clean && make deb; cd ..;
+cd pymonocypher && make clean && make deb; cd ..;
 export CC=clang;
+cd ggwave && cmake . -DGGWAVE_BUILD_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release \
+          && make deb; cd ..;
 cd highctidh && make clean && make deb; cd ..;
+cd reunion && make clean && make deb; cd ..;
+echo "Hashes for the Debian packages:";
+sha256sum dist/*.deb;
+sha256sum vula_libnss/dist/*.deb;
+sha256sum highctidh/dist/*.deb;
+sha256sum ggwave/dist/*.deb;
+sha256sum pymonocypher/dist/*.deb;
+sha256sum reunion/dist/*.deb;
 echo "Install the following Debian packages:";
-ls highctidh/dist/*.deb;
-ls vula_libnss/dist/*.deb;
-ls dist/*.deb;
+ls -1 dist/*.deb;
+ls -1 vula_libnss/dist/*.deb;
+ls -1 highctidh/dist/*.deb;
+ls -1 ggwave/dist/*.deb;
+ls -1 pymonocypher/dist/*.deb;
+ls -1 reunion/dist/*.deb;

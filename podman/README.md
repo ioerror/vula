@@ -32,8 +32,8 @@ clean` target.
 
 | dist         | name             | pytest | ping test | PyPI packages required                                      | notes                                                                           |
 |--------------|------------------|--------|-----------|-------------------------------------------------------------|---------------------------------------------------------------------------------|
-| buster       | Debian 10        | ❌     | ❌        | highctidh, vula\_libnss, stdeb, zeroconf, pyroute2, cryptography | conflicts with python3-cryptography, pyyaml, etc are not easily solved with pip |
-| focal        | Ubuntu 20.04 LTS | ✅     | ❌        | highctidh, vula\_libnss, stdeb                                   | No multicast connectivity in podman containers                                  |
+| buster       | Debian 10        | ❌     | ❌        | highctidh, vula\_libnss, zeroconf, pyroute2, cryptography | conflicts with python3-cryptography, pyyaml, etc are not easily solved with pip |
+| focal        | Ubuntu 20.04 LTS | ✅     | ❌        | highctidh, vula\_libnss                                    | No multicast connectivity in podman containers                                  |
 | hirsute      | Ubuntu 21.04     | ✅     | ✅        | highctidh, vula\_libnss                                          |                                                                                 |
 | impish       | Ubuntu 21.10     | ✅     | ✅        | highctidh, vula\_libnss                                          |                                                                                 |
 | jammy        | Ubuntu 22.04     | ✅     | ✅        | highctidh, vula\_libnss                                          |                                                                                 |

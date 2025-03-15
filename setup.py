@@ -39,7 +39,6 @@ if os.path.exists('requirements.txt'):
     with open("requirements.txt", "r") as obj:
         requirements = obj.read().splitlines()
 else:
-    # this makes stdeb work
     requirements = []
 
 with open("README.md", "r") as obj:
