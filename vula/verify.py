@@ -13,28 +13,36 @@
  after it has been verified.
 """
 
-try:
-    import cv2
-    from pyzbar.pyzbar import decode
-except ImportError:
-    zbar = None
-    cv2 = None
-    decode = None
-
-try:
-    import qrcode
-except ImportError:
-    qrcode = None
-
 import hashlib
 import json
 import sys
 
+from base64 import b64decode
 import click
+from typing import Any, Callable, Generator, List, Optional, Tuple, Union
+from types import ModuleType
 import pydbus
 import yaml
 from click.exceptions import Exit
 from gi.repository import GLib
+
+try:
+    cv2: Optional[ModuleType]
+    import cv
+except ImportError:
+    cv2 = None
+
+try:
+    zbar: Optional[ModuleType]
+    from pyzbar.pyzbar import decode
+except ImportError:
+    zbar = None
+
+try:
+    qrcode: Optional[ModuleType]
+    import qrcode
+except ImportError:
+    qrcode = None
 
 from .common import escape_ansi
 from .constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
@@ -42,6 +50,7 @@ from .engine import Result
 from .notclick import DualUse, bold, green, red
 from .peer import Descriptor
 from .verify_audio import VerifyAudio
+from .verify_reunion import reunion_multicast_run_verify
 
 
 @DualUse.object(
@@ -50,6 +59,8 @@ from .verify_audio import VerifyAudio
 )
 @click.pass_context
 class VerifyCommands(object):
+    cli: Callable[[], None]
+
     def __init__(self, ctx):
         organize = ctx.meta.get('Organize', {}).get('magic_instance')
 
@@ -65,6 +76,23 @@ class VerifyCommands(object):
             ).items()
         }
         (self.vk,) = set(d.vk for d in self.my_descriptors.values())
+        prefs: str = self.organize.show_prefs()
+        self.ifaces_mask: List[str] = yaml.safe_load(prefs)[
+            'iface_prefix_allowed'
+        ]
+
+    def _lookup_peer_vk_hostname(self, hostname: str) -> Tuple[str, bytes]:
+        try:
+            # Lookup hostname and hash it
+            peer_vk_b64: str = self.organize.get_vk_by_name(hostname)
+            peer_vk: bytes = b64decode(peer_vk_b64)
+            peer_vk_hashed: bytes = hashlib.sha256(peer_vk).digest()
+        except GLib.Error:
+            raise click.ClickException(
+                f"hostname {hostname} unknown, "
+                f"can only verify previously discovered hosts"
+            )
+        return peer_vk_b64, peer_vk_hashed
 
     @DualUse.method()
     def my_vk(self):
@@ -182,9 +210,14 @@ class VerifyCommands(object):
     @DualUse.method()
     @click.argument('hostname', type=str, required=True)
     @click.option(
-        '-v', '--verbose', default=False, is_flag=True, show_default=True
+        '-v',
+        '--verbose',
+        default=False,
+        is_flag=True,
+        show_default=True,
+        type=bool,
     )
-    def listen(self, hostname, verbose):
+    def listen(self, hostname: str, verbose: bool):
         try:
             known_vk = self.organize.get_vk_by_name(hostname)
         except GLib.Error:
@@ -227,6 +260,129 @@ class VerifyCommands(object):
                 if verbose:
                     print("keys are for the wrong DeLorean")
                 raise Exit(1)
+
+    @DualUse.method()  # type: ignore
+    @click.argument("hostname", required=True, type=str)
+    @click.option(
+        "--multicast-group", default="224.3.29.71", show_default=True, type=str
+    )
+    @click.option(
+        "--bind-addr",
+        default="0.0.0.0",
+        show_default=True,
+        type=str,
+        help="By default we bind to all IPv4 addresses where vula is operating",
+    )
+    @click.option("--port", default=9005, show_default=True, type=int)
+    @click.option(
+        "--reveal-once",
+        is_flag=True,
+        default=True,
+        type=bool,
+        help="Only reveal our VK to the first peer with the correct passphrase",
+    )
+    @click.option(
+        "--passphrase",
+        prompt=True,
+        hide_input=True,
+        type=str,
+        help="The passphrase for the REUNION session",
+    )
+    @click.option(
+        "--interval",
+        "-I",
+        default=15,
+        show_default=True,
+        type=int,
+        help="Interval at which to start new sessions",
+    )
+    @click.option(
+        "--timeout",
+        "-t",
+        default=60,
+        show_default=True,
+        type=int,
+        help="Timeout",
+    )
+    @click.option(
+        "--verbose",
+        is_flag=True,
+        default=False,
+        type=bool,
+        help="Verbose output",
+    )
+    def reunion(self, **kw: Any) -> int:
+        """
+        Verify a host using the rendez.vous.reunion.multicast API.
+
+        The hashed *vk* for the host is shared under the *passphrase* for the
+        REUNION session. We expect to receive the hashed *vk* of the peer
+        *hostname*.
+
+        If the received *vk* hash matches the expected value for the peer hostname,
+        the host is marked as verified and then the *vk* is pinned.
+
+        By default, we bind the multicast REUNION protocol to each interface
+        that is in the list of allowed vula interfaces. The REUNION protocol
+        runs every *interval* until success or until the *timeout* threshold
+        has been reached. To share your *vk* with more than one party under the
+        same *passphrase*, the *reveal-once* option may be set to False.
+        """
+        hostname: str = kw['hostname']
+        verbose: bool = kw['verbose']
+        bind_mask: List[str]
+        if kw['bind_addr'] != "0.0.0.0":
+            bind_mask = []
+        else:
+            bind_mask = self.ifaces_mask
+        kw['bind_mask'] = bind_mask
+        click.echo(green(bold(f"Verifying {hostname} with reunion")))
+        if verbose:
+            click.echo("Press Ctrl+C to stop")
+        expected_peer_vk: str
+        expected_peer_vk_hashed: bytes
+        expected_peer_vk, expected_peer_vk_hashed = (
+            self._lookup_peer_vk_hostname(hostname)
+        )
+        message: bytes = hashlib.sha256(bytes(self.vk)).digest()
+        kw['message'] = message
+        try:
+            hashed_peer_vk: Optional[bytes] = reunion_multicast_run_verify(
+                **kw
+            )
+        except click.ClickException:
+            hashed_peer_vk = None
+        if hashed_peer_vk is None:
+            click.echo(
+                red(bold("No valid response received. Verification failed."))
+            )
+            raise click.ClickException("Verification failed")
+        if hashed_peer_vk == expected_peer_vk_hashed:
+            res: str = self.organize.verify_and_pin_peer(
+                expected_peer_vk, hostname
+            )
+            yamlres: Result = Result(yaml.safe_load(res))
+            if yamlres is not None and yamlres.ok:
+                if verbose:
+                    click.echo(yamlres)
+                click.echo(
+                    green(
+                        bold(
+                            f"Verification succeeded: {hostname} is verified and pinned."
+                        )
+                    )
+                )
+                exit(0)
+            else:
+                raise Exception(yamlres.error)
+        else:
+            click.echo(red(bold(f"The received vk and does not match.")))
+            if verbose:
+                click.echo(f"{hashed_peer_vk=}")
+                click.echo(f"{expected_peer_vk_hashed=}")
+                click.echo(f"{expected_peer_vk=}")
+                click.echo("keys are for the wrong DeLorean")
+            raise Exit(1)
 
 
 main = VerifyCommands.cli

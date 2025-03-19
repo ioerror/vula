@@ -20,12 +20,13 @@ sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
 # pymonocypher
 sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
   cython3 build-essential python3 python3-venv python3-build debhelper-compat \
-  pybuild-plugin-pyproject python3-all-dev python3-numpy;
+  pybuild-plugin-pyproject python3-all-dev python3-numpy python-is-python3;
 
 # reunion
 sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
   build-essential python3 python3-venv flit dh-python debhelper git \
-  pybuild-plugin-pyproject python3-setuptools python3-hkdf;
+  pybuild-plugin-pyproject python3-setuptools python3-hkdf python3-flask \
+  python3-stem;
 
 # ggwave
 sudo DEBIAN_FRONTEND=noninteractive apt install cython3 build-essential \
@@ -46,7 +47,7 @@ else
 fi
 if [ ! -d ggwave ];
 then
-  git clone --recursive https://www.github.com/ioerror/ggwave
+  git clone --recursive https://www.github.com/ggerganov/ggwave
 else
   cd ggwave && git pull && cd ..;
 fi
@@ -62,15 +63,16 @@ then
 else
   cd reunion && git pull && cd ..;
 fi
+mkdir -p dist
 make clean && make deb
 export CC=gcc;
 cd vula_libnss && make clean && make deb; cd ..;
 cd pymonocypher && make clean && make deb; cd ..;
-export CC=clang;
 cd ggwave && cmake . -DGGWAVE_BUILD_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release \
           && make deb; cd ..;
-cd highctidh && make clean && make deb; cd ..;
 cd reunion && make clean && make deb; cd ..;
+export CC=clang;
+cd highctidh && make clean && make deb; cd ..;
 echo "Hashes for the Debian packages:";
 sha256sum dist/*.deb;
 sha256sum vula_libnss/dist/*.deb;

@@ -3,13 +3,17 @@ import os
 import sys
 
 import click
+from typing import Optional
+from types import ModuleType
 
 try:
+    ggwave: Optional[ModuleType]
     import ggwave
 except ImportError:
     ggwave = None
 
 try:
+    pyaudio: Optional[ModuleType]
     import pyaudio
 except ImportError:
     pyaudio = None

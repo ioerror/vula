@@ -360,7 +360,7 @@ def schema2click_options(f):
     return f
 
 
-def red(s):
+def red(s: str) -> str:
     """
     Formats the given string 's' to red foreground color.
 
@@ -371,7 +371,7 @@ def red(s):
     return click.style(s, fg="red")
 
 
-def green(s):
+def green(s: str) -> str:
     """
     Formats the given string 's' to green foreground color.
 
@@ -382,7 +382,7 @@ def green(s):
     return click.style(s, fg="green")
 
 
-def blue(s):
+def blue(s: str) -> str:
     """
     Formats the given string 's' to blue foreground color.
 
