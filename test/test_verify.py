@@ -1,5 +1,6 @@
 import json
 from unittest.mock import MagicMock, Mock, patch
+import sys
 
 import vula.verify
 
@@ -49,6 +50,9 @@ class TestVerifyCommands:
             mockdbus.SystemBus().get().our_latest_descriptors()
             == json.dumps(test_descriptor)
         )
+
+        with patch('sys.stdout'):
+            sys.stdout.isatty.return_value = True
 
         with patch("vula.verify.pydbus", mockdbus):
             # the __wrapped__ call gets rid of the click decorators.
