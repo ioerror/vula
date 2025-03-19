@@ -43,7 +43,7 @@ printy = "*"
 scapy = "*"
 pyshark = "*"
 atheris = "*"
-pygobject = "*"
+pygobject = "<=3.50.0"
 build = "*"
 
 [requires]

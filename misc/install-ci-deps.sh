@@ -11,7 +11,7 @@ dist="$(cat /etc/os-release|grep VERSION_CODENAME|cut -f 2 -d=)"
 
 echo "Installing on '$dist'"
 
-ci_deps="pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git portaudio19-dev gcc clang python3 python3-build python3-setuptools build-essential python3-venv python3-wheel python3-pip dh-python flit debhelper dh-python fakeroot python3-setuptools rpm python3-xlib xvfb xauth python3-pytest"
+ci_deps="pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev libgirepository-2.0-dev python3-all-dev python3-tk make git portaudio19-dev gcc clang python3 python3-build python3-setuptools build-essential python3-venv python3-wheel python3-pip dh-python flit debhelper dh-python fakeroot python3-setuptools rpm python3-xlib xvfb xauth python3-pytest"
 
 apt update
 apt install -y --no-install-recommends $ci_deps
