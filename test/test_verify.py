@@ -51,9 +51,6 @@ class TestVerifyCommands:
             == json.dumps(test_descriptor)
         )
 
-        with patch('sys.stdout'):
-            sys.stdout.isatty.return_value = True
-
         with patch("vula.verify.pydbus", mockdbus):
             # the __wrapped__ call gets rid of the click decorators.
             verify = vula.verify.VerifyCommands.__wrapped__(mockclickctx)
@@ -65,9 +62,9 @@ class TestVerifyCommands:
         assert verify.vk is not None
         assert verify.my_descriptors is not None
 
-    def test_my_vk(self, capsys):
+    def test_my_vk(self, monkeypatch, capsys):
+        monkeypatch.setattr(sys.stdout, 'isatty', lambda: True)
         verify = self.create_verify_commands()
-
         verify.my_vk()
         output = capsys.readouterr().out
         assert 'A' * 43 + '=' in output
@@ -75,7 +72,8 @@ class TestVerifyCommands:
         assert 'X' * 86 + '=' not in output
         assert 'Z' * 86 + '=' not in output
 
-    def test_my_descriptor(self, capsys):
+    def test_my_descriptor(self, monkeypatch, capsys):
+        monkeypatch.setattr(sys.stdout, 'isatty', lambda: True)
         verify = self.create_verify_commands()
         verify.my_descriptor()
         output = capsys.readouterr().out
