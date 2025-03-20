@@ -1,6 +1,6 @@
 ---
 title: "Install"
-date: 2025-03-20T14:14:30+01:00
+date: 2025-03-20T14:40:30+01:00
 draft: false
 ---
 
@@ -27,7 +27,7 @@ wheel from a git checkout.
 For a simple technology demonstration we offer an insecure quick package
 building script to aid in installing vula:
 
-* `cd /dev/shm && git clone https://codeberg.org/vula/vula/`
+* `git clone https://codeberg.org/vula/vula/`
 * `cd vula`
 * `./misc/quick-install.sh`
 
@@ -35,6 +35,7 @@ Install the newly built Debian packages.
 
 ## option 1: manually build and install Debian Packages
 
+Install the the packaged dependencies:
 * `sudo apt install --no-install-recommends
   build-essential ca-certificates clang coreutils debhelper dh-python dpkg-dev 
   fakeroot flit gcc git gnome-shell-extension-appindicator make python3 
@@ -48,7 +49,6 @@ Install the newly built Debian packages.
   python3-setuptools-scm python3-pystray python3-sphinx python3-systemd 
   python3-tk python3-toml python3-venv python3-wheel python3-xlib python3-yaml 
   python3-zeroconf sudo time wireguard-tools`
-
 * `git clone --recurse-submodules https://codeberg.org/vula/vula_libnss`
 * `cd vula_libnss`
 * `make deb && sudo dpkg -i deb_dist/python3-vula-libnss_*.deb`
