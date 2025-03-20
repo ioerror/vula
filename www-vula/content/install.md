@@ -64,7 +64,7 @@ start the `vula-organize` service.
 ## option 2: build a wheel and install with pip
 
 This option is available for advanced technical users - it requires manual
-setup of `[vula_libnss](https://codeberg.org/vula/vula_libnss)` after
+setup of [vula_libnss](https://codeberg.org/vula/vula_libnss) after
 installing `vula_libnss`. This essentially means ensuring that the libnss
 shared object file is installed in `/lib/libnss_vula.so.2`. This may be
 installed by building a Debian package or by installing `vula_libnss` with pip
