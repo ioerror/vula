@@ -11,7 +11,8 @@ the software to other operating systems in the future.
 
 The software has been developed and tested on Debian (bullseye), Mobian, and
 Ubuntu (20.04 and 20.10). It is likely to work on other modern systemd-based
-distributions.
+distributions. Option 0 is likely to only work on Debian testing and the latest
+Ubuntu distro.
 
 Vula can also be run without systemd, and/or in a single monolithic process,
 but how to do so is not yet documented.
@@ -23,18 +24,30 @@ wheel from a git checkout.
 
 ## option 0: quick install
 
-For a simple technology demonstration we offer an insecure quick install (eg: a dangerous [curl
-pipe sudo
-bash](https://www.idontplaydarts.com/2016/04/detecting-curl-pipe-bash-server-side/))
-process:
+For a simple technology demonstration we offer an insecure quick package
+building script to aid in installing vula:
+* `cd /dev/shm && git clone https://codeberg.org/vula/vula/`
+* `cd vula`
+* `./misc/quick-install.sh`
 
-* `cd /dev/shm && wget https://codeberg.org/vula/vula/raw/branch/main/misc/quick-install.sh`
-* `bash quick-install.sh`
+Install the newly built Debian packages.
 
 ## option 1: manually build and install Debian Packages
 
-* `sudo apt install --no-install-recommends wireguard wireguard-tools python3-yaml python3-click python3-nacl python3-schema python3-pip python3-pydbus python3-pyroute2 python3-pytest-runner python3-pytest python3-toml python3-py python3-packaging python3-pluggy python3-hkdf python3-ifaddr python3-cryptography python3-dbus python3-pygments python3-systemd python3-qrcode python3-all python-all fakeroot build-essential dh-python debhelper make gcc python3-all-dev python3-zeroconf`
-* `sudo pip3 install stdeb highctidh` (note: unfortunately this step still requires installing stdeb, highctidh, and its dependencies with pip as root - you can alternately build a deb of `highctidh` but this procedure is not yet documented here. the stdeb version from Debian stable and Ubuntu 20.10 is insufficient, however.)
+* `sudo apt install --no-install-recommends
+  build-essential ca-certificates clang coreutils debhelper dh-python dpkg-dev \
+  fakeroot flit gcc git gnome-shell-extension-appindicator make python3 \
+  python3-all-dev python3-babel python3-build python3-click python3-cpuinfo \
+  python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr \
+  python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy \
+  python3-opencv python3-packaging python3-pathtools python3-pillow python3-pip \
+  python3-pluggy python3-progress python3-py python3-pyaudio python3-pydbus \
+  python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner \
+  python3-pytest-xdist python3-qrcode python3-schema python3-setuptools \
+  python3-setuptools-scm python3-pystray python3-sphinx python3-systemd \
+  python3-tk python3-toml python3-venv python3-wheel python3-xlib python3-yaml \
+  python3-zeroconf sudo time wireguard-tools`
+
 * `git clone --recurse-submodules https://codeberg.org/vula/vula_libnss`
 * `cd vula_libnss`
 * `make deb && sudo dpkg -i deb_dist/python3-vula-libnss_*.deb`
@@ -100,5 +113,4 @@ To see the preferences:
 To see commands for editing preferences:
 * `vula prefs --help`
 
-More documentation is coming soon.
-
+Please open an issue to request alternative or additional install documentation.
