@@ -264,8 +264,10 @@ class VerifyCommands(object):
     @DualUse.method()  # type: ignore
     @click.argument("hostname", required=True, type=str)
     @click.option(
-        "--multicast-group", default="224.3.29.71", show_default=True, type=str
+        "--multicast-group", default="224.3.29.71", show_default=True, type=str, help="Multicast group",
     )
+    @click.option("--multicast-port", default=9005, show_default=True, type=int,
+                  help="Multicast listener port",)
     @click.option(
         "--bind-addr",
         default="0.0.0.0",
@@ -273,7 +275,14 @@ class VerifyCommands(object):
         type=str,
         help="By default we bind to all IPv4 addresses where vula is operating",
     )
-    @click.option("--port", default=9005, show_default=True, type=int)
+    @click.option(
+        "--bind-mask",
+        default=["all"],
+        multiple=True,
+        show_default=True,
+        type=str,
+        help="vula's iface_prefix_allowed is the default interface mask list",
+    )
     @click.option(
         "--reveal-once",
         is_flag=True,
@@ -313,14 +322,15 @@ class VerifyCommands(object):
     )
     def reunion(self, **kw: Any) -> int:
         """
-        Verify a host using the rendez.vous.reunion.multicast API.
+        Verify a host using the rendez.vous.reunion.multicast REUNION API.
 
         The hashed *vk* for the host is shared under the *passphrase* for the
         REUNION session. We expect to receive the hashed *vk* of the peer
         *hostname*.
 
-        If the received *vk* hash matches the expected value for the peer hostname,
-        the host is marked as verified and then the *vk* is pinned.
+        If the received *vk* hash matches the expected value for the peer
+        hostname's hashed vk, the host's vk is marked as verified and then the
+        *vk* for the hostname is pinned.
 
         By default, we bind the multicast REUNION protocol to each interface
         that is in the list of allowed vula interfaces. The REUNION protocol
@@ -330,12 +340,10 @@ class VerifyCommands(object):
         """
         hostname: str = kw['hostname']
         verbose: bool = kw['verbose']
-        bind_mask: List[str]
-        if kw['bind_addr'] != "0.0.0.0":
-            bind_mask = []
-        else:
-            bind_mask = self.ifaces_mask
-        kw['bind_mask'] = bind_mask
+        if kw['bind_mask'] == "all" or kw['bind_addr'] == "0.0.0.0":
+            kw['bind_mask'] = self.ifaces_mask
+        elif kw['bind_addr'] != "0.0.0.0":
+            kw['bind_mask'] = ()
         click.echo(green(bold(f"Verifying {hostname} with reunion")))
         if verbose:
             click.echo("Press Ctrl+C to stop")
@@ -357,6 +365,10 @@ class VerifyCommands(object):
                 red(bold("No valid response received. Verification failed."))
             )
             raise click.ClickException("Verification failed")
+        if len(hashed_peer_vk) != 32:
+            click.echo(
+                red(bold("Invalid length of peer vk received. Verification failed."))
+            )
         if hashed_peer_vk == expected_peer_vk_hashed:
             res: str = self.organize.verify_and_pin_peer(
                 expected_peer_vk, hostname
