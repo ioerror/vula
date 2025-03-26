@@ -30,7 +30,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
 
 # ggwave
 sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
-  cython3 build-essential debhelper-compat dh-python python3-all-dev \
+  cython3 build-essential cmake debhelper-compat dh-python python3-all-dev \
   python3-build python3-cogapp python3-venv;
 
 if [ ! -d highctidh ];
