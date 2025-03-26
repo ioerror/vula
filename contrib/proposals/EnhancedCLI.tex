@@ -1,0 +1,46 @@
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\title{Vula Project Proposal: Enhancing the CLI for System Administrators}
+\author{Vaney Quentin Guillaume, Noah Ferrari, Joel Meier}
+\date{\today}
+
+\begin{document}
+	
+	\maketitle
+	
+	\textbf{Overview:} The current Vula CLI lacks features vital to sysadmins. We propose a redesign focused on scriptability, accessibility, and automation. Key improvements include structured output (YAML/JSON), shell autocomplete, colorblind-friendly themes, and a new `vula script` subcommand tailored for automation and Ansible integration.
+	
+	\textbf{User Story:} Frank Hank, a sysadmin, manages multiple Vula instances and needs reliable, automatable tools. He requires structured output, accessible CLI design, autocomplete, and clear scripting integration to reduce manual overhead.
+	
+	\textbf{Objectives (Success Criteria):}
+	\begin{enumerate}
+		\item Redesign Vula CLI for scriptability.
+		\item Add YAML/JSON output formats.
+		\item Offer selectable colorblind-safe themes.
+		\item Implement shell autocomplete (e.g., Click).
+		\item Include full documentation with doctests and CLI design.
+	\end{enumerate}
+	
+	\textbf{Key Feature:} The `vula script` subcommand will act as a stable automation interface with goal-oriented commands and YAML output, enabling use in Ansible and scripts without affecting other CLI parts.
+	
+	\textbf{Security and Accessibility:} We treat accessibility as security. Improvements include:
+	\begin{itemize}
+		\item Non-color indicators (symbols/patterns).
+		\item Multiple color schemes for common vision deficiencies.
+		\item Structured, machine-readable output.
+	\end{itemize}
+	
+	\textbf{Extended Goals:}
+	\begin{itemize}
+		\item Document a Vula deployment with Ansible.
+		\item Provide a cron job example using `vula script`.
+	\end{itemize}
+	
+\end{document}
+
