@@ -1,0 +1,120 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{float}
+%\usepackage{cite}
+\usepackage{url}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{titlesec}
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{titling}
+
+\hypersetup{
+    hidelinks,
+    colorlinks,
+    urlcolor=blue,
+    citecolor=[rgb]{0,.6,.25}
+}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{lightgray}{rgb}{.9,.9,.9}
+\definecolor{darkgray}{rgb}{.4,.4,.4}
+\definecolor{purple}{rgb}{0.65, 0.12, 0.82}
+
+\title{
+    BTI2029 - Project submission for Open Source contribution\\
+    \large
+    ~\\
+    \textbf{Verify and improve correctness of Vula with Python type annotations}
+}
+% Manually set in title.tex
+\author{}
+\date{}
+% Left align title
+\pretitle{\begin{flushleft}\LARGE}
+\posttitle{\end{flushleft}}
+\preauthor{\begin{flushleft}\large}
+\postauthor{\end{flushleft}}
+\predate{\begin{flushleft}}
+\postdate{\end{flushleft}}
+% Adjust this value to move the title up
+\setlength{\droptitle}{-2cm}
+% This removes page numbers
+\pagenumbering{gobble}
+
+\begin{document}
+    \maketitle
+    \vspace{-2cm}
+
+    \begin{table}[H]
+        \begin{tabularx}{1\textwidth}{l X}
+            \toprule
+            School & \textbf{Bern University of Applied Sciences} \\
+            \midrule
+            Module & \textbf{BTI2029 - Open Source Software Contribution} \\
+            \midrule
+            Instructor & \textbf{Dr. Jacob Appelbaum} \\
+            \midrule
+            Authors  & \textbf{Gauss Frank (gausf1), Severin Lötscher (lotss3), Lukas von Allmen (vonal3)} \\
+            \midrule
+            Date  & \textbf{\today} \\
+            \bottomrule
+        \end{tabularx}
+        \label{tab:general-information}
+    \end{table}
+    % What do we want to do?
+    \section{Objectives}\label{sec:objectives}
+
+    Verify and improve the correctness of the existing python code base in \href{https://vula.link/}{vula} by:
+    \begin{itemize}
+        \item using type checkers to identify missing or wrong type annotations
+        \item adding and improving type annotations
+        \item enforcing type checking in different stages of the development process
+    \end{itemize}
+
+    % Why we want to do this?
+    \section{Reasoning}\label{sec:reasoning}
+    Type annotations improve a code base in readability, stability, maintainability, security and correctness.
+
+    % How we are doing it?
+    \section{Implementation}\label{sec:implementation}
+    We will use \href{https://www.mypy-lang.org/}{mypy} to identify missing or wrong type annotations in the current code base.
+    \hfill \break
+    \hfill \break
+    Further we will introduce an additional type checker for cross verification: \\
+    \href{https://github.com/microsoft/pyright/blob/main/docs/mypy-comparison.md}{pyright - Differences Between Pyright and Mypy} \\
+    \hfill \break
+    Based on the inputs of our instructor and maintainer of vula we will adopt the following best practices:
+    \begin{itemize}
+        \item Instead of creating a custom mypy configuration, we will use the `--strict` flag.
+        \item Our scope is to type the existing code base, changing code will be our last resort.
+        \item For untyped imports, we check if there are stubs available,
+        otherwise we will ignore it as described in: \href{https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports}{mypy - Missing imports}
+        \item Finding the right middle ground regarding type specificity: `Any` or `object` is almost never the right choice, but `Iterable[str]` might be a better description than `list[str]` for a functions argument.
+    \end{itemize}
+
+    \section{Goals}\label{sec:goals}
+    \paragraph{\textbf{Minimum Goals:}}
+    \begin{itemize}
+        \item Resolve all issues raised by mypy --strict.
+        \item Add a second type checker for cross verification: \href{https://github.com/microsoft/pyright/blob/main/docs/mypy-comparison.md}{pyright}
+        \item Add the type checkers to the CI configurations by extend the existing command `make check`.
+        \item Add a git pre-commit hook which runs the type checkers on each commit (e.g.: \href{https://pre-commit.com/}{pre-commit}).
+    \end{itemize}
+
+    \paragraph{\textbf{Optional goals:}}
+    \begin{itemize}
+        \item Add python type stubs for dependencies (Ad-hoc type stubs in the vula codebase).
+        \item Add type annotations for dependencies (Contribution to a third party library).
+    \end{itemize}
+\end{document}

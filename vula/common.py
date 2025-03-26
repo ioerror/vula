@@ -162,7 +162,7 @@ class ro_dict(dict):
     ValueError: Attempt to set key 'a' in read-only dictionary
 
     >>> ro = ro_dict({'a':1})
-    >>> ro.update({'a':2})
+    >>> ro.update({'a':2})  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
          ...
     ValueError: Attempt to update read-only dictionary (...)
@@ -1057,18 +1057,44 @@ def organize_dbus_if_active():
     Returns a dbus proxy to organize, if it is running. Exits otherwise.
 
     This is for commands that shouldn't dbus-activate it.
+
+    >>> import pydbus
+    >>> from unittest.mock import MagicMock, patch
+
+    >>> mock_bus = MagicMock()
+    >>> with patch("pydbus.SystemBus", return_value=mock_bus):
+    ...     mock_bus.dbus.NameHasOwner.return_value = True
+    ...     mock_bus.get.return_value = "DBusProxyObject"
+    ...     organize_dbus_if_active()
+    'DBusProxyObject'
+
+    >>> with patch("pydbus.SystemBus", return_value=mock_bus):
+    ...     mock_bus.dbus.NameHasOwner.return_value = False
+    ...     mock_bus.dbus.ListActivatableNames.return_value = [_ORGANIZE_DBUS_NAME]
+    ...     organize_dbus_if_active() # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+        ...
+    SystemExit: Organize is not running (but it is DBus-activatable; use 'vula start' to start it.).
+
+    >>> with patch("pydbus.SystemBus", return_value=mock_bus):
+    ...     mock_bus.dbus.NameHasOwner.return_value = False
+    ...     mock_bus.dbus.ListActivatableNames.return_value = []
+    ...     organize_dbus_if_active() # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+        ...
+    SystemExit: Organize DBus service is not configured
     """
 
     bus = pydbus.SystemBus()
     if bus.dbus.NameHasOwner(_ORGANIZE_DBUS_NAME):
         return bus.get(_ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH)
     elif _ORGANIZE_DBUS_NAME in bus.dbus.ListActivatableNames():
-        raise Exit(
+        raise SystemExit(
             "Organize is not running (but it is dbus-activatable; use 'vula"
             "start' to start it.)."
         )
     else:
-        raise Exit("Organize dbus service is not configured")
+        raise SystemExit("Organize dbus service is not configured")
 
 
 def sfmt(
