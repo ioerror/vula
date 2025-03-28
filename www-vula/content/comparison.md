@@ -1,45 +1,29 @@
 ---
-title: "Comparison"
-date: 2021-08-04T17:14:53+02:00
+title: "Comparison of LAN tunneling tools"
+date: 2025-03-28T11:36:55-07:00
 draft: false
 ---
 
 
-There are a wide variety of tools which can be used to create end-to-end
-encrypted tunnels between hosts, or which share other superficial similarities
-with Vula. To our knowledge, however, none of them achieve Vula's design goal
-of providing fully-automatic end-to-end encryption of local area network
-traffic.
+Many tools exist to create end-to-end encrypted tunnels between hosts, or share other superficial similarities with Vula, but to our knowledge, none of them achieves Vula's design goal of fully automatating end-to-end encryption of local area network traffic. Our comparison of the advantages and disadvantages of these tools is summarized in the table at the end of this topic.
 
-The following is a list of unique properties which Vula provides:
-* No infrastructure required
-* Fully automatic: LAN traffic between hosts with Vula installed is protected without any configuration whatsoever
-* Works on offline networks (eg, with RFC 3927 link-local addressing on ethernet, ad-hoc wifi, thunderbolt, etc)
-* Protects traffic using existing IP addresses (whether DHCP-assigned, link-local, or manually configured), so applications do not need to be reconfigured
-* Transitional post-quantum protection
+Vula's unique properties include:
 
-Projects such as [Tailscale](https://tailscale.com/),
-[Headscale](https://github.com/juanfont/headscale), and
-[innernet](https://github.com/tonarino/innernet) are similar to Vula in that
-they can be used to encrypt traffic between hosts on a LAN using WireGuard
-tunnels, but they differ in some important respects:
+* No special infrastructure is required.
+* Operation is fully automatic: LAN traffic between hosts with Vula installed is protected without any configuration whatsoever.
+* Offline network protocols are supported, for example, RFC 3927 link-local addressing on Ethernet, ad-hoc Wi-Fi, and Thunderbolt.
+* Existing IP addresses are used (whether DHCP-assigned, link-local, or manually configured), so applications do not need to be reconfigured.
+* Transitional post-quantum encryption offers resistance to future cryptanalysis threats.
 
-* They only create tunnels between hosts that are logged in to the same account on a centralized coordination server.
-    * Tailscale outsources the operation of this component to Amazon, a surveillance actor
-    * Headscale and innernet provide free software implementations which can be self-hosted, but remain a single point of failure
-* They use a different IP range inside and outside of the tunnels, so LAN-based applications need to be reconfigured to benefit from it.
-* They do not provide any post-quantum protection
+Projects such as [Tailscale](https://tailscale.com/), [Headscale](https://github.com/juanfont/headscale), and [innernet](https://github.com/tonarino/innernet) are similar to Vula in that they can be used to encrypt traffic between hosts on a LAN using WireGuard tunnels, but they differ in some important respects:
 
-With the exception of TCPcrypt and IPsec OE, the other projects listed here are
-all designed to protect traffic between hosts which are configured to be part
-of a single organization, whereas Vula provides automatic encryption of traffic
-between *all* locally-reachable hosts that are running the software.
+* All create tunnels between hosts that are logged into the same account on a centralized coordination server. Tailscale outsources this centralized component to Amazon AWS, a surveillance actor. Headscale and innernet provide free software implementations that can be self-hosted, but remain a single point of failure.
+* All use different IP ranges inside and outside of the encrypted tunnels, requiring LAN-based applications to be reconfigured.
+* All lack post-quantum protection.
 
-TCPcrypt is an outlier, in that it does provide opportunistic encryption
-between hosts without any configuration; however, it only protects TCP traffic,
-does not provide secure names, and its key verification system requires
-application-specific support. These and other deployment impediments have
-prevented its adoption.
+With the exception of TCPcrypt and IPsec OE, the other projects listed below are all designed to protect traffic between hosts which are configured as part of a single organization, whereas Vula provides automatic encryption between *all* locally-reachable hosts that are running the software.
+
+TCPcrypt is an outlier, in that it does provide opportunistic encryption between hosts without any configuration; however, it only protects TCP traffic, does not provide secure names, and its key verification system requires application-specific support. These and other deployment impediments have prevented its adoption.
 
 IPsec OE also is designed to provide opportunistic encryption, but has [numerous](https://nohats.ca/wordpress/blog/2013/09/12/history-and-implementation-status-of-opportunistic-encryption-for-ipsec/) [shortcomings](https://www.mail-archive.com/cryptography@metzdowd.com/msg12325.html) and has failed to gain adoption.
 
