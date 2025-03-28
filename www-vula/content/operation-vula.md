@@ -1,6 +1,6 @@
 ---
 title: "Operation Vula"
-date: 2021-08-04T17:18:18+02:00
+date: 2025-03-28T12:06:53-07:00
 draft: false
 ---
 
@@ -12,11 +12,11 @@ Operation Vula was a [clandestine effort by the ANC](https://omalley.nelsonmande
 
 Communications security systems such as these, designed by surveillance targets themselves, are sometimes categorized as *indigenous cryptography* by intelligence agencies.
 
-The common wisdom at the time of Operation Vula was to rely on commercially-available systems for any cryptographic need.  The implementations of many of these systems were insecure by design, however. This intentional weakness is consistent with the signals intelligence strategies of nations which materially supported the apartheid regime in South Africa.
+The common wisdom at the time of Operation Vula was to rely on commercially-available systems for any cryptographic need. However, many of these systems were insecure by design. This intentional weakness was consistent with the signals intelligence strategies of the nations that materially supported the apartheid regime in South Africa.
 
-It was in this context in the late 1980s that [Tim Jenkin](https://en.wikipedia.org/wiki/Tim_Jenkin) and Ronnie Press designed and built a custom cryptographic solution for the ANC's revolutionary activities, involving human couriers, tape recorders, payphones, portable computers, information theoretically secure cryptography such as one-time pads, and clandestine communications relays.
+It was in this context in the late 1980s that [Tim Jenkin](https://en.wikipedia.org/wiki/Tim_Jenkin) and Ronnie Press designed and built a custom cryptographic solution for the ANC's revolutionary activities, involving human couriers, tape recorders, payphones, portable computers, information-theoretically secure cryptography such as one-time pads, and clandestine communications relays.
 
-The original [vula connection](https://m.youtube.com/watch?v=29vrvKsKXPI) was designed with an understanding that the crypto systems of the era were likely untrustworthy, and that resistance to apartheid required strong cryptography without backdoors. They considered the problems from first principles and were successful by many measures.
+The original [vula connection](https://m.youtube.com/watch?v=29vrvKsKXPI) was designed with an understanding that the available crypto systems of the era were likely untrustworthy, and that resistance to apartheid required strong cryptography without backdoors. They considered the problems from first principles and were successful by many measures.
 
 We contacted Tim and asked for his permission to name this project in homage to his work, and he encouraged us to do so and to use this as an opportunity to tell people about [his story](https://web.archive.org/web/20180722014538/http://www.anc.org.za/content/talking-vula/), and about [stories of the people](https://www.goodreads.com/book/show/114193.Operation_Vula) who struggled against apartheid. We think Tim's work and the struggle he supported is worth studying. We find it extremely inspiring and we hope that others will too.
 
