@@ -1,56 +1,44 @@
 # Requirements
 
-Currently, GNU/Linux is the only supported operating system. We plan to port
-the software to other operating systems in the future.
+Vula currently supports the GNU/Linux operating system. We plan to port the software to other operating systems in the future.
 
-The software has been developed and tested on Debian 11 (bullseye), Mobian, and
-Ubuntu (21.04 and 21.10). It previously was working on Ubuntu 20.04 but the
-installation instructions have not been successfully tested there recently. It
-is likely to work on other modern systemd-based distributions.
+The software has been developed and tested on Debian 11 (bullseye), Mobian, and Ubuntu (21.04 and 21.10). It is likely to work on other modern systemd-based distributions. Vula can also be run without systemd, and/or in a single monolithic process, but this scenario is not yet documented.
 
-Vula can also be run without systemd, and/or in a single monolithic process,
-but how to do so is not yet documented.
-
-We do not yet offer Debian packages for download directly, but you can install
-a debianized version of our Python package using the `pypi-install` tool.
-
-To install the dependencies required for building vula packages yourself, or
-for installing a debian package via `pypi-install`, run this command:
+Although we do not provide pre-built Debian packages for download, but you can install a debianized version of our Python package using the `pypi-install` tool. To install the dependencies required for building vula packages, or for installing a Debian package using `pypi-install`, run the following commands:
 
 * `sudo apt install -y --no-install-recommends build-essential debhelper dh-python fakeroot gcc make python3-all python3-all-dev python3-click python3-cpuinfo python3-cryptography python3-dbus python3-dev python3-hkdf python3-ifaddr python3-matplotlib python3-mpmath python3-nacl python3-networkx python3-numpy python3-packaging python3-pathtools python3-pip python3-pluggy python3-progress python3-py python3-pydbus python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner python3-qrcode python3-schema python3-setuptools python3-setuptools-scm python3-systemd python3-toml python3-yaml python3-zeroconf python3-babel python3-tk python-all wireguard-tools python3-sphinx python3-xlib python3-pillow gir1.2-ayatanaappindicator3-0.1 python3-opencv`
 * `sudo pip install highctidh`
 
-You need `python3-click` module version 8.+, `apt` might install the latest version,
-but will fail to install version 8.+. You need to remove the installed version and
-reinstall the `click` module using `pypi`:
+Note that you need `python3-click` module version 8.+. but `apt` may install the latest rather than version 8.+. You may need to remove the installed version and reinstall the `click` module using `pypi`, using the following commands:
 
 * `sudo apt-get remove python3-click`
 * `sudo pypi-install click`
 
 # Install
 
-`make deb` produces a Debian package.
+`make deb` produces a Debian package. <!-- what is the context for this? -->
 
-## option 0: quick install
+Choose one of the following installation methods.
 
+## Option 0: Quick install
+
+Run the command:
 
 ```
 ./misc/quick-install.sh
 ```
 
 
-## option 1: build and install Debian Packages from a git checkout
+## Option 1: Build and install Debian packages from a new git checkout
 
-For working system tray support on the Gnome desktop environment it may be
-necessary to install the Ubuntu AppIndicators extension:
+For working system-tray support in the Gnome desktop environment , you may need to install the Ubuntu AppIndicators extension:
 
 * `sudo apt-get install gnome-shell-extension-appindicator`
 * `gnome-extensions enable ubuntu-appindicators@ubuntu.com`
 
-In addition to the dependencies in the `apt` command above, you will also need
-the [`highctidh`](https://codeberg.org/vula/highctidh) module. It can be installed
-using `pypi-install` as shown above, or other ways as described in its
-[`README.python.md`](https://codeberg.org/vula/highctidh/src/branch/main/README.python.md).
+In addition to the dependencies in the `apt` command above, you will also need the [`highctidh`](https://codeberg.org/vula/highctidh) module. It can be installed using `pypi-install` as shown above, or other ways as described in its [`README.python.md`](https://codeberg.org/vula/highctidh/src/branch/main/README.python.md).
+
+Run the following commands to clone the repository, build the packages, and install:
 
 ```
 git clone https://codeberg.org/vula/highctidh/
@@ -66,20 +54,13 @@ cd vula
 make deb && sudo dpkg -i dist/python3-vula_*_all.deb
 ```
 
-## option 2: build a wheel and install with pip
+## Option 2: Build a wheel and install with pip
 
-This option is not currently recommended, as a `pip install` of vula will place
-systemd and other configuration files in the wrong place. However, if you are
-interested in helping to get vula working on other distributions, `pip install
-highctidh vula_libnss vula` is a place to start.
+This option is not currently recommended, as a `pip install` of vula will place systemd and other configuration files in the wrong place. However, if you are interested in helping to get vula working on other distributions, `pip install highctidh vula_libnss vula` is a place to start.
 
-This option is available for advanced technical users - it requires manual
-setup of `[vula_libnss](https://codeberg.org/vula/vula_libnss)` after
-installing `vula_libnss`. This essentially means ensuring that the libnss
-shared object file is installed in `/lib/libnss_vula.so.2`. This may be
-installed by building a Debian package or by installing `vula_libnss` with pip
-and manually copying the `libnss_vula.so.2` file from inside the installed
-location to the correct location on the system.
+This option is available for advanced technical users, requiring manual setup of `[vula_libnss](https://codeberg.org/vula/vula_libnss)` after installing `vula_libnss`. This essentially means ensuring that the libnss shared-object file is installed in `/lib/libnss_vula.so.2`. This file may be installed by building a Debian package or by installing `vula_libnss` with pip and manually copying the `libnss_vula.so.2` file from inside the installed location to the correct location on the system.
+
+Run the following commands to clone the repository and install with pip:
 
 ```
 git clone https://codeberg.org/vula/vula
@@ -87,7 +68,7 @@ cd vula
 sudo pip install .
 ```
 
-After installing with pip, users will need to configure the system:
+After installing with pip, configure the system as follows:
 
 ```
 sudo vula configure nsswitch
@@ -97,36 +78,25 @@ sudo systemctl reload dbus
 sudo systemctl enable --now vula-organize
 ```
 
-These are steps which are automatically performed by the Debian package's
-[postinstall
-script](https://codeberg.org/vula/vula/src/branch/main/misc/python3-vula.postinst).
+These steps are performed automatically by the Debian package's [postinstall script](https://codeberg.org/vula/vula/src/branch/main/misc/python3-vula.postinst).
 
-## option 3: build an RPM
+## Option 3: Build an RPM
 
-We have only done minimal testing of vula on RPM-based systems, but, it is
-possible to type `make rpm` in the vula repo and generate an RPM (using
-setuptools' `bdist_rpm` command). The post-installation steps mentioned in
-option 2 above currently apply to RPM-based systems as well, because the RPM
-does not include a postinstall script. See the `Makefile` in this directory for
-hints on how to install the dependencies on Fedora.
+We have done minimal testing of vula on RPM-based systems, but it is possible to type `make rpm` in the vula repo and generate an RPM (using the setuptools `bdist_rpm` command). The post-installation steps mentioned in option 2 apply to RPM-based systems as well, because the RPM does not include a postinstall script. See the `Makefile` in this directory for hints on how to install the dependencies on Fedora.
 
-It is also possible to build an RPM in Fedora inside of a `podman` container by
-running `make dist=fedora34 rpm` in the `podman` directory.
+It is also possible to build an RPM in Fedora inside of a `podman` container by running `make dist=fedora34 rpm` in the `podman` directory.
 
-On Fedora you can install the rpm-build package with `sudo dnf install rpm-build`
-and then build the package executing `make rpm` in the vula repo.
+On Fedora you can install the rpm-build package with `sudo dnf install rpm-build` and then build the package by executing `make rpm` in the vula repo.
 
-Note that compatibility issues with RPM-based systems are collected in TODO.md.
+Compatibility issues with RPM-based systems are collected in TODO.md.
 
-## option 4: install from AUR (only for arch based systems)
+## Option 4: Install from AUR (for Arch-based systems only)
 
-Same as above only rudimentary testing of the functionality has been done on arch / manjaro.
+As with RPM, only rudimentary testing has been done on Arch/Manjaro.
 
-The current installation process requires packages from [AUR](https://aur.archlinux.org/).
-Currently one of the vula dependencies `python-highctidh` is not available from AUR.
-Installing packages from AUR is inherently dangerous, always check the PKGBUILD files.
+The current installation process requires packages from [AUR](https://aur.archlinux.org/), but one of the vula dependencies, `python-highctidh`, is unavailable from AUR. Installing packages from AUR is inherently dangerous, so always check the PKGBUILD files.
 
-The simplest installation is using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers) like `yay`.
+The simplest approach to installation is using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers) such as `yay`, as with the following command:
 
 ```
 yay -S python-vula-git
@@ -134,16 +104,15 @@ yay -S python-vula-git
 
 The `python-highctidh` module will need to be installed outside of AUR until it is packaged.
 
-In order to run `vula` commands as user you must be in a group called `sudo`. 
-On arch systems this is not a default group, you must add it manually.
+In order to run `vula` commands as user, you must be in a group called `sudo`. This is not a default group on Arch systems, so you must add it manually.
 
 # Running vula
 
 To see the current status:
 * `vula`
 
-To start vula (via dbus activation) if it is not started, or print the status
-if it is:
+To start vula (via dbus activation) if it is not started, or to print the status
+if it is started:
 * `vula start`
 
 To see a list of subcommands:
@@ -161,18 +130,17 @@ To see a list of peers, including disabled peers:
 To see descriptors and qrcodes for all enabled peers:
 * `vula peer show -Dq`
 
-To see the preferences:
+To see the preference settings:
 * `vula prefs`
 
 To see commands for editing preferences:
 * `vula prefs --help`
 
-To start graphical user interface:
+To start graphical the user interface:
 * `vula gui`
 
-More documentation is coming soon. See
-[STATUS.md](https://codeberg.org/vula/vula/src/branch/main/STATUS.md) for more
-information about what currently works and doesn't.
+Watch 
+[STATUS.md](https://codeberg.org/vula/vula/src/branch/main/STATUS.md) for more information about what currently works and doesn't.
 
 ## vula GUI
 
