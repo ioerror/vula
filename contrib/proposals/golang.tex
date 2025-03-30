@@ -1,0 +1,69 @@
+\documentclass[
+  invert-title=true,
+  titlepage=false,
+  titleimage-ratio=34
+]{bfhpub}
+
+\usepackage{blindtext}
+\usepackage{hyperref}
+\usepackage{csquotes}
+
+\hypersetup{
+colorlinks=true,
+urlcolor=blue
+}
+
+\title{Contribution Proposal}
+\subtitle{Continue work on vula-go}
+\author{
+	Philip Stoop (stoop1) \and Dominic Wenger (wengd7)
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Description}
+
+We want to fork the project \href{https://gitlab.ti.bfh.ch/vula/vula-go/}{vula-go} and continue work on it. Here we have a compiled list of goals, optional goals and non-goals to scope the work achievable during the semester.
+
+\noindent Goals:
+
+\begin{itemize}
+	\setlength\itemsep{0em}
+	\item Compatible with the python implementation
+		\begin{itemize}
+			\setlength\itemsep{0em}
+			\item Same CLI
+			\item Same DBus interface
+			\item Can be used with existing systemd files/units
+			\item Can discover/communicate with python counterpart over the network
+		\end{itemize}
+	\item Test suite with integration \& unit tests
+	\item Focus on linux support with the kernel wireguard
+	\item Uses \href{https://github.com/ioerror/highctidh}{highctidh}
+\end{itemize}
+
+Optional goals:
+
+\begin{itemize}
+	\setlength\itemsep{0em}
+	\item QR Code verification works
+	\item Userspace wireguard support
+\end{itemize}
+
+Non-goals (for now):
+
+\begin{itemize}
+	\setlength\itemsep{0em}
+	\item Support for alt publish/discovery (e.g. `ARP`)
+	\item Support for alt verification (e.g. `gg wave`) 
+	\item Support for other operating systems than linux
+	\item Any GUI
+\end{itemize}
+
+\noindent As our development environment, we set up multiple Qemu/KVM VMs which are in their own virtual network and have vula installed. We start by replacing the vula program with our go binary on one of the VMs. Then, after a while it should start to be able to communicate with the other hosts. 
+\end{document}
+
