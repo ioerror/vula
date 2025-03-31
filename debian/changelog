@@ -1,4 +1,10 @@
-vula (0.2.2025031100-1) unstable; urgency=medium
+vula (0.2.2025031100-2) unstable; urgency=medium
+
+  * Update debian/control
+
+ -- Vula Authors <security@vula.link>  Mon, 31 Mar 2025 13:00:00 +0100
+ 
+ vula (0.2.2025031100-1) unstable; urgency=medium
 
   * Upgrade to 0.2.2025031100
 
