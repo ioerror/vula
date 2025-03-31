@@ -149,13 +149,13 @@ The graphical user interface uses Tkinter as a Python binding to the Tk GUI tool
 ### Screenshots
 
 #### Peers
-![peers](misc/tk_frontend/peers.png)
+![peers](misc/frontend/peer.png)
 
 #### Preferences
-![preferences](misc/tk_frontend/preferences.png)
+![preferences](misc/frontend/dashboard.png)
 
 #### My verification key
-![my verification key](misc/tk_frontend/my_verification_key.png)
+![my verification key](misc/frontend/verification_key.png)
 
 #### My descriptor
-![my descriptor](misc/tk_frontend/my_descriptor.png)
+![my descriptor](misc/frontend/descriptor.png)

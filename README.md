@@ -6,7 +6,7 @@ Vula will additionally protect against interception by active adversaries with t
 
 If the local gateway to the internet is a vula peer, internet-destined traffic will also be encrypted on the LAN.
 
-#How does it work?
+# How does it work?
 
 Automatically.
 
