@@ -34,7 +34,7 @@ class PeerDetailsOverlay(tk.Toplevel):
         if peer["name"]:
             self.name = peer["name"]
         else:
-            self.name = peer["other_names"]
+            self.name = peer["other_names"] or ""
 
         self.title("Vula | Peer Details: " + self.name)
         self.geometry("520x500")
@@ -90,7 +90,7 @@ class PeerDetailsOverlay(tk.Toplevel):
         self.canvas.place(x=0, y=0)
 
         # Packing and configuring
-        self.top_canvas.pack(side="left", fill="y", expand="yes", anchor="nw")
+        self.top_canvas.pack(side="left", fill="y", expand=True, anchor="nw")
 
         self.yscrollbar.pack(side="right", fill="y")
 
@@ -105,7 +105,7 @@ class PeerDetailsOverlay(tk.Toplevel):
         self.top_canvas.create_window((0, 0), window=frame, anchor="nw")
 
         self.top_frame.pack(
-            fill="both", expand="yes", padx=(0, 0), pady=(0, 0), side="left"
+            fill="both", expand=True, padx=(0, 0), pady=(0, 0), side="left"
         )
 
         self.top_frame.columnconfigure(0, weight=1)
@@ -131,7 +131,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             image=self.button_delete_image,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: self.delete_peer(self.peer["id"], self.name),
+            command=lambda: self.delete_peer(self.peer["id"] or "", self.name),
             relief="sunken",
             background=BACKGROUND_COLOR,
             activebackground=BACKGROUND_COLOR,
@@ -162,7 +162,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             fg=TEXT_COLOR_BLACK,
             highlightthickness=0,
         )
-        self.entry_name.insert(0, self.peer["name"])
+        self.entry_name.insert(0, self.peer["name"] or "")
         self.entry_name.place(x=45.5, y=114.0, width=129.0, height=23.0)
 
         # name save
@@ -196,7 +196,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             33.0,
             194.0,
             anchor="nw",
-            text=self.peer["id"],
+            text=self.peer["id"] or "",
             fill=TEXT_COLOR_ORANGE,
             font=(FONT, FONT_SIZE_TEXT_M),
         )
@@ -209,7 +209,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             image=self.button_image_copy_id,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: self.add_to_clipbaord(self.peer["id"]),
+            command=lambda: self.add_to_clipbaord(self.peer["id"] or ""),
             relief="sunken",
             background=BACKGROUND_COLOR,
             activebackground=BACKGROUND_COLOR,
@@ -231,7 +231,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             33.0,
             262.0,
             anchor="nw",
-            text=self.peer["other_names"],
+            text=self.peer["other_names"] or "",
             fill=TEXT_COLOR_ORANGE,
             font=(FONT, FONT_SIZE_TEXT_M),
         )
@@ -250,7 +250,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             33.0,
             330.0,
             anchor="nw",
-            text=self.peer["status"],
+            text=self.peer["status"] or "",
             fill=TEXT_COLOR_ORANGE,
             font=(FONT, FONT_SIZE_TEXT_M),
         )
@@ -285,7 +285,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             33.0,
             398.0,
             anchor="nw",
-            text=self.peer["endpoint"],
+            text=self.peer["endpoint"] or "",
             fill=TEXT_COLOR_ORANGE,
             font=(FONT, FONT_SIZE_TEXT_M),
         )
@@ -304,7 +304,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             33.0,
             466.0,
             anchor="nw",
-            text=str(self.peer["allowed_ip"]),
+            text=str(self.peer["allowed_ips"]),
             fill=TEXT_COLOR_ORANGE,
             font=(FONT, FONT_SIZE_TEXT_M),
         )
@@ -323,7 +323,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             33.0,
             534.0,
             anchor="nw",
-            text=self.peer["latest_signature"],
+            text=self.peer["latest_signature"] or "",
             fill=TEXT_COLOR_ORANGE,
             font=(FONT, FONT_SIZE_TEXT_M),
         )
@@ -342,7 +342,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             33.0,
             602.0,
             anchor="nw",
-            text=self.peer["latest_handshake"],
+            text=self.peer["latest_handshake"] or "",
             fill=TEXT_COLOR_ORANGE,
             font=(FONT, FONT_SIZE_TEXT_M),
         )
@@ -361,7 +361,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             33.0,
             670.0,
             anchor="nw",
-            text=self.peer["wg_pubkey"],
+            text=self.peer["wg_pubkey"] or "",
             fill=TEXT_COLOR_ORANGE,
             font=(FONT, FONT_SIZE_TEXT_M),
         )
@@ -374,7 +374,9 @@ class PeerDetailsOverlay(tk.Toplevel):
             image=self.button_image_copy_wg_pubkey,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: self.add_to_clipbaord(self.peer["wg_pubkey"]),
+            command=lambda: self.add_to_clipbaord(
+                self.peer["wg_pubkey"] or ""
+            ),
             relief="sunken",
             background=BACKGROUND_COLOR,
             activebackground=BACKGROUND_COLOR,
@@ -396,7 +398,7 @@ class PeerDetailsOverlay(tk.Toplevel):
             33.0,
             738.0,
             anchor="nw",
-            text=self.peer["allowed_ips"],
+            text=self.peer["allowed_ips"] or "",
             fill=TEXT_COLOR_ORANGE,
             font=(FONT, FONT_SIZE_TEXT_M),
         )
@@ -473,7 +475,7 @@ class PeerDetailsOverlay(tk.Toplevel):
         if self.peer["other_names"]:
             name = self.peer["other_names"]
         else:
-            name = self.peer["name"]
+            name = self.peer["name"] or ""
         self.data.pin_and_verify(self.peer["id"], name)
         self.return_value = "pin_and_verify"
         self.destroy()
@@ -501,7 +503,7 @@ class PeerDetailsOverlay(tk.Toplevel):
         self,
     ) -> Literal['delete', 'pin_and_verify', 'rename', 'additional_ip', None]:
         self.deiconify()
-        self.wm_transient(self.app)
+        self.wm_transient(self.app.winfo_toplevel())
         self.wm_protocol("WM_DELETE_WINDOW", self.destroy)
         self.wait_window(self)
         return self.return_value

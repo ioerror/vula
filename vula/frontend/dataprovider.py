@@ -1,4 +1,4 @@
-from typing import List, TypedDict
+from typing import List, TypedDict, Literal, cast, Optional
 
 import pydbus
 import yaml
@@ -8,15 +8,15 @@ from vula.constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
 
 
 class PeerType(TypedDict):
-    name: str
-    id: str
-    other_names: str
-    status: str
-    endpoint: str
-    allowed_ip: str
-    latest_signature: str
-    latest_handshake: str
-    wg_pubkey: str
+    name: Optional[str]
+    id: Optional[str]
+    other_names: Optional[str]
+    status: Optional[str]
+    endpoint: Optional[str]
+    allowed_ips: Optional[str]
+    latest_signature: Optional[str]
+    latest_handshake: Optional[str]
+    wg_pubkey: Optional[str]
 
 
 class StatusType(TypedDict):
@@ -40,6 +40,22 @@ class PrefsType(TypedDict):
     overwrite_unpinned: bool
 
 
+PrefsTypeKeys = Literal[
+    "pin_new_peers",
+    "accept_nonlocal",
+    "auto_repair",
+    "subnets_allowed",
+    "subnets_forbidden",
+    "iface_prefix_allowed",
+    "local_domains",
+    "ephemeral_mode",
+    "accept_default_route",
+    "record_events",
+    "expire_time",
+    "overwrite_unpinned",
+]
+
+
 class DataProvider:
     def get_peers(self) -> List[PeerType]:
         organize = pydbus.SystemBus().get(
@@ -60,7 +76,7 @@ class DataProvider:
                 "other_names": None,
                 "status": None,
                 "endpoint": None,
-                "allowed_ip": None,
+                "allowed_ips": None,
                 "latest_signature": None,
                 "latest_handshake": None,
                 "wg_pubkey": None,
@@ -79,7 +95,7 @@ class DataProvider:
                 )
                 peer_dict["status"] = peer_lines[3].lstrip().split(": ")[1]
                 peer_dict["endpoint"] = peer_lines[4].lstrip().split(": ")[1]
-                peer_dict["allowed_ips"] = (
+                peer_dict["allowed_ips"] = (  # type: ignore
                     peer_lines[5].lstrip().split(": ")[1]
                 )
                 peer_dict["latest_signature"] = (
@@ -92,7 +108,7 @@ class DataProvider:
             else:
                 peer_dict["status"] = peer_lines[2].lstrip().split(": ")[1]
                 peer_dict["endpoint"] = peer_lines[3].lstrip().split(": ")[1]
-                peer_dict["allowed_ips"] = (
+                peer_dict["allowed_ips"] = (  # type: ignore
                     peer_lines[4].lstrip().split(": ")[1]
                 )
                 peer_dict["latest_signature"] = (
@@ -118,20 +134,16 @@ class DataProvider:
 
         return items
 
-    def get_status(self) -> StatusType:
+    def get_status(self) -> Optional[StatusType]:
         # Fetch the data from the systemd dbus
-        systemd = pydbus.SystemBus().get(".systemd1")
+        systemd = pydbus.SystemBus().get(".systemd1", "/")
 
         # Create an empty dict for the status
-        status: StatusType = {
-            "publish": None,
-            "discover": None,
-            "organize": None,
-        }
+        status = StatusType(publish="", discover="", organize="")
 
         # Define names to consider in the result
-        names = ["publish", "discover", "organize"]
-        for name in names:
+        for name in status.keys():
+            name = cast(Literal["publish", "discover", "organize"], name)
             # Template string for service name
             unit_name = "vula-%s.service" % (name,)
             try:

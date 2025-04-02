@@ -2,10 +2,12 @@
 discovers active vula peer and poisons vula peer cache for specified hosts
 """
 import logging
+from typing import Any
+
 import click
 from ipaddress import IPv4Address
-from zeroconf import ServiceBrowser, Zeroconf, ServiceInfo, IPVersion
-from vula.mitm.forge_descriptor import (
+from zeroconf import ServiceBrowser, Zeroconf, ServiceInfo, IPVersion, ServiceListener
+from forge_descriptor import (
     VulaKeys,
     forge_descriptor,
     serialize_forged_descriptor,
@@ -32,7 +34,7 @@ def extract_hostname_from_descriptor(descriptor) -> str:
     return descriptor[b'hostname'].decode('utf-8')
 
 
-def extract_ip_from_descriptor(descriptor) -> str:
+def extract_ip_from_descriptor(descriptor) -> IPv4Address:
     """
     extract hostname from Vula descriptor
     >>> descriptor = {b'addrs': b'10.123.128.250', b'vf': b'1637779299'}
@@ -70,7 +72,7 @@ class MdnsPoisonParticipantNotExistsException(MdnsPoisonException):
     pass
 
 
-class MdnsPoison:
+class MdnsPoison(ServiceListener):
     """
     Vula MDNS poisoner class based on zeroconf's ServiceBrowser
 
@@ -93,7 +95,7 @@ class MdnsPoison:
         :param ip: IP of the host MITMing the participants
         :param vula_keys: VulaKeys object
         """
-        self.participants = {}
+        self.participants: dict[str, Any] = {}
         for participant in participants:
             self.participants[participant] = None
         self.ip = ip

@@ -6,6 +6,15 @@ when:
   event: [push, tag, pull_request, manual]
 
 steps:
+  mypy:
+    image: ubuntu:plucky
+    commands:
+      - export CI=true
+      - PATH=$PATH:~/.local/bin
+      - ./misc/install-ci-mypy.sh
+      - mypy test vula || true
+      - mypy --install-types --non-interactive
+      - mypy test vula
 
   check_test:
     image: python:3.10-bookworm

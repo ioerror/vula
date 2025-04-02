@@ -1,12 +1,13 @@
 import atheris
+from atheris.instrument_bytecode import instrument_func
 import sys
 import os
 
-@atheris.instrument_func
+@instrument_func
 def checkVerifyAgainst(hostname):
 	os.system('vula verify against ' + str(hostname))
 
-@atheris.instrument_func
+@instrument_func
 def checkVulaAlone(data):
 	os.system('vula ' + str(data))
 

@@ -70,7 +70,7 @@ class App(tk.Tk):
             pady=3,
         )
         pref_frame.grid(row=0, column=0, sticky="ns")
-        pref_frame.grid_propagate(0)
+        pref_frame.grid_propagate(False)
         self.prefs = Prefs(pref_frame)
 
         peers_frame = Frame(
@@ -82,7 +82,7 @@ class App(tk.Tk):
             pady=3,
         )
         peers_frame.grid(row=0, column=1, sticky="nsew")
-        peers_frame.grid_propagate(0)
+        peers_frame.grid_propagate(False)
         self.peers_new = Peers(peers_frame)
 
         peers_frame.grid_columnconfigure(0, weight=1)
@@ -161,6 +161,15 @@ class App(tk.Tk):
 
         # Get the status of the different vula processes
         state = data.get_status()
+
+        # @TODO: The case where state is None might have to be handled
+        # @TODO: differently
+        if state is None:
+            state = {
+                "publish": "no status available",
+                "discover": "no status available",
+                "organize": "no status available",
+            }
 
         # Display the status at the bottom
         status_label = tk.Label(

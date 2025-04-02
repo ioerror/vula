@@ -234,7 +234,7 @@ class Sys(object):
         Syncs peer's wg config and routes. Returns a string.
         """
         peer = self.organize.peers[vk]
-        res = []
+        res: list[str] = []
         if peer.enabled:
             self.log.debug("syncing enabled peer %s", peer.name)
             ctidh_psk = self.organize.ctidh_dh(peer.descriptor.c)
@@ -260,8 +260,8 @@ class Sys(object):
         else:
             # FIXME: this should go away with triggers, but hasn't yet?
             self.remove_unknown()
-        res = filter(None, res)
-        return "\n".join(res)
+        result = filter(None, res)
+        return "\n".join(result)
 
     def sync_iprules(self, dryrun=False):
         routing_table = self.organize.table

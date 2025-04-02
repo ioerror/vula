@@ -3,19 +3,23 @@ from base64 import b64decode
 from io import BytesIO
 from threading import Thread
 from time import sleep
-from typing import Any, List, NoReturn, Optional
+from typing import Any, List, NoReturn, TYPE_CHECKING
 
 import click
+from PIL.ImageFile import ImageFile
 from gi.repository import GLib
 from PIL import Image
 from pydbus import SystemBus
 
-try:
+if TYPE_CHECKING:
     from Xlib.error import DisplayNameError
-except ModuleNotFoundError:
+else:
+    try:
+        from Xlib.error import DisplayNameError
+    except ModuleNotFoundError:
 
-    class DisplayNameError(Exception):
-        pass
+        class DisplayNameError(Exception):
+            pass
 
 
 from vula.common import escape_ansi
@@ -39,8 +43,8 @@ def main() -> None:  # noqa: 901
         sys.exit(2)
 
     class Tray(object):
-        _gui_thread: Optional[Thread] = None
-        _update_thread: Optional[Thread] = None
+        _gui_thread: Thread | None = None
+        _update_thread: Thread | None = None
         icon: Icon
         organize_bus: Any
         systemd_bus: Any
@@ -56,7 +60,7 @@ def main() -> None:  # noqa: 901
                 print("Vula is not running.")
                 sys.exit(3)
 
-        def _get_icon(self) -> Image:
+        def _get_icon(self) -> ImageFile:
             """
             Return the icon for the system tray entry.
 

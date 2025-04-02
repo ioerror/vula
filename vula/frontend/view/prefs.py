@@ -9,9 +9,9 @@ from tkinter import (
     PhotoImage,
     Scrollbar,
     Text,
-    Widget,
 )
 from tkinter.constants import W
+from typing import cast
 
 from vula.frontend import DataProvider, PrefsType
 from vula.frontend.constants import (
@@ -28,6 +28,7 @@ from vula.frontend.constants import (
     TEXT_COLOR_RED,
     TEXT_COLOR_WHITE,
 )
+from vula.frontend.dataprovider import PrefsTypeKeys
 from vula.frontend.overlay import PopupMessage
 
 _ = gettext.gettext
@@ -38,8 +39,8 @@ class Prefs(Frame):
 
     def __init__(self, frame: Frame) -> None:
         self.show_editable: bool = False
-        self.prefs: PrefsType = []
-        self.widgets: Widget = {}
+        self.prefs: PrefsType
+        self.widgets: dict[str, Text | Button] = {}
         self.frame: Frame = frame
 
         self.display_header()
@@ -97,24 +98,24 @@ class Prefs(Frame):
         )
 
         # Packing and configuring
-        self.pref_canvas.pack(side="left", fill="y", expand="yes")
+        self.pref_canvas.pack(side="left", fill="y", expand=True)
 
         self.yscrollbar.pack(side="right", fill="y")
 
         self.pref_canvas.configure(yscrollcommand=self.yscrollbar.set)
+
         self.pref_canvas.bind(
             '<Configure>',
             lambda e: self.pref_canvas.configure(
-                scrollregion=self.pref_content_frame.bbox('all')
+                scrollregion=self.pref_canvas.bbox('all')
             ),
         )
-
         self.pref_canvas.create_window(
             (0, 0), window=self.pref_content_frame, anchor="nw"
         )
 
         self.top_frame.pack(
-            fill="both", expand="yes", padx=(0, 50), pady=(50, 0), side="top"
+            fill="both", expand=True, padx=(0, 50), pady=(50, 0), side="top"
         )
         self.bottom_frame.pack(side="left")
 
@@ -191,7 +192,7 @@ class Prefs(Frame):
         self.title_frame.grid(row=0, column=0, pady=(10, 0), sticky="w")
 
     def get_prefs(self) -> None:
-        self.prefs: PrefsType = self.data.get_prefs()
+        self.prefs = self.data.get_prefs()
 
     def toggle(self, event: Event) -> None:
         """
@@ -216,31 +217,36 @@ class Prefs(Frame):
 
     def save_prefs(self) -> None:
         for pref, values in self.prefs.items():
-            # list based prefs
-            if type(values) == list:
-                current_list = self.widgets[pref].get("1.0", "end").split()
-                for value in current_list:
-                    if value not in self.prefs[pref]:
-                        res = self.data.add_pref(pref, value)
-                        if self.show_error(res) == 1:
-                            return
-                for value in values:
-                    if value not in current_list:
-                        res = self.data.remove_pref(pref, value)
-                        if self.show_error(res) == 1:
-                            return
-            # boolean based prefs
-            elif type(values) == bool:
-                bool_value = str(self.widgets[pref]["text"])
-                res = self.data.set_pref(pref, bool_value)
-                if self.show_error(res) == 1:
-                    return
-            # int based prefs
-            elif type(values) == int:
-                int_value = str(self.widgets[pref].get("1.0", "end"))
-                res = self.data.set_pref(pref, int_value)
-                if self.show_error(res) == 1:
-                    return
+            _pref: PrefsTypeKeys = cast(PrefsTypeKeys, pref)
+            widget_type = self.widgets[pref]
+            if isinstance(widget_type, Text):
+                widget = widget_type
+                if type(values) == list:
+                    current_list = widget.get("1.0", "end").split()
+                    for value in current_list:
+                        if isinstance(value, list):
+                            if value not in self.prefs[_pref]:
+                                res = self.data.add_pref(pref, value)
+                                if self.show_error(res) == 1:
+                                    return
+                    for value in values:
+                        if value not in current_list:
+                            res = self.data.remove_pref(pref, value)
+                            if self.show_error(res) == 1:
+                                return
+
+                # boolean based prefs
+                elif type(values) == bool:
+                    bool_value = str(self.widgets[pref]["text"])
+                    res = self.data.set_pref(pref, bool_value)
+                    if self.show_error(res) == 1:
+                        return
+                # int based prefs
+                elif type(values) == int:
+                    int_value = str(widget[pref].get("1.0", "end"))
+                    res = self.data.set_pref(pref, int_value)
+                    if self.show_error(res) == 1:
+                        return
 
         self.get_prefs()
         self.show_editable = False
@@ -330,8 +336,8 @@ class Prefs(Frame):
                         insertbackground=TEXT_COLOR_WHITE,
                     )
                     self.widgets[pref] = value_text
-                    for i in range(len(value)):
-                        value_text.insert(tk.END, value[i] + "\n")
+                    for element in value:
+                        value_text.insert(tk.END, element + "\n")
 
                     value_text.grid(
                         row=counter, column=1, padx=1, pady=1, sticky=W
@@ -351,10 +357,10 @@ class Prefs(Frame):
                             row=counter, column=1, padx=1, pady=1, sticky=W
                         )
                         counter += 1
-                    for i in range(len(value)):
+                    for element in value:
                         value_label = Label(
                             self.pref_content_frame,
-                            text=str(value[i]),
+                            text=str(element),
                             font=(FONT, FONT_SIZE_TEXT_XL),
                             bg=BACKGROUND_COLOR_CARD,
                             fg=TEXT_COLOR_WHITE,
@@ -428,7 +434,7 @@ class Prefs(Frame):
                     value_text.grid(
                         row=counter, column=1, padx=1, pady=1, sticky=W
                     )
-                    value_text.insert(tk.END, value)
+                    value_text.insert(tk.END, str(value))
                 else:
                     label = Label(
                         self.pref_content_frame,

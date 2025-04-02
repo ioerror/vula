@@ -4,7 +4,7 @@ from base64 import b64encode, b64decode
 from vula.peer import Descriptor
 from nacl.signing import SigningKey
 from nacl.encoding import Base64Encoder
-from vula.ctidh import ctidh_parameters, ctidh
+from vula.csidh import ctidh_parameters, ctidh
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 

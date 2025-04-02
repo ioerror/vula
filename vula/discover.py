@@ -1,21 +1,21 @@
 """
- vula-discover is a stateless program that prints each WireGuard mDNS
- service and formats the service parameters into a single easy-to-parse line.
- This program's output is intended to be fed into a daemon that configures
- WireGuard peers discovered by vula to configure the local vula
- interface.
+vula-discover is a stateless program that prints each WireGuard mDNS
+service and formats the service parameters into a single easy-to-parse line.
+This program's output is intended to be fed into a daemon that configures
+WireGuard peers discovered by vula to configure the local vula
+interface.
 
- The output of this program may be written to a pipe, a log file, a unix
- socket, the vula-organize DBus interface for processing descriptors, or any
- other place. It should run with the lowest privileges possible. The
- output is not filtered and so adversaries may attempt to inject unreasonable
- hosts such as `127.0.0.1` or other addresses. Care should be taken that only
- addresses for the local network segment are used as WireGuard peers.
+The output of this program may be written to a pipe, a log file, a unix
+socket, the vula-organize DBus interface for processing descriptors, or any
+other place. It should run with the lowest privileges possible. The
+output is not filtered and so adversaries may attempt to inject unreasonable
+hosts such as `127.0.0.1` or other addresses. Care should be taken that only
+addresses for the local network segment are used as WireGuard peers.
 """
 
 from ipaddress import ip_address as ip_addr_parser
 from logging import Logger, getLogger
-from typing import Optional
+from typing import Optional, Callable
 import click
 import pydbus
 from click.exceptions import Exit
@@ -40,7 +40,11 @@ class VulaServiceListener(ServiceListener):
     https://tools.ietf.org/html/rfc6763#section-6.4.
     """
 
-    def __init__(self, callback, our_wg_pk=None):
+    def __init__(
+        self,
+        callback: Callable[[Descriptor], None],
+        our_wg_pk: Optional[str] = None,
+    ) -> None:
         """
         Specifying our_wg_pk is optional, and allows discover to drop our own
         local descriptors before they get to organize. This reduces log noise
@@ -99,16 +103,16 @@ class Discover(object):
     </node>
     '''
 
-    def __init__(self):
-        self.callbacks = []
-        self.browsers = {}
+    def __init__(self) -> None:
+        self.callbacks: list[Callable[[Descriptor], None]] = []
+        self.browsers: dict[str, tuple[Zeroconf, ServiceBrowser]] = {}
         self.log: Logger = getLogger()
 
-    def callback(self, value):
+    def callback(self, value: Descriptor) -> None:
         for callback in self.callbacks:
             callback(value)
 
-    def listen_on_ip_or_if(self, ip_address, interface):
+    def listen_on_ip_or_if(self, ip_address: str, interface: str) -> None:
         """
         Deprecated.
 
@@ -119,25 +123,26 @@ class Discover(object):
             self.log.info("Must pick interface or IP address")
             raise Exit(1)
 
-        ip_addr = None
+        ip_addr: Optional[str] = None
 
         if ip_address:
             try:
+                # @TODO assignment has no effect and could be removed
                 ip_addr = str(ip_addr_parser(ip_address))
             except:  # noqa: E722
                 self.log.info("Invalid IP address argument")
                 raise Exit(3)
-            ip_addr: str = ip_address
+            ip_addr = ip_address
         elif interface:
             with IPRoute() as ipr:
                 index = ipr.link_lookup(ifname=interface)[0]
                 a = ipr.get_addr(match=lambda x: x['index'] == index)
-                ip_addr: str = dict(a[0]['attrs'])['IFA_ADDRESS']
+                ip_addr = dict(a[0]['attrs'])['IFA_ADDRESS']
 
         if ip_addr:
             self.listen([ip_addr])
 
-    def listen(self, ip_addrs, our_wg_pk=None):
+    def listen(self, ip_addrs: list[str], our_wg_pk: Optional[str] = None):
         for ip_addr in ip_addrs:
             if ip_addr in self.browsers:
                 self.log.info("Not launching a second browser for %r", ip_addr)

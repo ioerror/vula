@@ -4,7 +4,7 @@
 
 from typing import ByteString
 
-from highctidh import ctidh  # noqa: F401
+from highctidh import ctidh  # type: ignore  # noqa: F401
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
@@ -41,4 +41,4 @@ def hkdf(raw_key: ByteString) -> str:
 if __name__ == "__main__":
     import doctest
 
-    doctest.testmod(verbose=1)
+    doctest.testmod(verbose=True)

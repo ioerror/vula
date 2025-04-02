@@ -9,13 +9,15 @@ import sys
 import subprocess
 import platform
 import logging
+from typing import Optional
+
 import click
 import json
 
 from threading import Timer
 from pyfiglet import Figlet
 from printy import printy
-from scapy.all import Ether, ARP, srp, send
+from scapy.all import Ether, ARP, srp, send # type: ignore
 from ipaddress import IPv4Address
 import pyshark
 
@@ -83,7 +85,7 @@ def _enable_windows_iproute():
     service.start()
 
 
-def enable_ip_route():
+def enable_ip_route() -> None:
     """
     Enables IP forwarding
     """
@@ -105,7 +107,7 @@ def enable_ip_route():
     logger.info("[+] IP Routing enabled.")
 
 
-def get_mac(ip: IPv4Address) -> str:
+def get_mac(ip: IPv4Address) -> Optional[str]:
     """
     Returns MAC address belonging to the given IP address within the network.
     Returns None if nothing was found.
@@ -122,6 +124,8 @@ def get_mac(ip: IPv4Address) -> str:
         mac = ans[0][1].src
         logger.debug(f"Found MAC for IP: {mac}")
         return mac
+
+    return None
 
 
 def spoof(target_ip, host_ip):

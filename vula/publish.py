@@ -9,7 +9,7 @@
 <class 'logging.RootLogger'>
 
 """
-
+from ipaddress import IPv4Address, IPv6Address
 from logging import Logger, getLogger
 from platform import node as hostname
 
@@ -33,11 +33,11 @@ class Publish(object):
     </node>
     '''
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.log: Logger = getLogger()
-        self.zeroconfs = {}
+        self.zeroconfs: dict[str, Zeroconf] = {}
 
-    def listen(self, new_announcements):
+    def listen(self, new_announcements: dict[str, str]) -> None:
         # First we remove all old zeroconf listeners that are not in our new
         # instructions
         for iface, zc in list(self.zeroconfs.items()):
@@ -52,8 +52,8 @@ class Publish(object):
         # new desc
         for iface, desc_string in new_announcements.items():
             desc = Descriptor.parse(desc_string)
-            listen_IPs = [
-                str(a) for a in desc.all_addrs if a not in _VULA_ULA_SUBNET
+            listen_IPs: list[IPv4Address | IPv6Address] = [
+                a for a in desc.all_addrs if a not in _VULA_ULA_SUBNET
             ]
             self.log.debug(
                 "Starting mDNS service announcement for %r with listen_IPs %r",
@@ -64,7 +64,7 @@ class Publish(object):
             service_info: ServiceInfo = ServiceInfo(
                 _LABEL,
                 name=name,
-                addresses=listen_IPs,
+                addresses=[ip.packed for ip in listen_IPs],
                 port=desc.port,
                 properties=desc.as_zeroconf_properties,
                 server=desc.hostname,
@@ -80,7 +80,7 @@ class Publish(object):
                 zeroconf = self.zeroconfs[iface] = Zeroconf(
                     # note that the "interfaces" argument to zeroconf is a list
                     # of IPs
-                    interfaces=listen_IPs
+                    interfaces=[str(ip) for ip in listen_IPs],
                 )
                 self.log.debug("Registering vula service: %s", service_info)
                 try:

@@ -153,7 +153,8 @@ def main(only_systemd, verbose):
                     ),
                 )
             printer(
-                "active", f"{node()+_DOMAIN}'s vula ULA is {prefs.primary_ip}"
+                "active",
+                f"{node() + _DOMAIN}'s vula ULA is {prefs.primary_ip}",
             )
 
     elif _ORGANIZE_DBUS_NAME in bus.dbus.ListActivatableNames():

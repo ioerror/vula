@@ -83,6 +83,8 @@ class PrefsCommands(object):
     View and modify preferences.
     """
 
+    cli: click.Group
+
     def __init__(self, ctx):
         self.organize = organize_dbus_if_active()
         if ctx.invoked_subcommand is None:

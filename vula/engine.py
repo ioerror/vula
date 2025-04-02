@@ -134,6 +134,7 @@ class Engine(schemattrdict, yamlfile):
     def record(self, result):
         pass
 
+    @staticmethod
     def event(method):
         """
         Decorator for event methods
@@ -184,6 +185,7 @@ class Engine(schemattrdict, yamlfile):
 
         return _method
 
+    @staticmethod
     def action(method):
         """
         Decorator for action methods.
@@ -200,6 +202,7 @@ class Engine(schemattrdict, yamlfile):
 
         return _method
 
+    @staticmethod
     def write(method):
         """
         Decorator for write methods.

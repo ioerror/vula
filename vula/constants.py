@@ -3,7 +3,7 @@ vula constant values
 """
 
 from typing import List
-from ipaddress import ip_network
+from ipaddress import ip_network, IPv4Network, IPv6Network
 
 _LOG_FMT: str = "%(asctime)s: %(message)s"
 _DATE_FMT: str = "%Y-%m-%d-%H:%M:%S"
@@ -11,7 +11,7 @@ _WG_INTERFACE: str = "vula"
 _DUMMY_INTERFACE: str = "vula-net"
 
 # this is registered for vula at https://ula.ungleich.ch/
-_VULA_ULA_SUBNET: str = ip_network("fdff:ffff:ffdf::/48")
+_VULA_ULA_SUBNET: IPv4Network | IPv6Network = ip_network("fdff:ffff:ffdf::/48")
 
 # Set an upper boundary of 1kB for the cache
 _LRU_CACHE_MAX_SIZE: int = 1024

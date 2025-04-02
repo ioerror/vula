@@ -14,9 +14,10 @@ from setuptools.command.build_ext import build_ext as hookBuild_ext
 
 try:
     from babel.messages import frontend as babel
+
     compile_catalog = babel.compile_catalog
 except ImportError:
-    compile_catalog=None
+    compile_catalog = None
 
 try:
     from click_man.commands.man_pages import man_pages
@@ -72,15 +73,10 @@ linux_data_files = [
         [
             "misc/linux-desktop/vula.desktop",
             "misc/linux-desktop/vula-tray.desktop",
-        ]
+        ],
     ),
+    ("/usr/share/icons", ["misc/linux-desktop/vula_gui_icon.png"]),
     (
-        "/usr/share/icons",
-        [
-            "misc/linux-desktop/vula_gui_icon.png"
-        ]
-    ),
-        (
         "/usr/share/icons/vula",
         [
             "misc/images/add_ip_to_peer_entry.png",
@@ -99,7 +95,7 @@ linux_data_files = [
             "misc/images/repair.png",
             "misc/images/rediscover.png",
             "misc/images/release_gateway.png",
-        ]
+        ],
     ),
     (
         "/usr/share/dbus-1/system-services/",
@@ -141,7 +137,6 @@ macos_data_files = [
             'configs/dbus/local.vula.discover.service',
             'configs/dbus/local.vula.publish-alt.service',
             'configs/dbus/local.vula.discover-alt.service',
-
         ],
     ),
     ("/usr/local/lib/sysusers.d/", ['configs/sysusers.d/vula.conf']),

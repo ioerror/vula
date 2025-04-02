@@ -1,16 +1,16 @@
 """
- vula-verify is a stateless program that generates and reads QR codes to
- verify a peer or a set of vula peers.  This program's output is intended to
- be fed into the vula-organize daemon. It should authenticate an already
- known peer or peers and sets a bit to keep state that it has verified them.
- The QR code also includes a PSK and later will use CTIDH to automatically set
- a PSK on a pair-wise basis.
+vula-verify is a stateless program that generates and reads QR codes to
+verify a peer or a set of vula peers.  This program's output is intended to
+be fed into the vula-organize daemon. It should authenticate an already
+known peer or peers and sets a bit to keep state that it has verified them.
+The QR code also includes a PSK and later will use CTIDH to automatically set
+a PSK on a pair-wise basis.
 
- The output of this program may be written to a pipe, a log file, a unix
- socket, or any other place. It should run with the lowest possible privileges.
- The output is not filtered and so adversaries may attempt to inject
- unreasonable data. Care should be taken that the data is used only after it
- has been verified.
+The output of this program may be written to a pipe, a log file, a unix
+socket, or any other place. It should run with the lowest possible privileges.
+The output is not filtered and so adversaries may attempt to inject
+unreasonable data. Care should be taken that the data is used only after it
+has been verified.
 """
 
 import hashlib
@@ -19,10 +19,11 @@ import sys
 
 from base64 import b64decode
 import click
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 from types import ModuleType
 import pydbus
 import yaml
+from click import Context
 from click.exceptions import Exit
 from gi.repository import GLib
 
@@ -59,9 +60,9 @@ from .verify_reunion import reunion_multicast_run_verify
 )
 @click.pass_context
 class VerifyCommands(object):
-    cli: Callable[[], None]
+    cli: click.Group
 
-    def __init__(self, ctx):
+    def __init__(self, ctx: Context) -> None:
         organize = ctx.meta.get('Organize', {}).get('magic_instance')
 
         if not organize:
