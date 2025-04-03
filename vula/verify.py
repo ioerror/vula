@@ -263,10 +263,19 @@ class VerifyCommands(object):
     @DualUse.method()  # type: ignore
     @click.argument("hostname", required=True, type=str)
     @click.option(
-        "--multicast-group", default="224.3.29.71", show_default=True, type=str, help="Multicast group",
+        "--multicast-group",
+        default="224.3.29.71",
+        show_default=True,
+        type=str,
+        help="Multicast group",
     )
-    @click.option("--multicast-port", default=9005, show_default=True, type=int,
-                  help="Multicast listener port",)
+    @click.option(
+        "--multicast-port",
+        default=9005,
+        show_default=True,
+        type=int,
+        help="Multicast listener port",
+    )
     @click.option(
         "--bind-addr",
         default="0.0.0.0",
@@ -366,7 +375,11 @@ class VerifyCommands(object):
             raise click.ClickException("Verification failed")
         if len(hashed_peer_vk) != 32:
             click.echo(
-                red(bold("Invalid length of peer vk received. Verification failed."))
+                red(
+                    bold(
+                        "Invalid length of peer vk received. Verification failed."
+                    )
+                )
             )
         if hashed_peer_vk == expected_peer_vk_hashed:
             res: str = self.organize.verify_and_pin_peer(
