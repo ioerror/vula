@@ -91,7 +91,7 @@ class Publish_Alt:
 
     def get_descriptors(self) -> None:
         """
-        Update descriptors by querying organize
+        Update descriptors by querying organize.
         """
         self.organize_descriptors = json.loads(
             self.organize.our_latest_descriptors()
@@ -106,7 +106,7 @@ class Publish_Alt:
 
     def load_descriptor(self, ip: str) -> str:
         """
-        Undo the JSON stuff done in organize and return descriptor
+        Undo the JSON stuff done in organize and return descriptor.
         """
         return " ".join(
             "%s=%s;" % kv
@@ -123,7 +123,7 @@ class Publish_Alt:
 
     def run(self) -> None:
         """
-        Main body for publishing thread
+        Main body for publishing thread.
         """
         while self.active:
             self.get_descriptors()
@@ -133,7 +133,7 @@ class Publish_Alt:
     def process_publish_entry(self, t: float) -> bool:
         """
         Process queue of publishing entries. Go through FIFO
-        queue and send descriptors. Reinsert into queue if periodic
+        queue and send descriptors. Reinsert into queue if periodic.
         """
         try:
             publish_entry = self.publish_entries.get_nowait()
@@ -168,7 +168,7 @@ class Publish_Alt:
 
     def get_packets(self, sock: dict, packet_payload: bytes) -> list:
         """
-        Split message up into packets and return them for processing
+        Split message up into packets and return them for processing.
         """
         self.log.debug("getting packets")
         packet_header = self.generate_header(sock)
@@ -196,7 +196,7 @@ class Publish_Alt:
     def send_packets(self) -> None:
         """
         Main body for sending thread. Sends packets in queue over the network.
-        Wait for random duration of time between sending.
+        Imposes random delay between packets.
         """
         self.log.debug("setting up packet sending thread")
         while self.active:
@@ -230,7 +230,7 @@ class Publish_Alt:
 
     def get_ip(self, interface: str) -> str:
         """
-        Get IP address of interface
+        Get IP address of interface.
         """
         return socket.inet_ntoa(
             fcntl.ioctl(
@@ -245,7 +245,7 @@ class Publish_Alt:
 
     def get_interface_name(self, ip: str) -> Optional[str]:
         """
-        Return interface name associated withip
+        Return interface name associated with IP.
         """
         interfaces = socket.if_nameindex()
         for interface in interfaces:
@@ -258,7 +258,7 @@ class Publish_Alt:
 
     def get_mac(self, sock: dict) -> bytes:
         """
-        Get mac address of interface
+        Get mac address of interface.
         """
         return fcntl.ioctl(
             sock["socket"].fileno(),
@@ -270,7 +270,7 @@ class Publish_Alt:
 
     def compress_and_encrypt(self, msg: str, encryption_key: bytes) -> bytes:
         """
-        Encrypt given message with key. Add timestamp for obfuscation
+        Encrypt given message with key. Add timestamp for obfuscation.
         """
         message = (
             str(int(time.time())) + msg
@@ -290,7 +290,7 @@ class Publish_Alt:
 
     def generate_header(self, sock: dict) -> bytes:
         """
-        Assemble ARP header
+        Assemble ARP header.
         """
         packet_header = self.broadcast_mac
         packet_header += sock["mac_addr"]
@@ -332,8 +332,8 @@ class Publish_Alt:
 
     def start(self, ip_addrs: list[str]) -> None:
         """
-        DBus exposed controlling function. Takes list of IPs and
-        starts publishing process
+        DBus-exposed controlling function. Takes list of IPs and
+        starts the publishing process.
         """
         self.log.info("Starting alternative publish")
         self.setup(ip_addrs)
@@ -348,7 +348,7 @@ class Publish_Alt:
 
     def stop(self) -> None:
         """
-        DBus exposed controlling function. Stops discovering process
+        DBus-exposed controlling function. Stops the discovering process.
         """
         self.log.info("Stoping alternative publish")
         self.active = False
@@ -356,7 +356,7 @@ class Publish_Alt:
 
     def setup(self, ip_addrs: list[str], periodically: bool = True) -> None:
         """
-        Processes list of IP adresses and adds entries to be processed
+        Processes list of IP adresses and adds entries to be processed.
         """
         self.log.debug("publish setup")
         for ip in ip_addrs:
@@ -375,7 +375,7 @@ class Publish_Alt:
 
     def clear_broadcast_queue(self) -> None:
         """
-        Clears out all entries and closes the associated sockets
+        Clears out all entries and closes the associated sockets.
         """
         while not self.publish_entries.empty():
             socket_entry = self.publish_entries.get()
@@ -406,7 +406,7 @@ class Publish_Alt:
         time_interval,
     ) -> None:
         """
-        Sets up dbus
+        Sets up DBus
         """
         loop = GLib.MainLoop()
 

@@ -2,7 +2,7 @@
 This module provides the interface for configuring WireGuard interfaces.
 
 It currently requires PyRoute2 and only works on GNU/Linux; in the future it
-should contain implementations for other platforms too.
+should contain implementations for other platforms, too.
 
 A goal of the Feb12 2021 refactor is that sys_pyroute2 will be the only user of
 this module.
@@ -38,7 +38,7 @@ from .common import (
 
 def _wg_interface_list():
     """
-    This returns a list of the current wireguard interfaces' names.
+    This returns a list of names of current WireGuard interfaces.
 
     There must be a better way to do this!
     >>> type(_wg_interface_list())
@@ -81,9 +81,7 @@ class PeerConfig(schemattrdict, serializable):
     def from_netlink(cls, peer):
         """
         This converts approximately from what pyroute2 produces to what
-        pyroute2 consumes
-
-        (plus the extra key 'stats' with two keys)
+        pyroute2 consumes (plus the extra key "stats" with two keys).
 
         >>> p = PeerConfig.from_netlink({'attrs': dict(
         ...     public_key=b64encode(b'A'*32),
@@ -239,11 +237,11 @@ class Interface(attrdict, yamlrepr_hl):
     This is a wrapper for pyroute2's WireGuard interface.
 
     Give it an interface name, and it will give you a dict with the data in the
-    same shape as the pyroute2 structure but with less-irritating names.
+    same shape as the pyroute2 structure but with less irritating names.
 
-    But wait, there's more... it also has a "peers" attribute which gives you
-    the peers in the same shape as pyroute2's Wireguard module expects them to
-    be passed to the "set" method (note: round trips not yet tested).
+    But wait, there's more...it also has a "peers" attribute which gives you
+    the peers in the shape that pyroute2's WireGuard module expects to
+    pass to the "set" method (note: round trips not yet tested).
 
     Because this is a DualUse.object, you can see the data on the commandline
     with commands like these:
@@ -353,7 +351,7 @@ class Interface(attrdict, yamlrepr_hl):
     def query(self):
         """
         This calls "info" for the interface via pyroute2, and (re-)populates
-        our dictionary (we're a dict subclass, recall). It returns self.
+        our dictionary. (We're a dict subclass, recall). It returns self.
         """
         self.clear()
         self.log.debug("Fetching interface info for %s", self.name)
@@ -483,13 +481,13 @@ class Interface(attrdict, yamlrepr_hl):
     def peers(self):
         """
         Returns list of peer structures which should be identical to those
-        passed to the pyroute2 Wireguard set method, except with an extra
+        passed to the pyroute2 WireGuard set method, except with an extra
         "stats" key.
 
         And also except for that it won't do IPv6 correctly.
 
         This would be a good function to write tests for (and perhaps send
-        upstream to pyroute2...)
+        upstream to pyroute2).
         """
         return self.get('peers', [])
 
@@ -606,7 +604,7 @@ class wg(object):
     def showconf(self, interface):
         """
         Shows the current configuration of a given WireGuard interface, for use
-        with `setconf'.
+        with "setconf".
         """
         return Interface(interface).query().wg_showconf
 
@@ -632,7 +630,7 @@ class wg(object):
         <ip1>/<cidr1>[,<ip2>/<cidr2>]...] ]...
 
         This is intended to behave very similarly to the normal wg tool, except
-        it takes private keys on the commandline (and does not yet support
+        that it takes private keys on the commandline (and does not yet support
         reading them from files, as wg does). Yes, this is not a great idea,
         but it makes testing easier.
         """
@@ -722,9 +720,9 @@ def link():
 @click.argument('name', type=str)
 def del_(name):
     """
-    Delete an interface
+    Delete an interface.
 
-    Note: this is not wireguard-specific.
+    Note: this is not WireGuard-specific.
     """
     IPRoute().link('del', ifname=name)
 
@@ -733,7 +731,7 @@ def del_(name):
 @click.argument('name', type=str)
 def add(name):
     """
-    Add a new wireguard interface
+    Add a new WireGuard interface
     """
     IPRoute().link('add', ifname=name, kind="wireguard")
 

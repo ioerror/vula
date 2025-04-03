@@ -7,9 +7,9 @@
  a PSK on a pair-wise basis.
 
  The output of this program may be written to a pipe, a log file, a unix
- socket, or any other place. It should run with the lowest possible privileges
- possible. The output is not filtered and so adversaries may attempt to inject
- unreasonable data. Care should be taken that the data should only be used
+ socket, or any other place. It should run with the lowest possible 
+ privileges. The output is not filtered and so adversaries may attempt to 
+ inject unreasonable data. Care should be taken that the data is used only 
  after it has been verified.
 """
 
@@ -125,9 +125,8 @@ class VerifyCommands(object):
     @click.argument('hostname', type=str, required=True)
     def scan(self, width, height, camera, hostname, debug):
         """
-        We expect a string object that roughly looks like the following three
+        We expect a string object that looks roughly like the following three
         things:
-
 
             local.vula:desc:<descriptor base64 representation>
             local.vula:vk:<vk base64 representation>
@@ -337,7 +336,7 @@ class VerifyCommands(object):
         *hostname*.
 
         If the received *vk* hash matches the expected value for the peer
-        hostname's hashed vk, the host's vk is marked as verified and then the
+        hostname's hashed *vk*, the host's *vk* is marked as verified and then the
         *vk* for the hostname is pinned.
 
         By default, we bind the multicast REUNION protocol to each interface

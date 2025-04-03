@@ -1,6 +1,6 @@
 """
  vula-publish is a program that announces a WireGuard mDNS service as
- informed by Organize over dbus or as controlled by organize in monolith mode.
+ informed by organize over DBus or as controlled by organize in monolith mode.
 
 >>> p = Publish()
 >>> type(p.zeroconfs)
@@ -88,7 +88,7 @@ class Publish(object):
     def daemon(cls):
         """
         This method implements the non-monolithic daemon mode where we run
-        Publish in its own process (as we deploy on GNU/systemd).
+        publish in its own process (as we deploy on GNU/systemd).
         """
         loop = GLib.MainLoop()
         publish = cls()

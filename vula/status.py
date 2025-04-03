@@ -26,7 +26,7 @@ from .notclick import green, red, yellow
 )
 def main(only_systemd):
     """
-    Print status of systemd services and system configuration
+    Print status of systemd services and system configuration.
     """
     log = getLogger()
 

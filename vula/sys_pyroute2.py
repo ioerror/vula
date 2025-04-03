@@ -13,10 +13,11 @@ SCOPES = {0: 'global', 253: 'static'}
 
 class Sys(object):
     """
-    This  object provides all of the pyroute2-based system integration.
-    Organize (and everything else) should only call pyroute2 via this object.
+    This object provides all of the pyroute2-based system integration;
+    organize (and everything else) should only call pyroute2 via this 
+    object.
 
-    This is currently our only implementation of our still-evolving Sys
+    This is currently the only implementation of our still-evolving Sys
     interface. We should reduce the number of public methods here to a minimum,
     and later we can reimplement this object using other means on other
     platforms.
@@ -41,7 +42,7 @@ class Sys(object):
 
     def get_stats(self):
         """
-        Get the statistics
+        Get the statistics.
 
         >>> s = Sys(None)
         >>> type(s.get_stats())
@@ -53,7 +54,7 @@ class Sys(object):
 
     def stop_monitor(self) -> None:
         """
-        Stops the monitor
+        Stops the monitor.
         """
         self._stop_monitor = True
 
@@ -225,7 +226,7 @@ class Sys(object):
 
     def remove_routes(self, dests, table=None, dev=None, dryrun=False):
         """
-        Idempotently remove route(s)
+        Idempotently remove route(s).
 
         Dests is a list of cidr notation strings.
 
@@ -378,7 +379,7 @@ class Sys(object):
 
     def sync_routes(self, dests, table, dryrun=False):
         """
-        Takes a list of cidr notation dests and a routing table, and ensures
+        Takes a list of CIDR notation dests and a routing table, and ensures
         those routes are configured there. Returns a string.
         """
         res = []
