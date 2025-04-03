@@ -25,11 +25,11 @@ cache:
 before_script:
   - PATH=$PATH:~/.local/bin
   - apt update
-  - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git gir1.2-ayatanaappindicator3-0.1 xvfb xauth portaudio19-dev python3-pyaudio openssl python3-cryptography python3-pyroute2 python3-qrcode python3-schema python3-zeroconf python3-pillow python3-stdeb  python3-distutils python3-build build-essential debhelper dh-python fakeroot git make rpm python3-build python3-venv dpkg-dev python3-xlib
+  - apt install -y --no-install-recommends pkg-config libglib2.0-dev libcairo2-dev libgirepository1.0-dev python3-all-dev python3-tk make git gir1.2-ayatanaappindicator3-0.1 xvfb xauth portaudio19-dev python3-pyaudio openssl python3-cryptography python3-pyroute2 python3-qrcode python3-schema python3-zeroconf python3-pillow python3-distutils python3-build build-essential debhelper dh-python fakeroot git make rpm python3-build python3-venv dpkg-dev python3-xlib
   - python -m pip install --user pipx
   - python -m pipx ensurepath
   - pipx install pipenv
-  - pipenv install -v --skip-lock highctidh
+  - pipenv install -v --skip-lock rendez highctidh
   - pipenv install -v --dev --skip-lock
 
 # ---------- static analysis stage

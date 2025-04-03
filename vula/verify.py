@@ -357,9 +357,10 @@ class VerifyCommands(object):
             click.echo("Press Ctrl+C to stop")
         expected_peer_vk: str
         expected_peer_vk_hashed: bytes
-        expected_peer_vk, expected_peer_vk_hashed = (
-            self._lookup_peer_vk_hostname(hostname)
-        )
+        (
+            expected_peer_vk,
+            expected_peer_vk_hashed,
+        ) = self._lookup_peer_vk_hostname(hostname)
         message: bytes = hashlib.sha256(bytes(self.vk)).digest()
         kw['message'] = message
         try:
