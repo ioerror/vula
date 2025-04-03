@@ -87,13 +87,10 @@ build-packages:
     - . $(pipenv --venv)/bin/activate
     - make deb
     - dpkg -I deb_dist/*.deb
-    - make rpm
-    - rpm -qpl dist/*.rpm
   artifacts:
-    name: deb+rpm
+    name: deb
     paths:
       - deb_dist/*.deb
-      - dist/*.rpm
 
 # ---------- Run stage
 # Temporarily disabled due to pypi-install related errors

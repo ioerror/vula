@@ -19,7 +19,7 @@ import sys
 
 from base64 import b64decode
 import click
-from typing import Any, Callable, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple
 from types import ModuleType
 import pydbus
 import yaml
@@ -28,7 +28,7 @@ from gi.repository import GLib
 
 try:
     cv2: Optional[ModuleType]
-    import cv
+    import cv2
 except ImportError:
     cv2 = None
 
@@ -281,7 +281,7 @@ class VerifyCommands(object):
         default="0.0.0.0",
         show_default=True,
         type=str,
-        help="By default we bind to all IPv4 addresses where vula is operating",
+        help="By default we bind to all IPv4 addresses where vula operates",
     )
     @click.option(
         "--bind-mask",
@@ -296,7 +296,7 @@ class VerifyCommands(object):
         is_flag=True,
         default=True,
         type=bool,
-        help="Only reveal our VK to the first peer with the correct passphrase",
+        help="Reveal VK only to the first peer with the correct passphrase",
     )
     @click.option(
         "--passphrase",
@@ -378,7 +378,8 @@ class VerifyCommands(object):
             click.echo(
                 red(
                     bold(
-                        "Invalid length of peer vk received. Verification failed."
+                        "Invalid length of peer vk received. "
+                        + "Verification failed."
                     )
                 )
             )
@@ -393,7 +394,8 @@ class VerifyCommands(object):
                 click.echo(
                     green(
                         bold(
-                            f"Verification succeeded: {hostname} is verified and pinned."
+                            f"Verification succeeded: {hostname}"
+                            + " is verified and pinned."
                         )
                     )
                 )
@@ -401,7 +403,7 @@ class VerifyCommands(object):
             else:
                 raise Exception(yamlres.error)
         else:
-            click.echo(red(bold(f"The received vk and does not match.")))
+            click.echo(red(bold("The received vk and does not match.")))
             if verbose:
                 click.echo(f"{hashed_peer_vk=}")
                 click.echo(f"{expected_peer_vk_hashed=}")
