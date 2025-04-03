@@ -1,5 +1,5 @@
 """
-Note: This module is currently unused.
+This module is currently unused.
 
 >>> Network(essid={"a":True})
 essid:

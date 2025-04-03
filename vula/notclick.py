@@ -13,8 +13,8 @@ from schema import Optional, Schema
 This file contains various click-related bits of vula. None of this is
 strictly necessary; it is mostly used for debugging. It would be fine to remove
 the cls=Debuggable from __main__.py and remove all of the DualUse
-decorators from organize etc (using plain-old click.command to decorate the
-organize class should work) and the software would still run the way we intend
+decorators from organize, etc. (using plain-old click.command to decorate the
+organize class should work), and the software would still run the way we intend
 it to be run in production.
 
 So what do these magical click things do? They make it so that you can use -d
@@ -22,39 +22,45 @@ to do a post-mortem when there are exceptions (except maybe not in glib
 threads... sad). They also make it so that you can run class methods as
 subcommands, and so that there are subcommands for accessing attributes.
 
-Eg, this:
+E.g., this:
+
     vula organize sync
-will instantiate an organize object, loads its state, and then call the
+    
+This instantiate an organize object, loads its state, and then calls the
 object's sync() method. (Note that the way we actually intend sync to be called
-is "vula sync" which calls Organize's sync method via dbus; this "vula
+is with "vula sync", which calls Organize's sync method via DBus. This "vula
 organize sync" method is instantiating an organize object from its state file
 and calling the method on that.)
 
-Or, this: vula -d peer.Descriptor --addrs 10.168.128.160 --c
-vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIR
-H49QmNYDw== --dt
-86400 --e false --hostname wg-mdns-test3.local.  --pk
-EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM= --port 5354 --r '' --s
-T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3sSbVTYjzFGZSCO6n80SR
-aR+BIeOCg== --vf
-1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yBbuf3Zg= valid
+Or, this: 
 
-...will instantiate a Descriptor object and verify that its signature is
+    vula -d peer.Descriptor --addrs 10.168.128.160 --c
+    vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIR
+    H49QmNYDw== --dt
+    86400 --e false --hostname wg-mdns-test3.local.  --pk
+    EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM= --port 5354 --r '' --s
+    T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3sSbVTYjzFGZSCO6n80SR
+    aR+BIeOCg== --vf
+    1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yBbuf3Zg= valid
+
+This instantiates a Descriptor object and verifies that its signature is
 correct.
 
-Note that the first example does not require -d, but the second one does:
+Note that the first example does not require -d, but the second one does;
 automatic resolution of dotted attribute paths only happens in the top-level
 command and only when debug mode is enabled. The first example, meanwhile, uses
 the fact that the Organize class is a DualUse.
 
 Another example which relies on Debuggable, and works with a function that
 isn't decorated at all (types are inferred from type annotations):
+
     sudo vula -d configure._reconfigure_restart_systemd_services  --help
 
 One more example, of chaining the attribute-getting functions:
+
     sudo vula organize state system_state current_subnets
 
-Anyway, if this gets in the way we can get rid of some or all of it.
+Anyway, if this gets in the way, we can get rid of some or all of it.
 """
 
 
@@ -66,13 +72,13 @@ class OrderedGroup(click.Group):
 class Debuggable(OrderedGroup):
 
     """
-    This is a subclass of click.Group which adds a --debug option which enables
+    This is a subclass of click.Group which adds a --debug option that enables
     two features which are useful for debugging:
 
-        - It will drop to a pdb.post_mortem shell after any unhandled exception
+        - It will drop to a pdb.post_mortem shell after any unhandled exception.
 
-        - It allows for automatic commandline access to any function annotated
-          with basic types (str, int, maybe others?)
+        - It allows for automatic command-line access to any function annotated
+          with basic types (str, int, maybe others?).
 
     To use it, just decorate with @Debuggable.command() where you would
     otherwise be using @click.group()
@@ -155,7 +161,7 @@ def _click_command_from_annotated_function(cmd):
     that.
 
     There is actually a library called "autoclick" which presumably does a
-    better job of doing what this function is doing.
+    better job of what this function is doing.
     """
 
     @click.command()
@@ -188,7 +194,7 @@ class DualUse(click.Group):
     @DualUse.object() is a class decorator which enables class instances to be
     usable both as normal python objects and as click commandline functions.
 
-    Methods which should be cli accessible should be decorated with
+    Methods which should be CLI accessible should be decorated with
     @DualUse.method() or @property.
     """
 
@@ -210,13 +216,12 @@ class DualUse(click.Group):
     @property
     def all_commands(self):
         """
-        Return dictionary of DualUse methods and child classes, with
+        This is the return dictionary of DualUse methods and child classes, with
         self.commands applied on top of it.
 
         (FIXME: possibly wg.Interface is the only DualUse.object that actually
-        uses self.commands/add_command? if so, this could be renamed
-        'commands' if the link commands were ported to a nested dualuse
-        object...)
+        uses self.commands/add_command. If so, this could be renamed
+        'commands' if the link commands were ported to a nested DualUse.object.)
         """
         res = {
             value.cli.name: value.cli
@@ -238,7 +243,7 @@ class DualUse(click.Group):
         This got way out of hand. The 'else' branch in this method is just used
         for debugging, and not for everyday use. It allows accessing attributes
         recursively, so you can say things like "vula organize state
-        system_state our_wg_pk" and it will print the pk. But, for certain
+        system_state our_wg_pk" and it will print the pk. However, for certain
         objects, it hits max recursion depth, and I haven't figured out why
         yet. I reserve the right to remove this unsupported magic in the
         future.
@@ -283,7 +288,7 @@ class DualUse(click.Group):
     @classmethod
     def method(cls, opts=(), *a, **kw):
         """
-        Decorator to make methods of DualUse.object classes cli-accessible
+        Decorator to make methods of DualUse.object classes CLI-accessible.
         """
 
         def decorator(f):
@@ -313,7 +318,7 @@ class DualUse(click.Group):
     @classmethod
     def object(cls, *a, **kw):
         """
-        Decorator which installs an object instantiation cli in the 'cli'
+        Decorator which installs an object instantiation CLI in the 'cli'
         attribute of a class.
         """
 
@@ -329,7 +334,7 @@ class DualUse(click.Group):
 def _make_type(schema):
     class _type(click.ParamType):
         """
-        Note that these click types have awful looking type names currently, as
+        Note that these click types have awful-looking type names currently, as
         the name is literally the whole definition. This will hopefully look
         better when we upgrade to the new version of the schema module which
         allows schemas to have proper names, so we won't need to see the whole

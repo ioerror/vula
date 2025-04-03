@@ -57,7 +57,7 @@ def main(ctx, log_level, *args, **kwargs):
     """
     vula tools
 
-    With no arguments, runs "peer show"
+    With no arguments, runs "peer show".
     """
 
     if not log_level:
@@ -118,7 +118,9 @@ def repair(dry_run):
 
 @main.command()
 def rediscover():
-    "Tell organize to ask discover for more peers"
+    """
+    Tell organize to ask discover for more peers.
+    """
     organize = common.organize_dbus_if_active()  # noqa: F811
     click.echo('Discovering on ' + organize.rediscover())
 

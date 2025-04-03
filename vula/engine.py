@@ -12,15 +12,15 @@ from .common import raw, schemattrdict, yamlfile, yamlrepr_hl
 
 class Result(yamlrepr_hl, schemattrdict):
     """
-    A result object contains the results of an event. It contains the event,
-    and the actions, writes, triggers, and trigger_results which resulted from
+    A result object contains the results of an event, including the event,
+    actions, writes, triggers, and trigger_results that resulted from
     the event.
 
     Although log replay is not yet implemented, the event engine is designed
     such that replaying the events from a log of result objects should produce
     an identical state and an identical series of result objects (except for
     the trigger_results, which depend on the system's actual configuration
-    state which exists outside of the state engine).
+    state, which exists outside of the state engine).
     """
 
     schema = Schema(
@@ -94,10 +94,10 @@ class Engine(schemattrdict, yamlfile):
     which will be run after the transaction is committed.
 
     The three built-in write methods are SET, ADD, and REMOVE. These methods,
-    called from actions during an event transaction, are the only place where
+    called from actions during an event transaction, are the only places where
     the engine state is allowed to be modified.
 
-    If there are any exceptions during execution of the event and its actions,
+    If there are exceptions during execution of an event and its actions,
     or if the state after all of the actions have been completed does not
     satisfy the schema, then none of the event's actions' write operations
     are applied.
@@ -107,15 +107,15 @@ class Engine(schemattrdict, yamlfile):
     result object. Triggers may modify state which exists outside of the state
     engine, and may also initiate new events.
 
-    Calling an event will yield a Result object which contains a record of the
+    Calling an event will yield a Result object that contains a record of the
     event arguments and the resulting actions, writes, triggers, and trigger
     results, or contains the exception if one occurred.
 
     The state of the engine is only allowed to change through events which call
-    actions which in turn call write methods. The new state must depend solely
-    on the old state, and the event being processed. Therefore inputs from the
-    outside world such as, for instance, the system time, need to be contained
-    within an event to mutate the old state into the new state.  Similarly,
+    actions, which in turn call write methods. The new state must depend solely
+    on the old state and the event being processed. Inputs from the
+    outside world, such as, for instance, the system time, need to be contained
+    within an event to mutate the old state into the new state. Similarly,
     side effects should only happen in triggers which are run after the
     successful processing of an event.
     """
@@ -185,7 +185,7 @@ class Engine(schemattrdict, yamlfile):
 
     def action(method):
         """
-        Decorator for action methods
+        Decorator for action methods.
         """
 
         assert method.__name__.startswith('action_')
@@ -200,7 +200,7 @@ class Engine(schemattrdict, yamlfile):
 
     def write(method):
         """
-        Decorator for write methods
+        Decorator for write methods.
 
         Writes are where the state gets changed. They should be called from
         action methods, which should be called from event methods.
@@ -212,12 +212,12 @@ class Engine(schemattrdict, yamlfile):
             set:
                 - any type
             add:
-                - lists (which it treats as sorted sets)
+                - lists (treated as sorted sets)
                 - sets
                 - dicts of whatever, when new value is a dict
                 - dicts of bools, when new value is not a dict
             remove:
-                - lists (which it treats as sorted sets)
+                - lists (treated as sorted sets)
                 - sets
                 - dicts of whatever
         """
