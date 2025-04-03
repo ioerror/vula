@@ -67,7 +67,7 @@ class Discover_Alt:
     def receive_packet(self) -> bool:
         """
         Listens on the network for ARP packets
-        and adds them into the packet queue.
+        and adds them to the packet queue.
         """
         self.log.debug("receive_packet")
         with self.packet_queue_lock:
@@ -82,7 +82,7 @@ class Discover_Alt:
 
     def flush_old_peers(self) -> None:
         """
-        Flush stale packet streams by clearing out the data structure
+        Flush stale packet streams by clearing out the data structure.
         """
         self.log.debug("flush_old_peers")
         t = time.time()
@@ -96,8 +96,8 @@ class Discover_Alt:
         self, t: float, src_mac: bytes, candidate: Optional[bytes]
     ) -> None:
         """
-        Update the peer by appeding the valid candidate bytes to the byte
-        stream and pdating the timestamp.
+        Update the peer by appending the valid candidate bytes to the byte
+        stream and updating the timestamp.
         """
         self.log.debug("update_peer")
         with self.peers_lock:
@@ -113,7 +113,7 @@ class Discover_Alt:
     def decrypt_all_broadcasts(self) -> None:
         """
         Try to decrypt the packetstream of all entries.
-        Add descriptor into queue if succesfull
+        Add descriptor to queue if succesfull
         """
         self.log.debug("decrypt_all_broadcasts")
         erase_list = []
@@ -134,14 +134,14 @@ class Discover_Alt:
 
     def decrypt_broadcast(self, src_mac: bytes) -> Optional[str]:
         """
-        Start decryption process
+        Start decryption process.
         """
         self.log.debug("decrypt_broadcast")
         return self.decrypt(self.peers[src_mac]["byte_stream"], src_mac)
 
     def process_descriptors(self) -> bool:
         """
-        Empty out descriptor queue by sending them to organize.
+        Empty descriptor queue by sending contents to organize.
         """
         self.log.debug("process_descriptors")
         try:
@@ -161,7 +161,7 @@ class Discover_Alt:
 
     def process_packet(self) -> bool:
         """
-        Empty out packet queue and process them
+        Empty packet queue and process contents.
         """
         self.log.debug("process_packet")
         try:
@@ -183,8 +183,8 @@ class Discover_Alt:
 
     def capture(self) -> None:
         """
-        Capture thread main body. Captures and processes packets.
-        Updates descriptor queue for processing
+        Main body of capture thread. Captures and processes packets.
+        Updates descriptor queue for processing.
         """
         self.log.debug("starting capture")
         while self.active:
@@ -197,7 +197,7 @@ class Discover_Alt:
 
     def process(self) -> None:
         """
-        Processing thread main body. Processes all packets in queue
+        Main body of processing thread. Processes all packets in queue
         """
         self.log.debug("starting processing")
         while self.active:
@@ -209,7 +209,7 @@ class Discover_Alt:
 
     def flush(self) -> None:
         """
-        Flushing thread main body. Clean up datastructure.
+        Main body of flushing thread. Clean up data structure.
         """
         self.log.debug("flush")
         while self.active:
@@ -219,7 +219,7 @@ class Discover_Alt:
 
     def decrypt(self, message: bytes, key: bytes) -> Optional[str]:
         """
-        Decrypts and decompresses message with given key
+        Decrypts and decompresses message with given key.
         """
         self.log.debug("decrypt")
         key = hashlib.sha256(key).digest()
@@ -236,7 +236,7 @@ class Discover_Alt:
 
     def start(self) -> None:
         """
-        DBus exposed controlling function. Starts the whole process
+        DBus-exposed controlling function. Starts the whole process.
         """
         self.log.info("Starting alternative discovery")
         self.active = True
@@ -249,7 +249,7 @@ class Discover_Alt:
 
     def stop(self) -> None:
         """
-        DBus exposed controlling function. Stops the whole process
+        DBus-exposed controlling function. Stops the whole process.
         """
         self.log.info("Stopping alternative discovery")
         click.echo(self.active)
@@ -265,7 +265,7 @@ class Discover_Alt:
         packet_max_length: int,
     ) -> None:
         """
-        Set up DBus and init object
+        Set up DBus and init object.
         """
         loop = GLib.MainLoop()
 

@@ -47,7 +47,7 @@ def chown_like_dir_if_root(path):
     As of this writing, this function is only used by the organize daemon when
     writing the hosts file.
 
-    FIXME: this should probably be used when writing the state file as well?
+    FIXME: This should probably be used when writing the state file as well.
     """
     if os.getuid() == 0:
         dirstat = os.stat(os.path.dirname(os.path.realpath(path)))
@@ -101,7 +101,7 @@ def _safer_load(
 
 class attrdict(dict):
     """
-    Dictionary which provides attribute access to its keys.
+    This is a dictionary that provides attribute access to its keys.
 
     For best results, use the schemattrdict subclass rather than using this
     directly.
@@ -142,17 +142,17 @@ class attrdict(dict):
 
 class ro_dict(dict):
     """
-    This is a dictionary which is not easy to accidentally update.
+    This is a dictionary that is not easy to accidentally update.
 
     It's not a strong read-only protection, as its values may be mutable and
     the dict itself can actually be updated by using the dict type's update
-    method instead of using the object's own exception-raising update method
-    definedhere.
+    method instead of using the object's own exception-raising update method 
+    that is defined here.
 
     We use this instead of the frozendict from PyPI so that we can be an actual
-    dict and thus it is trivially compatible with out other dict mixin classes,
-    and because we don't need the feature frozendict provides which we don't
-    (hashability). Perhaps in the future we'll decide to use frozendict
+    dict and thus it is trivially compatible with our other dict mixin classes,
+    and because we don't need the additional feature that frozendict provides 
+    (hashability). Perhaps in the future we'll decide to use frozendict 
     instead.
 
     >>> ro = ro_dict({'a':1,'b':2,'c':3})
@@ -171,7 +171,8 @@ class ro_dict(dict):
 
     def __setitem__(self, key, value):
         """
-        raises a ValueError exception when trying to set a key in a ro_dict
+        This raises a ValueError exception when trying to set a key in an 
+        ro_dict.
 
         test adding a non-existing key to ro_dict:
         >>> test_ro_dict = ro_dict({"key": "value"})
@@ -193,10 +194,10 @@ class ro_dict(dict):
 
     def update(self, *a, **kw):
         """
-        raises a ValueError exception when trying to change a ro_dict using the
-        update() method
+        This raises a ValueError exception when trying to change an ro_dict 
+        using the update() method.
 
-        test updating an existing key:
+        Test updating an existing key:
         >>> test_ro_dict = ro_dict({"key": "value"})
         >>> test_ro_dict.update({"key": "other_value"})
         Traceback (most recent call last):
@@ -204,7 +205,7 @@ class ro_dict(dict):
         ValueError: Attempt to update read-only dictionary (*({'key': \
 'other_value'},), **{})
 
-        test updating a non-existing key:
+        Test updating a non-existing key:
         >>> test_ro_dict = ro_dict({"key": "value"})
         >>> test_ro_dict.update({"different_key": "other_value"})
         Traceback (most recent call last):
@@ -219,7 +220,7 @@ class ro_dict(dict):
 
 def raw(value):
     """
-    Recursively coerces objects into something serializable.
+    This recursively coerces objects into something serializable.
 
     This tries to return the original unmodified object whenever possible, to
     avoid precluding the possibility of having automatic YAML object references
@@ -278,7 +279,8 @@ def raw(value):
 
 class serializable(dict):
     def _dict(self):
-        """Return serializable as a dictionary
+        """
+        Return serializable as a dictionary.
 
         >>> serializable({1:serializable({2:3})})._dict()
         {1: {2: 3}}
@@ -339,8 +341,8 @@ class yamlfile(serializable):
 
 class yamlrepr(serializable):
     r"""
-    Function to return a YAML representation of a Serializable in human
-    readable format
+    Function to return a YAML representation of a Serializable in human-
+    readable format.
     >>> myObj = serializable(("ab", "cd"))
     >>> myYaml = yamlrepr(myObj)
     >>> myYaml.__repr__()
@@ -349,7 +351,7 @@ class yamlrepr(serializable):
 
     def __repr__(self):
         """
-        Function to return a YAML representation of a Serializable in human
+        Function to return a YAML representation of a Serializable in human-.
         readable format
         >>> yamlrepr(serializable({2:3}))
         2: 3
@@ -365,8 +367,8 @@ class yamlrepr(serializable):
 class jsonrepr_pp(serializable):
     def __repr__(self):
         r"""
-        Function to return a json representation of a Serializable in human
-        readable format
+        Function to return a JSON representation of a Serializable in human-
+        readable format.
         >>> myObj = serializable(("ab", "cd"))
         >>> myJson = jsonrepr_pp(myObj)
         >>> myJson.__repr__()
@@ -378,7 +380,7 @@ class jsonrepr_pp(serializable):
 class jsonrepr(serializable):
     def __repr__(self):
         """
-        Function to return a json representation of a Serializable.
+        Function to return a JSON representation of a Serializable.
         >>> mySerializable = serializable(("ab", "cd"))
         >>> myJsonRepr = jsonrepr(mySerializable)
         >>> myJsonRepr.__repr__()
@@ -421,7 +423,7 @@ if pygments is not None:
     class jsonrepr_hl(jsonrepr):
         def __repr__(self):
             r"""
-            Function to return a raw json formatted content with syntax
+            Function to return raw JSON-formatted content with syntax
             highlighting.
             >>> serializableObj = serializable(("ab", "cd"))
             >>> jsonReprObj = jsonrepr(serializableObj)
@@ -455,7 +457,7 @@ class ConsistencyError(Exception):
 class comma_separated_IPs(object):
     def __init__(self, _str):
         """
-        create a list of IP address
+        Creates a list of IP addresses.
 
         >>> comma_separated_IPs("127.0.0.1,15.15.15.15")
         <comma_separated_IPs('127.0.0.1,15.15.15.15')>
@@ -475,7 +477,7 @@ class comma_separated_IPs(object):
 
     def __iter__(self):
         """
-        Iterate over ips
+        Iterate over IP addresses.
 
         >>> [ip for ip in comma_separated_IPs("::1,192.168.1.1")]
         [IPv6Address('::1'), IPv4Address('192.168.1.1')]
@@ -484,7 +486,7 @@ class comma_separated_IPs(object):
 
     def __getitem__(self, idx):
         """
-        get item at index
+        Get item at index.
 
         :param idx: int
         :return: IPv4Address
@@ -506,7 +508,7 @@ class comma_separated_IPs(object):
 
     def __repr__(self):
         """
-        Return the type of the class with his IP
+        Return the type of the class with its IP address.
 
         >>> ip = comma_separated_IPs('192.168.0.1')
         >>> ip.__repr__()
@@ -519,7 +521,7 @@ class comma_separated_IPs(object):
         """
 
         """
-        get IP
+        Get IP.
 
         >>> ips = comma_separated_IPs("192.168.3.2,192.168.0.3,192.168.3.4,
         ... 192.168.0.2,192.168.0.3,192.168.3.4")
@@ -531,7 +533,7 @@ class comma_separated_IPs(object):
 
     def __str__(self):
         """
-        Return the comma separated IP addresses as a string
+        Return comma-separated IP addresses as a string.
 
         >>> ip = comma_separated_IPs('fe80::1')
         >>> ip.__str__()
@@ -557,7 +559,7 @@ class comma_separated_IPs(object):
 
 class comma_separated_Nets(comma_separated_IPs):
     """
-    Instantiate a list of networks
+    Instantiate a list of networks.
 
     >>> comma_separated_Nets("blabla")
     Traceback (most recent call last):
@@ -588,7 +590,9 @@ class comma_separated_Nets(comma_separated_IPs):
 
 
 class Constraint(object):
-    "Abstract base class for Schema validation directives"
+    """
+    Abstract base class for Schema validation directives.
+    """
 
     def __init__(self, *args, **kwargs):
         self.args = args
@@ -596,7 +600,7 @@ class Constraint(object):
 
     def __repr__(self):
         """
-        Function to return constraint object.
+        Function to return a constraint object.
         >>> Constraint({4:3})
         Constraint({4: 3})
         """
@@ -625,23 +629,25 @@ class Constraint(object):
             raise ValueError("%s check failed on %r" % (self, value))
 
     def constraint(self):
-        "Constraint subclasses must implement this method"
+        """
+        Constraint subclasses must implement this method.
+        """
         raise NotImplementedError
 
 
 class Length(Constraint):
     """
-    Constraint to check if a string length is equal to, min or max a given
+    Constraint to check if a string length is equal-to, min, or max of a given
     value.
     """
 
     @staticmethod
     def constraint(value, length=None, min=None, max=None):
         """
-        Validates length of a given string. Min and/or Max can be specified, or
+        Validates the length of a given string. Min and/or Max can be specified, or
         a precise length.
 
-        Returns the value if constraints are met else an error is raised.
+        Returns the value if constraints are met, otherwise an error is raised.
 
         >>> Length.constraint("Test", min = 3, max = 5)
         'Test'
@@ -774,7 +780,7 @@ ESSID = And(str, Length(min=1, max=32))
 class b64_bytes(bytes):
     """
     Bytes subclass which automatically stringifies itself to base64, and has a
-    repr which shows the first 6 bytes of its base64 encoding.
+    repr which shows the first six bytes of its base64 encoding.
     """
 
     def __str__(self):
@@ -793,7 +799,7 @@ class b64_bytes(bytes):
 
     def __repr__(self):
         """
-        Function to return a base64 representation of entered bytes
+        Function to return a base64 representation of entered bytes.
 
         >>> string = "Vula is cool."
         >>> arr = bytearray(string, 'utf-8')
@@ -952,16 +958,16 @@ class chunkable_values(dict):
     """
     This chunks and unchunks dictionary values.
 
-    So, a long value stored under key k becomes many small keys k00..kNN who's
+    A long value stored under key k becomes many small keys k00..kNN whose
     values can be concatenated to obtain the original long value.
 
-    This is meant to be used for encoding values too large to fit in a TXT
-    record. Therefore the chunk size leaves room for the key size plus a two
-    digit chunk number plus one more byte for the equals sign in a ZeroConf TXT
-    record.
+    This is used for encoding values too large to fit in a TXT
+    record. Therefore the chunk size leaves room for the key size plus a two-
+    digit chunk number plus one more byte (for the equals sign) in a ZeroConf 
+    TXT record.
 
-    This was just written for a quick experiment and should be made more robust
-    before actually using it.
+    This was just written as a quick experiment and should be made more robust
+    before actual use.
 
     >>> d = chunkable_values(a=1, b='0123456789')
     >>> d.chunk(10)
@@ -1054,7 +1060,7 @@ class KeyFile(yamlrepr_hl, schemattrdict, yamlfile):
 
 def organize_dbus_if_active():
     """
-    Returns a dbus proxy to organize, if it is running. Exits otherwise.
+    Returns a DBus proxy to organize, if it is running. Exits otherwise.
 
     This is for commands that shouldn't dbus-activate it.
 

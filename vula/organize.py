@@ -451,10 +451,10 @@ class OrganizeState(Engine, yamlrepr_hl):
 class Organize(attrdict):
     """
     vula's organize daemon processes events such as new descriptors or system
-    configuration changes, and maintains the configuration of the wireguard
+    configuration changes, and maintains the configuration of the WireGuard
     interface and routing table.
 
-    It provides dbus interfaces for client tools to view and modify its state.
+    It provides DBus interfaces for client tools to view and modify its state.
     """
 
     dbus = '''
@@ -640,7 +640,7 @@ class Organize(attrdict):
 
     def _load_state(self):
         """
-        Deserializes the state object from disk and returns it
+        Deserializes the state object from disk and returns it.
         """
         self.log.debug("Loading state file")
         try:
@@ -704,9 +704,8 @@ class Organize(attrdict):
     @DualUse.method()
     def save(self):
         """
-        Save state to disk
-
-        (should be no-op if run from commandline in a new organize instance)
+        Save state to disk. (Should be no-op if run from the commandline in a
+        new organize instance.)
         """
         self.state.write_yaml_file(self.state_file, mode=0o600, autochown=True)
         self.log.info("vula state file updated: %i peers", len(self.peers))
@@ -726,7 +725,7 @@ class Organize(attrdict):
     )
     def sync(self, dryrun=False, verbose=False, firstrun=False):
         """
-        Sync system to the desired organized state
+        Sync system to the desired organized state.
         """
         res = []
         res += self.sys.sync_interface(dryrun=dryrun)
@@ -762,14 +761,14 @@ class Organize(attrdict):
     @DualUse.method()
     def release_gateway(self):
         """
-        Release the current gateway
+        Release the current gateway.
         """
         return str(yamlrepr(self.state.event_RELEASE_GATEWAY()))
 
     @DualUse.method()
     def bp(self):
         """
-        Call pdb.set_trace()
+        Call pdb.set_trace().
         """
         pdb.set_trace()
 
@@ -784,7 +783,7 @@ class Organize(attrdict):
     )
     def run(self, monolithic, no_dbus=False):
         """
-        Run GLib main loop (default if no command specified)
+        Run GLib main loop (default if no command specified).
         """
 
         if not no_dbus:

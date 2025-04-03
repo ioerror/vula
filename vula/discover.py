@@ -1,13 +1,13 @@
 """
  vula-discover is a stateless program that prints each WireGuard mDNS
- service and formats the service parameters into a single easy to parse line.
+ service and formats the service parameters into a single easy-to-parse line.
  This program's output is intended to be fed into a daemon that configures
- wireguard peers discovered by vula to configure the local vula
+ WireGuard peers discovered by vula to configure the local vula
  interface.
 
  The output of this program may be written to a pipe, a log file, a unix
- socket, the vula-organize dbus Interface for processing descriptors, or any
- other place. It should run with the lowest possible privileges possible. The
+ socket, the vula-organize DBus interface for processing descriptors, or any
+ other place. It should run with the lowest privileges possible. The
  output is not filtered and so adversaries may attempt to inject unreasonable
  hosts such as `127.0.0.1` or other addresses. Care should be taken that only
  addresses for the local network segment are used as WireGuard peers.
@@ -35,9 +35,9 @@ from .peer import Descriptor
 
 class WireGuardServiceListener(ServiceListener):
     """
-    *WireGuardServiceListener* is for use with *zeroconf's* *ServiceBrowser*.
-    The key=value pairs conform to
-    https://tools.ietf.org/html/rfc6763#section-6.4
+    *WireGuardServiceListener* is for use with *zeroconf*'s *ServiceBrowser*.
+    The key-value pairs conform to 
+    https://tools.ietf.org/html/rfc6763#section-6.4.
     """
 
     def __init__(self, callback):
@@ -57,8 +57,8 @@ class WireGuardServiceListener(ServiceListener):
 
     def add_service(self, zeroconf: Zeroconf, s_type: str, name: str) -> None:
         """
-        When zeroconf discovers a new WireGuard service it calls *add_service*
-        which produces a peer descriptor on *stdout*.
+        When *zeroconf* discovers a new WireGuard service it calls 
+        *add_service*, which produces a peer descriptor on *stdout*.
         """
         # Typing note:
         # 'Any' works here and while 'Optional[ServiceInfo]' should, it does
@@ -113,7 +113,7 @@ class Discover(object):
         """
         Deprecated.
 
-        This is for the cli to accept interface names.
+        This is for the CLI to accept interface names.
         """
 
         if interface and ip_address:
@@ -172,7 +172,7 @@ class Discover(object):
     def daemon(cls, use_dbus, ip_address, interface):
         """
         This method implements the non-monolithic daemon mode where we run
-        Discover in its own process (as we deploy on GNU/systemd).
+        Discover in its own process (as deployed on GNU/systemd).
         """
 
         loop = GLib.MainLoop()

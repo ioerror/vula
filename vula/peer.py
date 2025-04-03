@@ -51,7 +51,7 @@ _qrcode = None
 class Descriptor(schemattrdict, serializable):
 
     """
-    Descriptors are the objects which are communicated between between publish
+    Descriptors are the objects which are communicated between publish
     and discover (via mDNS) and between discover and organize (via strings).
 
     This ridiculous test uses the fact that this is commandline-accessible:
@@ -209,7 +209,7 @@ class Descriptor(schemattrdict, serializable):
 
     def __str__(self):
         """
-        Return the number or IP as a string
+        Return the number or IP as a string.
 
         >>> ip = comma_separated_IPs('192.168.13.37')
         >>> ip.__str__()
@@ -224,7 +224,7 @@ class Descriptor(schemattrdict, serializable):
     @property
     def id(self):
         """
-        This returns the peer ID (aka the verify key, base64-encoded)
+        This returns the peer ID (aka the verify key, base64-encoded).
         >>> desc_s = (
         ... "addrs=192.168.6.9;"
         ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
@@ -331,7 +331,7 @@ class Descriptor(schemattrdict, serializable):
         Verifies the signature.
         Returns true if valid, false if invalid.
 
-        Valid Signature:
+        Valid signature:
         >>> desc_str = (
         ... "addrs=10.215.167.50; c=KNDxDMgmkH8Poa7TJBlIZrvTnQBN5w10gYlyY5"
         ... "MfvkA7Eu12IhpheCdJzWIwap4PE5Ryv3PzvU4ikrEY6oXJNw==; dt=86400; e=0; "
@@ -342,7 +342,7 @@ class Descriptor(schemattrdict, serializable):
         >>> desc = Descriptor.parse(desc_str)
         >>> assert desc.verify_signature() is True
 
-        Invalid Signature:
+        Invalid signature:
         >>> desc = Descriptor(desc, port=desc['port'] + 1)
         >>> assert desc.verify_signature() is False
         """
@@ -377,7 +377,7 @@ class Descriptor(schemattrdict, serializable):
         The data that is encoded within the QR-Code is
         given by this functions parameter.
 
-        It returns a String.
+        It returns a string.
         """
         global _qrcode
         if _qrcode is None:
@@ -421,7 +421,7 @@ class Peer(schemattrdict):
 
     @property
     def wg_pk(self):
-        "WireGuard public key"
+        "WireGuard public key."
         return self.descriptor.pk
 
     @property
@@ -514,7 +514,7 @@ class Peer(schemattrdict):
     @property
     def name_and_id(self):
         """
-        Returns the name and id of the peer.
+        Returns the name and ID of the peer.
 
         >>> desc_string = ("addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
         ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
@@ -668,7 +668,7 @@ class Peers(yamlrepr, queryable, schemadict):
     A dictionary of peers. Note that, despite being the home of the conflict
     detection code, a Peers object can be valid (from a schema standpoint) even
     while containing conflicts. The schema of a SystemState object uses this
-    conflict detection code to ensure that the peers object within a
+    conflict detection code to ensure that the Peers object within a
     SystemState does not contain conflicts.
     """
 
@@ -725,8 +725,9 @@ class Peers(yamlrepr, queryable, schemadict):
 
     def conflicts_for_descriptor(self, desc):
         """
-        Returns list of enabled peers a descriptor has a conflicting wg_pk,
-        hostname, or IP address with (ignoring itself).
+        Returns list of enabled vula peers where a descriptor has a conflicting 
+        wg_pk, hostname, or IP address field (ignoring itself).
+        
         """
         return list(
             {
@@ -784,16 +785,16 @@ def _ac_get_peer_ids(ctx, args, incomplete):
 @click.pass_context
 class PeerCommands(object):
     """
-    Commands to view and modify peer information
+    Commands to view and modify peer information.
 
     When "peer" is the top-level command, its subcommands communicate with
-    organize via dbus. This is the normal way to use these commands (eg, you
+    organize via DBus. This is the normal way to use these commands (e.g., you
     can run "vula peer show").
 
     At this point in development, "peer" may also be run as a subcommand of the
     "organize" command, in which case it will instantiate and operate on the
     organize object directly. In the case of the "set" and "remove" peer
-    subcommands this only makes sense when there isn't an organize daemon
+    subcommands, this only makes sense when there isn't an organize daemon
     process running (as the daemon process will overwrite the state file
     written by the "organize peer ..." command process without ever reading its
     contents). Note that we do not currently check to ensure that there is not
@@ -841,7 +842,7 @@ class PeerCommands(object):
     )
     def show(self, peers=(), which=None, descriptor=False, qrcode=False):
         """
-        Show peer information
+        Show peer information.
 
         With no arguments, all enabled peers are shown.
 
@@ -880,7 +881,7 @@ class PeerCommands(object):
     @click.argument('file', type=click.File(), default='-')
     def import_(self, file):
         """
-        Import peer descriptors
+        Import peer descriptors.
 
         Reads from standard input if a file is not specified.
 
@@ -907,7 +908,7 @@ class PeerCommands(object):
     @click.pass_context
     class addr(object):
         """
-        Modify peer addresses
+        Modify peer addresses.
 
         In the future, this might also show addresses, but for now that can be
         done with the "peer show" command.
@@ -933,7 +934,7 @@ class PeerCommands(object):
         @click.argument('ip', type=str)
         def del_(self, vk, ip):
             """
-            Delete an address from a peer
+            Delete an address from a peer.
 
             Note: if the peer re-announces the address, it will be re-added. To
             prevent an address from being (re)enabled, you can set it to
@@ -948,9 +949,9 @@ class PeerCommands(object):
     @click.argument('value', type=str)
     def set(self, vk, path, value):
         """
-        Modify arbitrary peer properties
+        Modify arbitrary peer properties.
 
-        This is currently the only way to verify peers, enable/disable them,
+        This is currently the only way to verify peers, enable or disable them,
         and enable or disable IP addresses.
 
         In the future, this command should perhaps only be available for
@@ -969,7 +970,7 @@ class PeerCommands(object):
     @click.argument('vk', type=str)
     def remove(self, vk):
         """
-        Remove a peer
+        Remove a peer.
         """
         res = self.organize.remove_peer(vk)
         res = Result.from_yaml(str(res))

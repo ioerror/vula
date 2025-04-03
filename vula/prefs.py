@@ -69,7 +69,7 @@ class Prefs(yamlrepr_hl, schemattrdict):
 @click.pass_context
 class PrefsCommands(object):
     """
-    View and modify preferences
+    View and modify preferences.
     """
 
     def __init__(self, ctx):
@@ -80,7 +80,7 @@ class PrefsCommands(object):
     @DualUse.method()
     def show(self):
         """
-        Show preferences
+        Show preferences.
         """
         res = str(yamlrepr_hl(yaml.safe_load(self.organize.show_prefs())))
         return res
@@ -90,7 +90,7 @@ class PrefsCommands(object):
     @click.argument('value', type=str)
     def set(self, pref, value):
         """
-        Set a preference to a value
+        Set a preference to a value.
         """
         return self.organize.set_pref(pref, value)
 
@@ -99,7 +99,7 @@ class PrefsCommands(object):
     @click.argument('value', type=str)
     def add(self, pref, value):
         """
-        Merge a preference value into a list or dict
+        Merge a preference value into a list or dict.
         """
         return self.organize.add_pref(pref, value)
 
@@ -108,7 +108,7 @@ class PrefsCommands(object):
     @click.argument('value', type=str)
     def remove(self, pref, value):
         """
-        Remove a preference value from a list or dict
+        Remove a preference value from a list or dict.
         """
         return self.organize.remove_pref(pref, value)
 

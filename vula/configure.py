@@ -51,7 +51,7 @@ from .notclick import DualUse
 class Configure(attrdict):
     def __init__(self, ctx, **kw):
         """
-        Configure interface (generating keys if necessary)
+        Configure interface (generating keys if necessary).
         """
         self.update(**kw)
         self.log: Logger = getLogger()
