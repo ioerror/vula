@@ -25,14 +25,14 @@ subcommands, and so that there are subcommands for accessing attributes.
 E.g., this:
 
     vula organize sync
-    
+
 This instantiate an organize object, loads its state, and then calls the
 object's sync() method. (Note that the way we actually intend sync to be called
 is with "vula sync", which calls Organize's sync method via DBus. This "vula
 organize sync" method is instantiating an organize object from its state file
 and calling the method on that.)
 
-Or, this: 
+Or, this:
 
     vula -d peer.Descriptor --addrs 10.168.128.160 --c
     vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIR
@@ -75,7 +75,8 @@ class Debuggable(OrderedGroup):
     This is a subclass of click.Group which adds a --debug option that enables
     two features which are useful for debugging:
 
-        - It will drop to a pdb.post_mortem shell after any unhandled exception.
+        - It will drop to a pdb.post_mortem shell after any unhandled
+          exception.
 
         - It allows for automatic command-line access to any function annotated
           with basic types (str, int, maybe others?).
@@ -216,12 +217,12 @@ class DualUse(click.Group):
     @property
     def all_commands(self):
         """
-        This is the return dictionary of DualUse methods and child classes, with
-        self.commands applied on top of it.
+        This is the return dictionary of DualUse methods and child classes,
+        with self.commands applied on top of it.
 
         (FIXME: possibly wg.Interface is the only DualUse.object that actually
-        uses self.commands/add_command. If so, this could be renamed
-        'commands' if the link commands were ported to a nested DualUse.object.)
+        uses self.commands/add_command. If so, this could be renamed 'commands'
+        if the link commands were ported to a nested DualUse.object.)
         """
         res = {
             value.cli.name: value.cli

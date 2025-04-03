@@ -725,9 +725,9 @@ class Peers(yamlrepr, queryable, schemadict):
 
     def conflicts_for_descriptor(self, desc):
         """
-        Returns list of enabled vula peers where a descriptor has a conflicting 
+        Returns list of enabled vula peers where a descriptor has a conflicting
         wg_pk, hostname, or IP address field (ignoring itself).
-        
+
         """
         return list(
             {

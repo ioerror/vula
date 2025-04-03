@@ -146,13 +146,13 @@ class ro_dict(dict):
 
     It's not a strong read-only protection, as its values may be mutable and
     the dict itself can actually be updated by using the dict type's update
-    method instead of using the object's own exception-raising update method 
+    method instead of using the object's own exception-raising update method
     that is defined here.
 
     We use this instead of the frozendict from PyPI so that we can be an actual
     dict and thus it is trivially compatible with our other dict mixin classes,
-    and because we don't need the additional feature that frozendict provides 
-    (hashability). Perhaps in the future we'll decide to use frozendict 
+    and because we don't need the additional feature that frozendict provides
+    (hashability). Perhaps in the future we'll decide to use frozendict
     instead.
 
     >>> ro = ro_dict({'a':1,'b':2,'c':3})
@@ -171,7 +171,7 @@ class ro_dict(dict):
 
     def __setitem__(self, key, value):
         """
-        This raises a ValueError exception when trying to set a key in an 
+        This raises a ValueError exception when trying to set a key in an
         ro_dict.
 
         test adding a non-existing key to ro_dict:
@@ -194,7 +194,7 @@ class ro_dict(dict):
 
     def update(self, *a, **kw):
         """
-        This raises a ValueError exception when trying to change an ro_dict 
+        This raises a ValueError exception when trying to change an ro_dict
         using the update() method.
 
         Test updating an existing key:
@@ -644,8 +644,8 @@ class Length(Constraint):
     @staticmethod
     def constraint(value, length=None, min=None, max=None):
         """
-        Validates the length of a given string. Min and/or Max can be specified, or
-        a precise length.
+        Validates the length of a given string. Min and/or Max can be
+        specified, or a precise length.
 
         Returns the value if constraints are met, otherwise an error is raised.
 
@@ -963,7 +963,7 @@ class chunkable_values(dict):
 
     This is used for encoding values too large to fit in a TXT
     record. Therefore the chunk size leaves room for the key size plus a two-
-    digit chunk number plus one more byte (for the equals sign) in a ZeroConf 
+    digit chunk number plus one more byte (for the equals sign) in a ZeroConf
     TXT record.
 
     This was just written as a quick experiment and should be made more robust

@@ -14,7 +14,7 @@ SCOPES = {0: 'global', 253: 'static'}
 class Sys(object):
     """
     This object provides all of the pyroute2-based system integration;
-    organize (and everything else) should only call pyroute2 via this 
+    organize (and everything else) should only call pyroute2 via this
     object.
 
     This is currently the only implementation of our still-evolving Sys

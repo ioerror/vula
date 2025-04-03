@@ -36,7 +36,7 @@ from .peer import Descriptor
 class WireGuardServiceListener(ServiceListener):
     """
     *WireGuardServiceListener* is for use with *zeroconf*'s *ServiceBrowser*.
-    The key-value pairs conform to 
+    The key-value pairs conform to
     https://tools.ietf.org/html/rfc6763#section-6.4.
     """
 
@@ -57,7 +57,7 @@ class WireGuardServiceListener(ServiceListener):
 
     def add_service(self, zeroconf: Zeroconf, s_type: str, name: str) -> None:
         """
-        When *zeroconf* discovers a new WireGuard service it calls 
+        When *zeroconf* discovers a new WireGuard service it calls
         *add_service*, which produces a peer descriptor on *stdout*.
         """
         # Typing note:
