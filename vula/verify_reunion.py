@@ -1,14 +1,10 @@
-import socket
-import struct
 import time
-from typing import Any, Generator, List, Optional, Protocol, Tuple, Union, cast
-from random import randint
+from typing import List, Optional
 
 import click
-from rendez.vous.reunion.session import ReunionSession
 from rendez.vous.reunion.multicast import UDPListeners
 
-from .notclick import DualUse, bold, green, red
+from .notclick import red
 
 
 def reunion_multicast_run_verify(
@@ -24,7 +20,7 @@ def reunion_multicast_run_verify(
     hostname: str,
     verbose: bool,
 ) -> bytes:
-    if reveal_once != True:
+    if reveal_once is not True:
         raise click.ClickException(
             "REUNION multi-reveal support is currently unavailable"
         )

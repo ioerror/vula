@@ -1068,13 +1068,14 @@ def organize_dbus_if_active():
     ...     organize_dbus_if_active()
     'DBusProxyObject'
 
+    >>> o = [_ORGANIZE_DBUS_NAME]
     >>> with patch("pydbus.SystemBus", return_value=mock_bus):
     ...     mock_bus.dbus.NameHasOwner.return_value = False
-    ...     mock_bus.dbus.ListActivatableNames.return_value = [_ORGANIZE_DBUS_NAME]
+    ...     mock_bus.dbus.ListActivatableNames.return_value = o
     ...     organize_dbus_if_active() # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
         ...
-    SystemExit: Organize is not running (but it is DBus-activatable; use 'vula start' to start it.).
+    SystemExit: Organize is not running (but it is DBus-activatable; ...
 
     >>> with patch("pydbus.SystemBus", return_value=mock_bus):
     ...     mock_bus.dbus.NameHasOwner.return_value = False
