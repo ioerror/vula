@@ -37,11 +37,12 @@ class TestVerifyCommands:
         }
 
         mockdbus = Mock()
-        mockpeer = Mock()
-        mockpeer.our_latest_descriptors.return_value = json.dumps(
+        mockorganize = Mock()
+        mockorganize.our_latest_descriptors.return_value = json.dumps(
             test_descriptor
         )
-        mockdbus.SystemBus.return_value.get.return_value = mockpeer
+        mockorganize.prefs = vula.prefs.Prefs()
+        mockdbus.SystemBus.return_value.get.return_value = mockorganize
 
         mockclickctx = MagicMock()
         mockclickctx.meta.get.return_value.get.return_value = None
