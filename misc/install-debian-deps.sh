@@ -3,7 +3,7 @@ set -e
 
 # This script is meant to be run inside of a container.
 #
-# See quick-install.sh for the script meant to be run on real systems.
+# See quick-build.sh for a build procedure meant to be run on real systems.
 #
 # This script is recently only tested and working with bookworm.
 
