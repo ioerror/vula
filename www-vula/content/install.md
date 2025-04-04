@@ -29,7 +29,7 @@ If apt reports a missing dependency, the script fails with errors. You can usual
 2. After a successful run, the script lists the deb packages that have been built. Install them manually as follows:
 
 ```
-sudo dpkg -i dist/python3-vula_0.2.2025031100-2_all.deb vula_libnss/dist/python3-vula-libnss_0.0.2024120900-1_amd64.deb highctidh/dist/python3-highctidh_1.0.2024092800-1_amd64.deb ggwave/dist/libggwave-dev_0.4.2_amd64.deb ggwave/dist/python3-ggwave_0.4.2-0_amd64.deb pymonocypher/dist/python3-pymonocypher_4.0.2.5-0_amd64.deb reunion/dist/python3-rendez_1.2.1-1_all.deb
+sudo dpkg -i dist/python3-vula_*_all.deb vula_libnss/dist/python3-vula-libnss_*_amd64.deb highctidh/dist/python3-highctidh_*_amd64.deb ggwave/dist/libggwave-dev_*_amd64.deb ggwave/dist/python3-ggwave_*_amd64.deb pymonocypher/dist/python3-pymonocypher_*_amd64.deb reunion/dist/python3-rendez_*_all.deb
 ```
 
 3. Vula starts as soon as the packages are installed. To check if it is running properly, use the following command:
