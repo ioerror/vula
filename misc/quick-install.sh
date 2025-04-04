@@ -13,7 +13,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
   python3-pluggy python3-progress python3-py python3-pyaudio python3-pydbus \
   python3-pygments python3-pyroute2 python3-pytest python3-pytest-runner \
   python3-pytest-xdist python3-qrcode python3-schema python3-setuptools \
-  python3-setuptools-scm python3-pystray python3-sphinx python3-systemd \
+  python3-setuptools-scm python3-pystray python3-socks python3-sphinx python3-systemd \
   python3-tk python3-toml python3-venv python3-wheel python3-xlib python3-yaml \
   python3-zeroconf sudo time wireguard-tools;
 
