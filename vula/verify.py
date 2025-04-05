@@ -112,12 +112,6 @@ class VerifyCommands(object):
             click.echo(repr(str(desc)))
 
     @DualUse.method()
-    @click.argument('name', type=str)
-    def against(self, name):
-        # take name vk and vk (self), hash with sha256
-        pass
-
-    @DualUse.method()
     @click.option('-w', '--width', default=640, show_default=True)
     @click.option('-h', '--height', default=480, show_default=True)
     @click.option('-c', '--camera', default=0, show_default=True)
