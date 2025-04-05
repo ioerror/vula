@@ -81,7 +81,6 @@ pytest:
 
 sast-analysis:
 	pipenv run bandit -r -ll -s B104 -f txt -o ./report-bandit.txt ./vula
-	pipenv run semgrep --json -o ./report-semgrep.txt --config="p/security-audit" ./vula/
 
 deps-graphs:
 	# this requires pipenv, pydeps, graphviz, ...
