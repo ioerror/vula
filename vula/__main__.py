@@ -3,6 +3,7 @@ import sys
 from logging import DEBUG, INFO, WARN, basicConfig, getLogger  # noqa: F401
 
 import click
+import dbus
 import pydbus
 
 from . import (  # noqa: F40
@@ -92,6 +93,20 @@ def start(quick):
     status.main(
         args=(('--only-systemd',) if quick else ()), standalone_mode=False
     )
+
+
+@main.command()
+def stop():
+    """Stop vula
+
+    This is a shortcut for systemctl stop vula.slice
+    """
+    return dbus.Interface(
+        dbus.SystemBus().get_object(
+            "org.freedesktop.systemd1", "/org/freedesktop/systemd1"
+        ),
+        "org.freedesktop.systemd1.Manager",
+    ).StopUnit('vula.slice', 'replace')
 
 
 @main.command(short_help="Starts the graphical user interface")
