@@ -679,6 +679,7 @@ class Peers(yamlrepr, queryable, schemadict):
     )
 
     def with_hostname(self: Peers, name: str):
+        "Return peer with given hostname (among all of its enabled names)"
         res = self.limit(enabled=True).by('nicknames').get(name, [])
         if len(res) > 1:
             raise Bug(
