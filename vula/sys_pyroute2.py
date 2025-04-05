@@ -97,7 +97,10 @@ class Sys(object):
     def _get_system_state(self):
         "WIP"
 
-        links = {L['index']:dict(L['attrs'])['IFLA_IFNAME'] for L in self.ipr.get_links()}
+        links = {
+            L['index']: dict(L['attrs'])['IFLA_IFNAME']
+            for L in self.ipr.get_links()
+        }
 
         addrs = self.ipr.get_addr()
 
@@ -111,7 +114,6 @@ class Sys(object):
 
         current_subnets = {}
         current_interfaces = {}
-
 
         for a in addrs:
             addr = ip_address(dict(a['attrs'])['IFA_ADDRESS'])

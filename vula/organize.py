@@ -823,7 +823,7 @@ class Organize(attrdict):
         vf: int = int(time.time())
         ips_to_publish = []
         for iface, ips in self.state.system_state.current_interfaces.items():
-            ips_to_publish.extend(list(map(str,ips)))
+            ips_to_publish.extend(list(map(str, ips)))
             desc = {
                 k: str(v)
                 for k, v in self._construct_service_descriptor(
