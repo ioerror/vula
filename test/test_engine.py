@@ -40,7 +40,7 @@ class TestOrganizeEngine(unittest.TestCase):
             )
         return result
 
-    def _proc_desc(self, actions=[], error=False, **kw):
+    def _process_descriptor(self, actions=[], error=False, **kw):
         result = self.state.event_INCOMING_DESCRIPTOR(desc(**kw))
         if result.error and not error:
             self.assertEqual(result.error, ())
@@ -49,7 +49,7 @@ class TestOrganizeEngine(unittest.TestCase):
         return result
 
     def _add_alice_ok(self):
-        return self._proc_desc(
+        return self._process_descriptor(
             actions=['ACCEPT_NEW_PEER'],
             hostname='alice.local',
             vk=mkk('alicevk'),
@@ -60,7 +60,7 @@ class TestOrganizeEngine(unittest.TestCase):
     def _add_bob_maybe(
         self, hostname='bob.local', addrs='10.0.0.2', pk=mkk('bobpk')
     ):
-        return self._proc_desc(
+        return self._process_descriptor(
             hostname=hostname, vk=mkk('bobvk'), pk=pk, addrs=addrs
         )
 
@@ -178,13 +178,13 @@ class TestOrganizeEngine(unittest.TestCase):
         )
 
     def test_bogon_announcement(self):
-        self._proc_desc(
+        self._process_descriptor(
             hostname='alice.local',
             vk=mkk(1),
             addrs='10.0.0.1',
             actions=['ACCEPT_NEW_PEER'],
         )
-        self._proc_desc(
+        self._process_descriptor(
             hostname='mallory.local',
             vk=mkk('3'),
             addrs='10.0.2.1',
@@ -194,10 +194,10 @@ class TestOrganizeEngine(unittest.TestCase):
 
     def test_update(self):
         self.assertEqual(self.state.prefs.pin_new_peers, False)
-        self._proc_desc(
+        self._process_descriptor(
             hostname='alice.local', vk=mkk(1), vf=1, addrs='10.0.0.1'
         )
-        self._proc_desc(
+        self._process_descriptor(
             hostname='alice.local',
             vk=mkk(1),
             vf=2,
@@ -209,14 +209,14 @@ class TestOrganizeEngine(unittest.TestCase):
     def test_replace_ip(self):
         "The one where Mallory takes the IP of unpinned peer Alice"
         self.assertEqual(self.state.prefs.pin_new_peers, False)
-        self._proc_desc(
+        self._process_descriptor(
             hostname='alice.local',
             vk=mkk('alice'),
             pk=mkk('alicepk'),
             vf=1,
             addrs='10.0.0.1',
         )
-        self._proc_desc(
+        self._process_descriptor(
             hostname='mallory.local',
             vk=mkk('mallory'),
             pk=mkk('mallorypk'),
@@ -234,10 +234,10 @@ class TestOrganizeEngine(unittest.TestCase):
         s = self.state
         _ = self.state.event_USER_EDIT('SET', 'prefs.pin_new_peers', True)
         self.assertEqual(s.prefs.pin_new_peers, True)
-        self._proc_desc(
+        self._process_descriptor(
             hostname='alice.local', vk=mkk('alice'), vf=1, addrs='10.0.0.1'
         )
-        self._proc_desc(
+        self._process_descriptor(
             hostname='alice-1.local',
             vk=mkk('alice'),
             vf=2,
@@ -268,10 +268,10 @@ class TestOrganizeEngine(unittest.TestCase):
         )
 
     def test_ignore_replay_unpinned(self):
-        self._proc_desc(
+        self._process_descriptor(
             hostname='alice.local', vk=mkk(1), vf=2, addrs='10.0.0.2'
         )
-        self._proc_desc(
+        self._process_descriptor(
             hostname='alice.local',
             vk=mkk(1),
             vf=1,
@@ -285,10 +285,10 @@ class TestOrganizeEngine(unittest.TestCase):
 
     def test_ignore_replay_pinned(self):
         _ = self.state.event_USER_EDIT('SET', 'prefs.pin_new_peers', True)
-        self._proc_desc(
+        self._process_descriptor(
             hostname='alice.local', vk=mkk(1), vf=2, addrs='10.0.0.2'
         )
-        self._proc_desc(
+        self._process_descriptor(
             hostname='alice.local',
             vk=mkk(1),
             vf=1,
