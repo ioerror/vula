@@ -1387,18 +1387,6 @@
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3' and python_version < '4'",
             "version": "==2.5.0"
         },
-        "semgrep": {
-            "hashes": [
-                "sha256:1009bc98ea1fcb75d854e2e5f3bf097739f34fdbb1bdc9cb72ab16910f813d4d",
-                "sha256:2c266ee8e96da208949469ed7201bf2e9b79fefec44466ccfa0f7817a39b6031",
-                "sha256:49a600bd9816e6c6ab3607f6609059b8912b26efd22ef92c5516b58e6169af59",
-                "sha256:807fbc211f8b6739ce77d3fe874088e56887fbc7fcad15e08b1ad366dc68b45b",
-                "sha256:d17dfbeda5b455ed588f3d5f433cf7ce7552cb5446b635700c59dcf315c893a5"
-            ],
-            "index": "pypi",
-            "markers": "python_version >= '3.8'",
-            "version": "==1.55.2"
-        },
         "setuptools": {
             "hashes": [
                 "sha256:a481fbc56b33f5d8f6b33dce41482e64c68b668be44ff42922903b03872590bf",
