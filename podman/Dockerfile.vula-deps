@@ -5,20 +5,16 @@ FROM $DISTRO:$VERSION
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# the impish image has a problem with this file; presumably will be fixed soon,
-# but for now:
-RUN rm -f /etc/apt/apt.conf.d/docker-clean
-
 RUN apt --fix-missing update && apt upgrade -y && \
     apt install -y --no-install-recommends \
-    procps vim less git iproute2 iputils-ping dbus systemd
+    procps vim less git iproute2 iputils-ping dbus tcpdump systemd
 
-COPY /misc/install-debian-deps.sh /install-debian-deps.sh
+RUN mkdir /deps
 
-RUN bash install-debian-deps.sh
+WORKDIR /deps
+COPY /misc/build-deps-debs.sh build-deps-debs.sh
 
-COPY /misc/install-highctidh.sh /install-highctidh.sh
-
-RUN bash install-highctidh.sh
+RUN bash build-deps-debs.sh
+RUN dpkg -i */dist/*deb
 
 CMD /bin/systemd
