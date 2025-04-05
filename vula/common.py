@@ -1098,7 +1098,7 @@ def organize_dbus_if_active():
     elif _ORGANIZE_DBUS_NAME in bus.dbus.ListActivatableNames():
         raise SystemExit(
             "Organize is not running (but it is dbus-activatable; use 'vula"
-            "start' to start it.)."
+            " start' to start it.)."
         )
     else:
         raise SystemExit("Organize dbus service is not configured")

@@ -42,7 +42,7 @@ class Sys(object):
 
     def get_stats(self):
         """
-        Get the statistics.
+        Get wireguard interface statistics
 
         >>> s = Sys(None)
         >>> type(s.get_stats())

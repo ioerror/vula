@@ -288,6 +288,10 @@ testnet-clean-all: testnet-stop
 testnet-shell: testnet-start
 	podman exec -it $(test1) $(bin_sh)
 
+.PHONY: testnet-shell2
+testnet-shell2: testnet-start
+	podman exec -it $(test2) $(bin_sh)
+
 .PHONY: test
 test: .testnet-started-$(dist)-stamp
 	podman ps
