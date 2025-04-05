@@ -19,7 +19,6 @@ import pydbus
 from gi.repository import GLib
 from zeroconf import NonUniqueNameException, ServiceInfo, Zeroconf
 
-from .common import comma_separated_IPs
 from .constants import _LABEL, _PUBLISH_DBUS_NAME
 
 
@@ -41,18 +40,18 @@ class Publish(object):
     def listen(self, new_announcements):
         # First we remove all old zeroconf listeners that are not in our new
         # instructions
-        for ip, zc in list(self.zeroconfs.items()):
-            if ip not in new_announcements:
-                self.log.info("Removing old service announcement for %r", ip)
+        for iface, zc in list(self.zeroconfs.items()):
+            if iface not in new_announcements:
+                self.log.info(
+                    "Removing old service announcement for %r", iface
+                )
                 zc.close()
-                del self.zeroconfs[ip]
+                del self.zeroconfs[iface]
         # Now we add a zeroconf listener for each new IP and ServiceInfo if it
         # is not already existing, else we update the old zc object with the
         # new desc
-        for ip_addr, desc in new_announcements.items():
-            self.log.debug(
-                "Starting mDNS service announcement for %r", ip_addr
-            )
+        for iface, desc in new_announcements.items():
+            self.log.debug("Starting mDNS service announcement for %r", iface)
             name: str = node() + "." + _LABEL
             service_info: ServiceInfo = ServiceInfo(
                 _LABEL,
@@ -64,7 +63,7 @@ class Publish(object):
                 properties=desc,
                 server=desc['hostname'],
             )
-            zeroconf = self.zeroconfs.get(ip_addr)
+            zeroconf = self.zeroconfs.get(iface)
             if zeroconf:
                 # Do update dance
                 self.log.debug("Updating vula service: %s", service_info)
@@ -72,8 +71,10 @@ class Publish(object):
                 self.log.debug("Updating vula service.")
 
             else:
-                zeroconf = self.zeroconfs[ip_addr] = Zeroconf(
-                    interfaces=list(map(str, comma_separated_IPs(ip_addr)))
+                zeroconf = self.zeroconfs[iface] = Zeroconf(
+                    # note that the "interfaces" argument to zeroconf is a list
+                    # of IPs
+                    interfaces=desc['addrs'].split(',')
                 )
                 self.log.debug("Registering vula service: %s", service_info)
                 try:

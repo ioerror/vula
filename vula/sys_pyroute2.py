@@ -97,6 +97,11 @@ class Sys(object):
     def _get_system_state(self):
         "WIP"
 
+        links = {
+            L['index']: dict(L['attrs'])['IFLA_IFNAME']
+            for L in self.ipr.get_links()
+        }
+
         addrs = self.ipr.get_addr()
 
         gateways = list(
@@ -108,10 +113,11 @@ class Sys(object):
         )
 
         current_subnets = {}
+        current_interfaces = {}
 
         for a in addrs:
             addr = ip_address(dict(a['attrs'])['IFA_ADDRESS'])
-            iface = dict(a['attrs']).get('IFA_LABEL', '')
+            iface = links[a['index']]
             this_subnet = ip_network(
                 "%s/%s" % (addr, a['prefixlen']), strict=False
             )
@@ -131,8 +137,9 @@ class Sys(object):
                 for subnet in self.organize.prefs.subnets_forbidden
             ):
                 current_subnets.setdefault(this_subnet, []).append(addr)
+                current_interfaces.setdefault(iface, []).append(addr)
 
-        return current_subnets, gateways
+        return current_subnets, current_interfaces, gateways
 
     def get_new_system_state(self):
         return self.organize.get_new_system_state()
