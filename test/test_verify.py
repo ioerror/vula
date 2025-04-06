@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, Mock, patch
 import sys
 
 import vula.verify
+from vula.common import yamlrepr
 
 
 class TestVerifyCommands:
@@ -41,7 +42,9 @@ class TestVerifyCommands:
         mockorganize.our_latest_descriptors.return_value = json.dumps(
             test_descriptor
         )
-        mockorganize.prefs = vula.prefs.Prefs()
+        mockorganize.show_prefs.return_value = repr(
+            yamlrepr(vula.prefs.Prefs())
+        )
         mockdbus.SystemBus.return_value.get.return_value = mockorganize
 
         mockclickctx = MagicMock()
