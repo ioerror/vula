@@ -76,7 +76,8 @@ class VerifyCommands(object):
             ).items()
         }
         (self.vk,) = set(d.vk for d in self.my_descriptors.values())
-        self.ifaces_mask: List[str] = self.organize.prefs[
+        prefs: str = self.organize.show_prefs()
+        self.ifaces_mask: List[str] = yaml.safe_load(prefs)[
             'iface_prefix_allowed'
         ]
 
