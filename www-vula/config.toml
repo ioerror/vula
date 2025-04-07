@@ -35,6 +35,12 @@ publishDir = "../../vula-pages/"
         weight = 3
 
   [[menu.main]]
+        identifier = "gui"
+        name = "gui"
+        url = "/gui/"
+        weight = 3
+
+  [[menu.main]]
         identifier = "hacking"
         name = "hacking"
         url = "/hacking/"
