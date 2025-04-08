@@ -5,6 +5,7 @@ theme = "smol"
 copyright = "Vula Authors"
 disableKinds = ["RSS", "sitemap", "section", "taxonomy"]
 ignoreErrors = ["error-disable-taxonomy"]
+publishDir = "../../vula-pages/"
 
 [params]
     subtitle = "automatic local network encryption"
@@ -24,13 +25,19 @@ ignoreErrors = ["error-disable-taxonomy"]
   [[menu.main]]
         identifier = "status"
         name = "status"
-        url = "/status/"
+        url = "https://codeberg.org/vula/vula/src/branch/main/STATUS.md"
         weight = 2
 
   [[menu.main]]
         identifier = "install"
         name = "install"
         url = "/install/"
+        weight = 3
+
+  [[menu.main]]
+        identifier = "gui"
+        name = "gui"
+        url = "/gui/"
         weight = 3
 
   [[menu.main]]
