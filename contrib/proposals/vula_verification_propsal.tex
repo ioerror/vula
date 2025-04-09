@@ -1,0 +1,28 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\title{\textbf{Formal Verification of the Vula Handshake using Tamarin}}
+\author{Max Pelletier}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Objective}
+The project aims to formally verify the security properties of the Vula handshake using the Tamarin prover. The goal is to extend the existing formal verification of WireGuard to include Vula, ensuring that its key exchange mechanism maintains critical security guarantees.
+
+\section*{Description}
+This project involves the following key steps:
+\begin{itemize}
+    \item \textbf{Understanding Vula and WireGuard Handshakes:} Analyze the differences and similarities between Vula and WireGuard's key exchange protocols.
+	    \item \textbf{Extending the WireGuard Tamarin Model:} Modify the existing Tamarin model to incorporate Vula’s handshake.
+    \item \textbf{Defining Security Properties:} Verify authentication, secrecy, forward secrecy, and resistance to replay attacks.
+\end{itemize}
+
+\section*{Why This Project?}
+Formal verification is essential for ensuring the robustness of cryptographic protocols. While WireGuard has undergone extensive verification, Vula has not been formally analyzed to the same extent. By integrating Vula into Tamarin, this project contributes to a deeper understanding of its security guarantees and potential vulnerabilities.
+
+\end{document}
