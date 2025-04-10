@@ -165,6 +165,14 @@ for name, value in list(globals().items()):
     cmd = getattr(value, 'main', None)
     if isinstance(cmd, click.Command):
         main.add_command(cmd, name=name)
+try:
+    # this gives us a very nice "repl" subcommand.
+    # apt install python3-click-repl to enable it.
+    from click_repl import register_repl
+
+    register_repl(main)
+except ImportError:
+    pass
 
 if __name__ == "__main__":
     main()
