@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from vula.constants import TEST_DESC
+from vula.constants import _TEST_DESC
 from vula.peer import Descriptor
 import vula.discover
 
@@ -10,7 +10,7 @@ class TestVulaServiceListener:
         callback = MagicMock()
         zeroconf = MagicMock()
         zeroconf.get_service_info().properties = Descriptor.parse(
-            TEST_DESC
+            _TEST_DESC
         ).as_zeroconf_properties
         listener = vula.discover.VulaServiceListener(callback)
 

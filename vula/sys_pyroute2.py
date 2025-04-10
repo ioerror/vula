@@ -7,9 +7,9 @@ from pyroute2 import IPRoute, IPRSocket
 from .constants import (
     _LINUX_MAIN_ROUTING_TABLE,
     _IN6_ADDR_GEN_MODE_NONE,
-    GW_ROUTES,
     _DUMMY_INTERFACE,
-    VULA_ULA_SUBNET,
+#    _VULA_ULA_SUBNET,
+    _GW_ROUTES,
 )
 from .wg import Interface as WgInterface
 
@@ -216,7 +216,7 @@ class Sys(object):
             # correct source on our routes.
             #            + [
             #                self.sync_routes(
-            #                    [str(VULA_ULA_SUBNET)],
+            #                    [str(_VULA_ULA_SUBNET)],
             #                    table=_LINUX_MAIN_ROUTING_TABLE,
             #                    dryrun=dryrun,
             #                )
@@ -259,7 +259,7 @@ class Sys(object):
             if peer.use_as_gateway:
                 res.append(
                     self.sync_routes(
-                        GW_ROUTES,
+                        _GW_ROUTES,
                         table=_LINUX_MAIN_ROUTING_TABLE,
                         dryrun=dryrun,
                     )
@@ -448,7 +448,7 @@ class Sys(object):
                 for r in current_routes
                 if r['attrs'].get('RTA_TABLE') == _LINUX_MAIN_ROUTING_TABLE
                 and f"{r['attrs'].get('RTA_DST')}/{r.get('dst_len')}"
-                in GW_ROUTES
+                in _GW_ROUTES
             ]
             for route in default_routes:
                 dst = route['attrs']['RTA_DST'] + "/" + str(route['dst_len'])

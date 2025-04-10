@@ -16,9 +16,9 @@ from .common import (
 )
 
 from .constants import (
-    IPv4_LL,
-    IPv6_LL,
-    IPv6_ULA,
+    _IPv4_LL,
+    _IPv6_LL,
+    _IPv6_ULA,
 )
 
 
@@ -48,9 +48,9 @@ class Prefs(yamlrepr_hl, schemattrdict):
         accept_nonlocal=False,
         auto_repair=True,
         subnets_allowed=[
-            str(IPv6_LL),
-            str(IPv6_ULA),
-            str(IPv4_LL),
+            str(_IPv6_LL),
+            str(_IPv6_ULA),
+            str(_IPv4_LL),
             "10.0.0.0/8",
             "192.168.0.0/16",
             "172.16.0.0/12",

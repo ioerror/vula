@@ -53,10 +53,10 @@ from .constants import (
     _PUBLISH_DBUS_NAME,
     _PUBLISH_DBUS_PATH,
     _WG_PORT,
-    VULA_ULA_SUBNET,
-    GW_ROUTES,
-    IPv6_LL,
-    IPv6_ULA,
+    _VULA_ULA_SUBNET,
+    _GW_ROUTES,
+    _IPv6_LL,
+    _IPv6_ULA,
     _LRU_CACHE_MAX_SIZE,
 )
 from .csidh import ctidh, ctidh_parameters, hkdf
@@ -265,7 +265,7 @@ class OrganizeState(Engine, yamlrepr_hl):
             # if a non-pinned peer had our gateway IP but no longer does,
             # remove its gateway flag
             self._SET(('peers', cur_gw.id, 'use_as_gateway'), False)
-            self.result.add_triggers(remove_routes=GW_ROUTES)
+            self.result.add_triggers(remove_routes=_GW_ROUTES)
         if not (cur_gw and cur_gw.pinned):
             # if there isn't a pinned peer acting as the gateway.
             # FIXME: this could set two peers as the gateway if the system has
@@ -293,7 +293,7 @@ class OrganizeState(Engine, yamlrepr_hl):
         Here we validate an incoming descriptor and decide if we will accept
         it.
         """
-        if descriptor.p not in IPv6_ULA:
+        if descriptor.p not in _IPv6_ULA:
             return self.action_IGNORE(
                 descriptor, "primary IP is not in ULA subnet"
             )
@@ -364,7 +364,7 @@ class OrganizeState(Engine, yamlrepr_hl):
             desc = peer.descriptor
         if system_state is None:
             system_state = self.system_state
-        subnets = list(system_state.current_subnets) + [VULA_ULA_SUBNET]
+        subnets = list(system_state.current_subnets) + [_VULA_ULA_SUBNET]
         if peer.pinned:
             v4 = {i: True for i in desc.IPv4addrs + list(peer.IPv4addrs)}
             v6 = {i: True for i in desc.IPv6addrs + list(peer.IPv6addrs)}
@@ -399,7 +399,7 @@ class OrganizeState(Engine, yamlrepr_hl):
             )
         ips = dict(v4)
         ips.update(v6)
-        if not any(v for i, v in ips.items() if i not in VULA_ULA_SUBNET):
+        if not any(v for i, v in ips.items() if i not in _VULA_ULA_SUBNET):
             self.action_REMOVE_PEER(peer)
 
         if desc.hostname not in peer.nicknames and any(
@@ -434,7 +434,7 @@ class OrganizeState(Engine, yamlrepr_hl):
         if peer.use_as_gateway:
             # FIXME: this doesn't specify the routing table. maybe need to make
             # triggers api accept kwargs too?
-            self.result.add_triggers(remove_routes=GW_ROUTES)
+            self.result.add_triggers(remove_routes=_GW_ROUTES)
             # these routes are currently only removed because we still call
             # sync (aka full repair) on system state change
 
@@ -925,7 +925,7 @@ class Organize(attrdict):
                     'SET',
                     ('prefs', 'primary_ip'),
                     ip_address(
-                        VULA_ULA_SUBNET.network_address.packed[:6]
+                        _VULA_ULA_SUBNET.network_address.packed[:6]
                         + os.urandom(10)
                     ),
                 )
@@ -934,7 +934,7 @@ class Organize(attrdict):
                     'SET',
                     ('prefs', 'primary_ip'),
                     ip_address(
-                        VULA_ULA_SUBNET.network_address.packed[:6]
+                        _VULA_ULA_SUBNET.network_address.packed[:6]
                         + os.urandom(10)
                     ),
                 )
@@ -952,7 +952,7 @@ class Organize(attrdict):
             # we always want these two when v6 is enabled. they're in the
             # default prefs, but we add them here to handle upgrading from a
             # pre-v6 prefs file.
-            for net in (IPv6_LL, IPv6_ULA):
+            for net in (_IPv6_LL, _IPv6_ULA):
                 if net not in self.prefs.subnets_allowed:
                     self.state.event_USER_EDIT(
                         'ADD', ('prefs', 'subnets_allowed'), net

@@ -13,7 +13,7 @@ from nacl.exceptions import BadSignatureError
 from nacl.signing import SigningKey, VerifyKey
 from schema import And, Optional, Regex, Schema, Use
 
-from .constants import VULA_ULA_SUBNET
+from .constants import _VULA_ULA_SUBNET
 
 from .common import (
     Bug,
@@ -116,14 +116,14 @@ class Descriptor(schemattrdict, serializable):
         This returns the descriptor as a dictionary of bytes, for sending to
         zeroconf.
 
-        >>> from vula.constants import TEST_DESC_UNSIGNED
-        >>> Descriptor.parse(TEST_DESC_UNSIGNED).as_zeroconf_properties
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> Descriptor.parse(_TEST_DESC_UNSIGNED).as_zeroconf_properties
         {b'r': b'', b'c': b'NnoGEZ4W+d6TE22+Qyau0LF513FM43EagOP9aiSX9KhTCS1Gryt7qDoM04j7p0KQRJxwkcPEO/MpIJE5/bJKYQ==', b'dt': b'86400', b'e': b'0', b'hostname': b'vula-bookworm-test1.local.', b'p': b'\xfd\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01', b'pk': b'3w5/xje5jsdUCX30JfS/L/bMuwZRniK69dAVprN7t3c=', b'port': b'5354', b'v4a': b'\nY\x00\x02', b'v6a': b'\xfd\xff\xff\xff\xff\xdf\x98\x9f$\xcf\x0b\xda\x12b\xcf\xc6\xfe\x80\x00\x00\x00\x00\x00\x00\xbc\x92M\xff\xfe\x82\x03\r\xfdT\xf2z\x17\xc1:a\x00\x00\x00\x00\x00\x00\x00\x02', b'vf': b'1743974365', b'vk': b'afToKyN29ubu4DkhUMLoGIt5WjbsgEHYuccNtxvbjmA='}
 
         # Full round trip:
         >>> str(Descriptor.from_zeroconf_properties(
-        ...         Descriptor.parse(TEST_DESC_UNSIGNED).as_zeroconf_properties)
-        ... ) == TEST_DESC_UNSIGNED
+        ...         Descriptor.parse(_TEST_DESC_UNSIGNED).as_zeroconf_properties)
+        ... ) == _TEST_DESC_UNSIGNED
         True
         """
         data = {}
@@ -141,8 +141,8 @@ class Descriptor(schemattrdict, serializable):
         """
         Parse the *descriptor* string line into a dictionary-like object. Carefully.
 
-        >>> from vula.constants import TEST_DESC
-        >>> TEST_DESC == str(Descriptor.parse(TEST_DESC))
+        >>> from vula.constants import _TEST_DESC
+        >>> _TEST_DESC == str(Descriptor.parse(_TEST_DESC))
         True
         """
         try:
@@ -173,8 +173,8 @@ class Descriptor(schemattrdict, serializable):
     def id(self):
         """
         This returns the peer ID (aka the verify key, base64-encoded).
-        >>> from vula.constants import TEST_DESC_UNSIGNED
-        >>> d = Descriptor.parse(TEST_DESC_UNSIGNED)
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> d = Descriptor.parse(_TEST_DESC_UNSIGNED)
         >>> d.id
         'afToKyN29ubu4DkhUMLoGIt5WjbsgEHYuccNtxvbjmA='
         """
@@ -183,8 +183,8 @@ class Descriptor(schemattrdict, serializable):
     @property
     def ephemeral(self):
         """
-        >>> from vula.constants import TEST_DESC_UNSIGNED
-        >>> d = Descriptor.parse(TEST_DESC_UNSIGNED)
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> d = Descriptor.parse(_TEST_DESC_UNSIGNED)
         >>> d.ephemeral
         0
         """
@@ -199,8 +199,8 @@ class Descriptor(schemattrdict, serializable):
     @property
     def IPv4addrs(self):
         """
-        >>> from vula.constants import TEST_DESC_UNSIGNED
-        >>> d = Descriptor.parse(TEST_DESC_UNSIGNED)
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> d = Descriptor.parse(_TEST_DESC_UNSIGNED)
         >>> d.IPv4addrs
         [IPv4Address('10.89.0.2')]
         """
@@ -209,8 +209,8 @@ class Descriptor(schemattrdict, serializable):
     @property
     def IPv6addrs(self):
         """
-        >>> from vula.constants import TEST_DESC_UNSIGNED
-        >>> d = Descriptor.parse(TEST_DESC_UNSIGNED)
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> d = Descriptor.parse(_TEST_DESC_UNSIGNED)
         >>> d.IPv6addrs # doctest: +NORMALIZE_WHITESPACE
         [IPv6Address('fdff:ffff:ffdf:989f:24cf:bda:1262:cfc6'),
          IPv6Address('fe80::bc92:4dff:fe82:30d'),
@@ -235,13 +235,13 @@ class Descriptor(schemattrdict, serializable):
         Returns true if valid, false if invalid.
 
         Missing signature:
-        >>> from vula.constants import TEST_DESC_UNSIGNED
-        >>> desc = Descriptor.parse(TEST_DESC_UNSIGNED)
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> desc = Descriptor.parse(_TEST_DESC_UNSIGNED)
         >>> assert desc.verify_signature() is False
 
         Valid signature:
-        >>> from vula.constants import TEST_DESC
-        >>> desc = Descriptor.parse(TEST_DESC)
+        >>> from vula.constants import _TEST_DESC
+        >>> desc = Descriptor.parse(_TEST_DESC)
         >>> assert desc.verify_signature() is True
 
         Invalid signature:
@@ -335,8 +335,8 @@ class Peer(schemattrdict):
 
         It is either the petname, or the last name announced, or, if the last
         name announced is disabled, another enabled name.
-        >>> from vula.constants import TEST_DESC_UNSIGNED
-        >>> peer = Descriptor.parse(TEST_DESC_UNSIGNED).make_peer(petname='george')
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> peer = Descriptor.parse(_TEST_DESC_UNSIGNED).make_peer(petname='george')
         >>> peer.name
         'george'
         """
@@ -354,8 +354,8 @@ class Peer(schemattrdict):
         """
         Returns a sorted list of all names other than self.name
 
-        >>> from vula.constants import TEST_DESC_UNSIGNED
-        >>> peer = Descriptor.parse(TEST_DESC_UNSIGNED).make_peer(
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> peer = Descriptor.parse(_TEST_DESC_UNSIGNED).make_peer(
         ...      petname='abc', nicknames=dict(xyz=True,xxx=False,yyy=True))
         >>> peer.other_names
         ['xyz', 'yyy']
@@ -371,8 +371,8 @@ class Peer(schemattrdict):
         """
         Returns the name and ID of the peer.
 
-        >>> from vula.constants import TEST_DESC_UNSIGNED
-        >>> peer = Descriptor.parse(TEST_DESC_UNSIGNED).make_peer(
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> peer = Descriptor.parse(_TEST_DESC_UNSIGNED).make_peer(
         ...                                         petname='abc')
         >>> peer.name_and_id
         'abc (afToKyN29ubu4DkhUMLoGIt5WjbsgEHYuccNtxvbjmA=)'
@@ -439,7 +439,7 @@ class Peer(schemattrdict):
     @property
     def endpoint_addr(self):
         if ips := sort_LL_first(
-            i for i in self.enabled_ips if i not in VULA_ULA_SUBNET
+            i for i in self.enabled_ips if i not in _VULA_ULA_SUBNET
         ):
             return ips[0]
         return ip_address('0.0.0.0')

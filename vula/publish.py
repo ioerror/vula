@@ -18,7 +18,7 @@ import pydbus
 from gi.repository import GLib
 from zeroconf import NonUniqueNameException, ServiceInfo, Zeroconf
 
-from .constants import _LABEL, _PUBLISH_DBUS_NAME, VULA_ULA_SUBNET
+from .constants import _LABEL, _PUBLISH_DBUS_NAME, _VULA_ULA_SUBNET
 from .peer import Descriptor
 
 
@@ -53,7 +53,7 @@ class Publish(object):
         for iface, desc_string in new_announcements.items():
             desc = Descriptor.parse(desc_string)
             listen_IPs = [
-                str(a) for a in desc.all_addrs if a not in VULA_ULA_SUBNET
+                str(a) for a in desc.all_addrs if a not in _VULA_ULA_SUBNET
             ]
             self.log.debug(
                 "Starting mDNS service announcement for %r with listen_IPs %r",
