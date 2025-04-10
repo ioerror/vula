@@ -453,7 +453,7 @@ class ConsistencyError(Exception):
 
 class comma_separated_IPs(object):
     addr_cls = lambda _, a: ip_address(a)
-    size = None
+    size: Optional[int] = None
 
     def __init__(self, arg):
         """
@@ -461,8 +461,8 @@ class comma_separated_IPs(object):
 
         >>> comma_separated_IPs("127.0.0.1, 15.15.15.15")
         <comma_separated_IPs('127.0.0.1,15.15.15.15')>
-        >>> comma_separated_IPs("fe80::1, fe80::2")
-        <comma_separated_IPs('fe80::1,fe80::2')>
+        >>> comma_separated_IPs("fe80::1, fe80::2,127.0.0.1")
+        <comma_separated_IPs('fe80::1,fe80::2,127.0.0.1')>
         >>> comma_separated_IPs(comma_separated_IPs("::1"))
         <comma_separated_IPs('::1')>
         >>> comma_separated_IPs("invalid")
@@ -506,6 +506,11 @@ class comma_separated_IPs(object):
     @property
     def packed(self):
         """
+        Return self as bytes.
+
+        The format here is a concatenation of the ipaddress module's packed
+        representation, so the bytes are always in network (big-endian) order.
+
         >>> comma_separated_IPv4s('116.104.105.115,32.105.115.32,'
         ...     '109.111.114.101,32.99.111.109,112.97.99.116').packed
         b'this is more compact'
@@ -531,8 +536,7 @@ class comma_separated_IPs(object):
         :param idx: int
         :return: IPv4Address
 
-        >>> test_list = comma_separated_IPs("127.0.0.2,127.0.0.3,127.0.0.4")
-        >>> test_list.__getitem__(1)
+        >>> comma_separated_IPs("127.0.0.2,127.0.0.3")[-1]
         IPv4Address('127.0.0.3')
 
 
@@ -611,11 +615,29 @@ class IPs(comma_separated_IPs):
 
 
 class comma_separated_IPv4s(comma_separated_IPs):
+    """
+    >>> comma_separated_IPv4s("fe80::1, 127.0.0.1")
+    Traceback (most recent call last):
+    ...
+    ipaddress.AddressValueError: Expected 4 octets in 'fe80::1'
+    >>> comma_separated_IPv4s("127.0.0.1")
+    <comma_separated_IPv4s('127.0.0.1')>
+    """
+
     addr_cls = IPv4Address
     size = 4
 
 
 class comma_separated_IPv6s(comma_separated_IPs):
+    """
+    >>> comma_separated_IPv6s("fe80::1, 127.0.0.1")
+    Traceback (most recent call last):
+    ...
+    ipaddress.AddressValueError: At least 3 parts expected in '127.0.0.1'
+    >>> comma_separated_IPv6s("fe80::1")
+    <comma_separated_IPv6s('fe80::1')>
+    """
+
     addr_cls = IPv6Address
     size = 16
 
@@ -1127,8 +1149,8 @@ def addrs_in_subnets(addrs, subnets):
 
 def sort_LL_first(ips):
     """
-    This sorts a list of IPs to put the link-local ones first, and v6 addresses
-    ahead of v4
+    This sorts a list of IPs to put the link-local ones (if any) first, and to
+    secondarily to place v6 addresses ahead of v4.
 
     >>> sort_LL_first([ip_address('169.254.0.1'), ip_address('127.0.0.1'),
     ...                ip_address('ff00::1'), ip_address('169.254.0.2'),

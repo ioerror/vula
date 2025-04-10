@@ -10,6 +10,7 @@ _DATE_FMT: str = "%Y-%m-%d-%H:%M:%S"
 _WG_INTERFACE: str = "vula"
 _DUMMY_INTERFACE: str = "vula-net"
 
+# this is registered for vula at https://ula.ungleich.ch/
 VULA_ULA_SUBNET: str = ip_network("fdff:ffff:ffdf::/48")
 
 # Set an upper boundary of 1kB for the cache
