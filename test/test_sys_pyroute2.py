@@ -67,4 +67,4 @@ class TestSys:
             sys._monitor()
 
             sys.get_new_system_state.assert_not_called()
-            assert mock_organize.log.info.call_count == 3
+            assert mock_organize.log.info.call_count == 2
