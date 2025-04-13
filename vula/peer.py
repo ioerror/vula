@@ -165,9 +165,7 @@ class Descriptor(schemattrdict, serializable):
 
     def _build_sig_buf(self: Descriptor) -> bytes:
         return " ".join(
-            "%s=%s;" % (k, v)
-            for k, v in sorted(self.items())
-            if k != 's'
+            "%s=%s;" % (k, v) for k, v in sorted(self.items()) if k != 's'
         ).encode()
 
     def __str__(self):
