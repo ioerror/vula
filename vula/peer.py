@@ -83,7 +83,6 @@ class Descriptor(schemattrdict, serializable):
             ),  # AllowedIPs may be set from this in the future; fixme
             'e': Flexibool,
             Optional('s'): b64_bytes.with_len(64),
-            Optional('if'): Use(str),
         }
     )
 
@@ -94,6 +93,11 @@ class Descriptor(schemattrdict, serializable):
         """
         This instantiates a descriptor from a dictionary of bytes values, as
         the zeroconf library gives us.
+
+        This function is tested via as_zeroconf_properties's doctest below.
+
+        This function should be called from within a try block, as invalid
+        descriptors with raise an exception.
         """
         data = {}
         for k, v in props.items():
@@ -163,7 +167,7 @@ class Descriptor(schemattrdict, serializable):
         return " ".join(
             "%s=%s;" % (k, v)
             for k, v in sorted(self.items())
-            if k != 's' and k != 'if'  # FIXME: why is 'if' here?!
+            if k != 's'
         ).encode()
 
     def __str__(self):
@@ -411,7 +415,7 @@ class Peer(schemattrdict):
         return [str(ip) for ip in self.enabled_ips]
 
     @property
-    def routeable_ips(self):
+    def routable_ips(self):
         return [
             ip
             for ip in self.enabled_ips
@@ -422,14 +426,14 @@ class Peer(schemattrdict):
     def routes(self):
         return [
             ip_network("%s/%s" % (ip, ip.max_prefixlen))
-            for ip in self.routeable_ips
+            for ip in self.routable_ips
         ]
 
     @property
     def _wg_allowed_ips(self):
         res = [
             ip_network("%s/%s" % (ip, ip.max_prefixlen))
-            for ip in self.routeable_ips
+            for ip in self.routable_ips
         ]
         if self.use_as_gateway:
             res.append(ip_network("0.0.0.0/0"))

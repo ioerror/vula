@@ -4,7 +4,7 @@ This document contains the assessment of the vula codebase for IPv6 support at
 the implementation and at the protocol level. The purpose of the assessment was
 to consider the state of IPv6 support in vula to identify what needed to be
 enhanced, changed, or otherwise carefully checked for correctness. Following
-asessment report's observations and during our subsequent IPv6 research, design
+assessment report's observations and during our subsequent IPv6 research, design
 and implementation phases, IPv6 support has been improved substantially, and it
 is now enabled in the podman test environment.
 

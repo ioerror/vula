@@ -88,7 +88,7 @@ class Sys(object):
                 # this happens often, so we don't even debug log it
                 pass
             else:
-                self.log.info(
+                self.log.debug(
                     "ignoring netlink message type %r (%s bytes)",
                     event,
                     len(str(msg)),

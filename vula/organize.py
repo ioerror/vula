@@ -359,7 +359,7 @@ class OrganizeState(Engine, yamlrepr_hl):
         self._update_peer(peer, desc)
 
     def _update_peer(self, peer, desc=None, system_state=None):
-        self.info_log("calling _update_peer for %s", peer.name_and_id)
+        self.info_log("calling _update_peer for %r", peer.name_and_id)
         if desc is None:
             desc = peer.descriptor
         if system_state is None:
@@ -379,14 +379,6 @@ class OrganizeState(Engine, yamlrepr_hl):
                 and any(i in s for s in self.prefs.subnets_allowed)
                 for i in desc.IPv6addrs
             }
-        0 and print(
-            f"""
-
-{desc.IPv6addrs} -> {v6}
-{[((i,s), (i in s)) for i in desc.IPv6addrs for s in subnets]}
-
-"""
-        )
         if v4 != peer.IPv4addrs:
             self._SET(
                 ('peers', peer.id, 'IPv4addrs'),
@@ -660,6 +652,11 @@ class Organize(attrdict):
 
     @property
     def v6_enabled(self):
+        """
+        This returns True if ipv6 is enabled in the preferences AND the system
+        has at least one IPv6 address bound to any interface (including ::1 on
+        lo).
+        """
         return self.state.system_state.has_v6 and self.prefs.enable_ipv6
 
     @property
@@ -686,6 +683,7 @@ class Organize(attrdict):
         self, ip_addrs: str, vf: int
     ) -> Descriptor:
         self.log.info("Constructing service descriptor id: %s", vf)
+        # XXX add Curve448 pk for hybrid DH
         addrs = sort_LL_first(ip_addrs)
         return Descriptor(
             {
@@ -709,15 +707,17 @@ class Organize(attrdict):
         ).sign(self._keys.vk_Ed25519_sec_key)
 
     @DualUse.method()
-    def get_new_system_state(self, reason=None):
+    def get_new_system_state(self, reason=""):
         res = []
         old_state = self.state.system_state.copy()
         new_system_state = SystemState.read(self)
+        if reason:
+            reason = f"because {reason}"
         if old_state == new_system_state:
-            self.log.info(f"checked system state because {reason}; no changes")
+            self.log.info(f"checked system state{reason}; no changes")
         else:
             self.log.info(
-                f"checked system state because {reason}; found changes,"
+                f"checked system state{reason}; found changes,"
                 " running sync/repair"
             )
             res = self.state.event_NEW_SYSTEM_STATE(new_system_state)
@@ -983,8 +983,8 @@ class Organize(attrdict):
                 self._construct_service_descriptor(ips, vf)
             )
 
-            # python-zeroconf irritatingly wants IPs instead of interfaces for
-            # its "interfaces" argument, so we give it one IP per interface.
+            # python-zeroconf wants IPs instead of interfaces for its
+            # "interfaces" argument, so we give it one IP per interface.
             # (giving it too many also causes problems...) FIXME?
             ips = IPs(ips)
             if v4s := ips.v4s:
