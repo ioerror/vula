@@ -359,6 +359,12 @@ class OrganizeState(Engine, yamlrepr_hl):
         self._update_peer(peer, desc)
 
     def _update_peer(self, peer, desc=None, system_state=None):
+        """
+        This is called for each peer by action_ADJUST_TO_NEW_SYSTEM_STATE to
+        adjust each peer to the new state, including removing peers which no
+        longer have qualifying addresses). It is also called for new and
+        updated peers from those actions.
+        """
         self.info_log("calling _update_peer for %r", peer.name_and_id)
         if desc is None:
             desc = peer.descriptor
