@@ -3,6 +3,8 @@ from datetime import timedelta
 from logging import getLogger
 from sys import platform
 
+from platform import node
+import json
 import click
 import pydbus
 
@@ -13,7 +15,9 @@ except ImportError:
 
 from click.exceptions import Exit
 
-from .constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
+from .prefs import Prefs
+from .peer import Descriptor
+from .constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH, _DOMAIN
 from .notclick import green, red, yellow
 
 
@@ -24,7 +28,13 @@ from .notclick import green, red, yellow
     is_flag=True,
     help="Only print systemd service status",
 )
-def main(only_systemd):
+@click.option(
+    '-v',
+    '--verbose',
+    count=True,
+    help="Only print systemd service status",
+)
+def main(only_systemd, verbose):
     """
     Print status of systemd services and system configuration.
     """
@@ -35,14 +45,13 @@ def main(only_systemd):
         raise Exit(1)
 
     def printer(status, service):
-        status = "{:^8}".format(status)
         status = (
-            green
-            if status.strip() in ('active',)
-            else yellow
-            if status.strip() in ('inactive', 'activatable')
-            else red
-        )(status)
+            (lambda x: x)
+            if status == 'none'
+            else green
+            if status in ('active',)
+            else (yellow if status in ('inactive', 'activatable') else red)
+        )("{:^8}".format(status))
         click.echo("[{}] {}".format(status, service))
 
     bus = pydbus.SystemBus()
@@ -94,25 +103,58 @@ def main(only_systemd):
             )
             organize = bus.get(_ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH)
             sync_todo = organize.sync(True)
+
+            enabled_peers = organize.peer_ids('enabled')
+            disabled_peers = organize.peer_ids('disabled')
+
+            descs = json.loads(organize.our_latest_descriptors())
+            prefs = Prefs(json.loads(organize.get_prefs()))
+            if descs:
+                descs = {
+                    iface: Descriptor.parse(desc)
+                    for iface, desc in descs.items()
+                }
+                if verbose:
+                    for iface, desc in descs.items():
+                        printer(
+                            "active",
+                            f"Publishing on {iface}: "
+                            + ', '.join(map(str, desc.all_addrs)),
+                        )
+                else:
+                    printer(
+                        "active",
+                        "Publishing "
+                        + ", ".join(
+                            f"{len(desc.all_addrs)} IPs on {iface}"
+                            for iface, desc in descs.items()
+                        ),
+                    )
+            else:
+                printer("none", "no qualifying interfaces")
+
             if sync_todo:
                 printer(
                     "needs repair",
                     "{} enabled peers; {} disabled".format(
-                        str(len(organize.peer_ids('enabled'))),
-                        str(len(organize.peer_ids('disabled'))),
+                        str(len(enabled_peers)),
+                        str(len(disabled_peers)),
                     ),
                 )
                 for line in sync_todo:
                     printer("needs repair", "[#] %s" % (line,))
             else:
                 printer(
-                    "active",
+                    "active" if len(enabled_peers) else "none",
                     "{} enabled peers correctly configured; "
                     "{} disabled".format(
-                        str(len(organize.peer_ids('enabled'))),
-                        str(len(organize.peer_ids('disabled'))),
+                        str(len(enabled_peers)),
+                        str(len(disabled_peers)),
                     ),
                 )
+            printer(
+                "active", f"{node()+_DOMAIN}'s vula ULA is {prefs.primary_ip}"
+            )
 
     elif _ORGANIZE_DBUS_NAME in bus.dbus.ListActivatableNames():
         printer("activatable", _ORGANIZE_DBUS_NAME + ' dbus service')

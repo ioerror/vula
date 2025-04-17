@@ -74,13 +74,12 @@ class Result(yamlrepr_hl, schemattrdict):
         for name, args in self.triggers:
             try:
                 self.trigger_results.append(getattr(target, name)(*args))
-            except Exception as ex:
-                self.trigger_results.append(str(ex))
+            except Exception:
+                self.trigger_results.append(traceback.format_exc())
         return self
 
 
 class Engine(schemattrdict, yamlfile):
-
     """
     This is a transactional state engine. Subclasses implement rules in the
     form of events and actions.
@@ -127,6 +126,7 @@ class Engine(schemattrdict, yamlfile):
         self.result = None
         self.next_state = None
         self.save = lambda *a: None
+        self.info_log = lambda *a: None
         self.debug_log = lambda *a: None
         self.trigger_target = None
         super(Engine, self).__init__(*a, **kw)
@@ -174,6 +174,7 @@ class Engine(schemattrdict, yamlfile):
                 res = self.Result(**res)
             finally:
                 self.result = None
+                self.next_state = None
                 self._lock.release()
             if self.trigger_target:
                 res.run_triggers(self.trigger_target)
@@ -187,14 +188,15 @@ class Engine(schemattrdict, yamlfile):
         """
         Decorator for action methods.
         """
-
         assert method.__name__.startswith('action_')
         name = method.__name__.split('_', 1)[1]
 
         @wraps(method)
         def _method(self, *a):
+            assert self.next_state, "can't run actions when not in an event"
             self.result.actions.append((name,) + a)
             method(self, *a)
+            return self.next_state
 
         return _method
 

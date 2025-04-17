@@ -1,15 +1,35 @@
+
+# user-facing options you can set when using this Makefile
+
+# number of instances (per distro) to run
+N := 2
+
+# specify an instance number, for "make sh" and other targets that operate on a
+# single instance
+i := 1
+
+# specify where we starting counting to N from
+M := 1
+
+# distro to run, for targets that use one
+dist := bookworm
+
+# distros to run, for targets that run multiple
+dists := bookworm noble 
+
 VERSION := $(shell cat ../vula/__version__.py |cut -f 2 -d'"')
 DEB_NAME := ../dist/python3-vula_$(VERSION)-1_all.deb
 RPM_NAME := ../dist/vula-$(VERSION)-1.noarch.rpm
 NET_NAME := vula-net
 SO_NAME := /usr/local/lib64/python3.9/site-packages/lib/libnss_vula.so.2
-dist := bookworm
-dists := bookworm jammy mantic noble
+#dists := bookworm jammy mantic noble
 podman_args := --volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula --uts=private
 add_caps := --cap-add NET_ADMIN,NET_RAW
 test1 := vula-$(dist)-test1
 test2 := vula-$(dist)-test2
-test_hosts := $(test1) $(test2)
+host_basename := vula-$(dist)-test
+for_n_hosts := for j in $$(seq $(M) $(N)); do
+test_hosts := $(shell $(for_n_hosts) echo $(host_basename)$$j ;done)
 
 .PHONY: help
 help:
@@ -220,10 +240,19 @@ editable-image: .editable-$(dist)-image-stamp testnet-clean
 
 .PHONY: .create-network
 .create-network:
-	-podman network create --internal $(NET_NAME)
+	# this network is v4-only (albeit still with fe80), using podman's rfc1918 IPs
+#	-podman network create --internal $(NET_NAME)-ip4
 
-.PHONY: shell
-shell: $(installed_image_stamp)
+    # this network is v6-only, in the specified ULA network
+#	-podman network create --subnet fd00:abcd:ef::/64 --internal $(NET_NAME)-ip46
+
+	# this network is dual-stack, using podman's rfc1918 and ULAs
+	-podman network create --ipv6 --internal $(NET_NAME)
+
+
+
+.PHONY: temp-shell
+temp-shell: $(installed_image_stamp)
 	podman run $(podman_args) --rm -it vula-$(dist) $(bin_sh)
 
 .PHONY: systemd-shell
@@ -247,64 +276,70 @@ deps-systemd-shell: .deps-$(dist)-stamp
 	podman exec -it vula-$(dist)-shell $(bin_sh)
 	podman stop vula-$(dist)-shell
 
-.PHONY: testnet-start
-testnet-start: .testnet-started-$(dist)-stamp
-.testnet-started-$(dist)-stamp: $(installed_image_stamp)
+.PHONY: start
+start: .started-$(dist)-stamp
+.started-$(dist)-stamp: $(installed_image_stamp)
 	-make NET_NAME=$(NET_NAME) .create-network
 	-sed -i 's/"cniVersion": "1.0.0",/"cniVersion": "0.4.0",/' ~/.config/cni/net.d/vula-net.conflist
 	for c in $(test_hosts); do \
-		podman create $(podman_args) --name $$c --hostname $$c --network $(NET_NAME) $(add_caps) vula-$(dist); \
+		podman create $(podman_args) --replace --name $$c --hostname $$c --network $(NET_NAME) $(add_caps) vula-$(dist); \
 		podman start $$c; \
 	done
+	podman exec -it $(host_basename)$(N) perl -e \
+	'until (`systemctl is-active vula-organize.service` eq "active\n") {sleep 1}'
+	sleep 1
 	touch $@
 
-.PHONY: testnet-stop
-testnet-stop:
+.PHONY: v4only
+v4only: start
+	$(for_n_hosts) \
+		podman exec -it $(host_basename)$(N) perl -e 'until ("active\n" eq `systemctl is-active vula-organize.service`) {sleep 1}' && \
+		sleep 1 && \
+		podman exec -it $(host_basename)$$j vula prefs set enable_ipv6 false; \
+	done
+
+.PHONY: ip46simple
+ip46simple:
+	make N=6 clean start
+	make N=4 v4only
+	make N=2 v6only
+	make N=6 restart
+	make N=6 ping
+
+.PHONY: stop
+stop:
 	@-for c in $(test_hosts); do \
 		podman stop $$c; \
 	done 2>&1 | grep -v 'no container with name or ID'
-	@rm -vf .testnet-started-$(dist)-stamp
+	@rm -vf .started-$(dist)-stamp
 
-.PHONY: testnet-restart
-testnet-restart: testnet-stop clean-containers testnet-start
-
-.PHONY: retest
-retest: testnet-restart test
+.PHONY: restart
+restart: stop start
 
 .PHONY: testnet-clean
-testnet-clean: testnet-stop
+testnet-clean: stop
 	@-for c in $(test_hosts); do \
 		podman rm $$c; \
 	done 2>&1 | grep -v 'no container with name or ID'
 
-.PHONY: testnet-clean-all
-testnet-clean-all: testnet-stop
+.PHONY: testnet-clean-all-dists
+testnet-clean-all-dists: stop
 	@-for dist in $(dists); do \
 		make dist=$$dist testnet-clean; \
 	done
 
 
-.PHONY: testnet-shell
-testnet-shell: testnet-start
-	podman exec -it $(test1) $(bin_sh)
-
-.PHONY: testnet-shell2
-testnet-shell2: testnet-start
-	podman exec -it $(test2) $(bin_sh)
+.PHONY: sh
+sh: start
+	podman exec -it vula-$(dist)-test$(i) $(bin_sh)
 
 .PHONY: test
-test: .testnet-started-$(dist)-stamp
-	podman ps
-	-make test-pytest
-	@-for c in $(test_hosts); do \
-		podman exec -it $$c vula start; \
-	done
-	make test-ping
-	podman exec $(test1) vula peer
+test: pytest status ping
+	podman exec $(host_basename)$(i) vula peer
 	@echo -n "test environment: "
 	@podman exec -it $(test1) cat /etc/os-release|grep VERSION_CODENAME|cut -f 2 -d=
 	#
-	# note: run "make testnet-stop" to stop these containers,
+	# note: run "make stop" to stop these containers,
 	# 		 or "make testnet-clean" to delete them.
 	#
 
@@ -370,17 +405,44 @@ test-active-adversary: testnet-mitm-start
 	python3 ../vula/mitm/test_passive_adversary.py activeresult
 	sudo podman exec -it vula-bookworm-test1 vula peer
 
-.PHONY: test-pytest
-test-pytest: testnet-start
+.PHONY: pytest
+pytest: start
 	podman exec -it $(test1) pytest-3
 
-.PHONY: test-ping
-test-ping: testnet-start
-	podman exec -it $(test2) perl -e 'until ("active\n" eq `systemctl is-active vula-organize.service`) {sleep 1}'
-	sleep 1
-	podman exec -it $(test1) vula status
-	podman exec -it $(test2) vula status
-	podman exec -it $(test2) ping -c 1 $(test1).local.
+.PHONY: status
+status: start
+	$(for_n_hosts)\
+		podman exec -it $(host_basename)$$j vula status \
+	;done
+
+.PHONY: peer_show
+peer_show: start
+	$(for_n_hosts)\
+		podman exec -it $(host_basename)$$j vula peer \
+	;done
+
+.PHONY: ping
+ping: start
+	# pinging from host $(i) to other hosts
+	$(for_n_hosts) \
+		podman exec -it $(host_basename)$(i) ping -c 1 $(host_basename)$$j.local. \
+	;done
+
+.PHONY: ping-all
+ping-all: start
+	# pinging from each host to all hosts
+	$(for_n_hosts) \
+		echo "Pinging from $$j" && \
+		make i=$$j ping \
+	;done
+
+.PHONY: run
+run:
+	# running "$(cmd)" on $(N) hosts
+	@$(for_n_hosts) \
+		echo "# podman exec -it $(host_basename)$$j $(cmd)" && \
+		podman exec -it $(host_basename)$$j $(cmd) \
+	;done
 
 .PHONY: test-all
 test-all:
@@ -395,14 +457,14 @@ test-all-separate:
 	done
 
 .PHONY: clean-containers
-clean-containers: testnet-clean-all
-	@-podman network rm $(NET_NAME) 		2>&1 | grep -v 'network not found'
-	@-podman stop vula-tmp					2>&1 | grep -v 'no container with name or ID'
-	@-podman rm vula-tmp					2>&1 | grep -v 'no container with name or ID'
+clean-containers: testnet-clean-all-dists
 	@-for dist in $(dists); do \
 		podman stop vula-$$dist-shell; \
 		podman rm vula-$$dist-shell; \
 	done 2>&1 | grep -v 'no container with name or ID'
+	@-podman network rm $(NET_NAME) 		2>&1 | grep -v 'network not found'
+	@-podman stop vula-tmp					2>&1 | grep -v 'no container with name or ID'
+	@-podman rm vula-tmp					2>&1 | grep -v 'no container with name or ID'
 
 .PHONY: clean-images
 clean-images:
@@ -421,13 +483,13 @@ clean-packages:
 	@rm -vf $(DEB_NAME) $(RPM_NAME)
 
 .PHONY: clean
-clean: clean-packages clean-containers clean-images
+clean: clean-packages clean-containers
 	# OK (errors are normal for this target)
 	# note that the "make clean" target doesn't clean all podman artifacts:
 	# - use "make clean-all" to also delete the "vula-debian-deps" image
 
 .PHONY: clean-all
-clean-all: clean
+clean-all: clean clean-images
 	@-for dist in $(dists); do \
 		podman rmi vula-deps-$$dist; \
 		rm -vf .deps-$$dist-stamp; \

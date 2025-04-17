@@ -23,8 +23,9 @@ class TestOrganizeEngine(unittest.TestCase):
         )
 
     def _assert_res_no_error(self, result: {}):
-        if result.error:
-            self.assertEqual(result.error, ())
+        self.assertEqual(
+            (result.error, getattr(result, 'traceback', None)), (None, None)
+        )
         return result
 
     def _assert_res_actions(self, result, actions):
@@ -34,7 +35,7 @@ class TestOrganizeEngine(unittest.TestCase):
                 "Got: %r\n\nFull result:\n%r"
                 % (
                     actions,
-                    ["%s (%s)" % (a[0], a[1]) for a in result.actions],
+                    [a[0] for a in result.actions],
                     result,
                 )
             )
@@ -42,8 +43,9 @@ class TestOrganizeEngine(unittest.TestCase):
 
     def _process_descriptor(self, actions=[], error=False, **kw):
         result = self.state.event_INCOMING_DESCRIPTOR(desc(**kw))
-        if result.error and not error:
-            self.assertEqual(result.error, ())
+        self.assertEqual(
+            (result.error, getattr(result, 'traceback', None)), (None, None)
+        )
         if actions:
             self._assert_res_actions(result, actions)
         return result
@@ -54,19 +56,19 @@ class TestOrganizeEngine(unittest.TestCase):
             hostname='alice.local',
             vk=mkk('alicevk'),
             pk=mkk('alicepk'),
-            addrs='10.0.0.1',
+            v4a='10.0.0.1',
         )
 
     def _add_bob_maybe(
-        self, hostname='bob.local', addrs='10.0.0.2', pk=mkk('bobpk')
+        self, hostname='bob.local', v4a='10.0.0.2', pk=mkk('bobpk')
     ):
         return self._process_descriptor(
-            hostname=hostname, vk=mkk('bobvk'), pk=pk, addrs=addrs
+            hostname=hostname, vk=mkk('bobvk'), pk=pk, v4a=v4a
         )
 
     def _add_alice_bob_same_ip(self):
         self._add_alice_ok()
-        return self._add_bob_maybe(addrs='10.0.0.1')
+        return self._add_bob_maybe(v4a='10.0.0.1')
 
     def _add_alice_bob_same_pk(self):
         self._add_alice_ok()
@@ -76,13 +78,13 @@ class TestOrganizeEngine(unittest.TestCase):
     def _add_alice_bob_same_ip_and_pk(self):
         self._add_alice_ok()
         # bob is using alice's pk *and* ip. the audacity.
-        return self._add_bob_maybe(pk=mkk('alicepk'), addrs='10.0.0.1')
+        return self._add_bob_maybe(pk=mkk('alicepk'), v4a='10.0.0.1')
 
     def _add_alice_bob_same_ip_and_hostname(self):
         self._add_alice_ok()
         # now bobvk is claiming alice's name and ip. this is like the
         # real-world scenario where a user has changed their vk.
-        return self._add_bob_maybe(hostname='alice.local', addrs='10.0.0.1')
+        return self._add_bob_maybe(hostname='alice.local', v4a='10.0.0.1')
 
     def test_add_replace_unpinned_ip(self):
         self.assertEqual(self.state.prefs.pin_new_peers, False)
@@ -171,7 +173,7 @@ class TestOrganizeEngine(unittest.TestCase):
             )
         )
         self._assert_res_actions(
-            self._add_bob_maybe(addrs='10.0.0.1'), ['ACCEPT_NEW_PEER']
+            self._add_bob_maybe(v4a='10.0.0.1'), ['ACCEPT_NEW_PEER']
         )
         self.assertEqual(
             self.state.peers.with_ip('10.0.0.1').name, 'bob.local'
@@ -181,13 +183,13 @@ class TestOrganizeEngine(unittest.TestCase):
         self._process_descriptor(
             hostname='alice.local',
             vk=mkk(1),
-            addrs='10.0.0.1',
+            v4a='10.0.0.1',
             actions=['ACCEPT_NEW_PEER'],
         )
         self._process_descriptor(
             hostname='mallory.local',
             vk=mkk('3'),
-            addrs='10.0.2.1',
+            v4a='10.0.2.1',
             actions=['REJECT'],
         )
         self.assertEqual(len(self.state.peers), 1)
@@ -195,13 +197,13 @@ class TestOrganizeEngine(unittest.TestCase):
     def test_update(self):
         self.assertEqual(self.state.prefs.pin_new_peers, False)
         self._process_descriptor(
-            hostname='alice.local', vk=mkk(1), vf=1, addrs='10.0.0.1'
+            hostname='alice.local', vk=mkk(1), vf=1, v4a='10.0.0.1'
         )
         self._process_descriptor(
             hostname='alice.local',
             vk=mkk(1),
             vf=2,
-            addrs='10.0.0.1',
+            v4a='10.0.0.1',
             actions=['UPDATE_PEER_DESCRIPTOR'],
         )
         self.assertEqual(self.state.peers[mkk(1)].descriptor.vf, 2)
@@ -214,14 +216,14 @@ class TestOrganizeEngine(unittest.TestCase):
             vk=mkk('alice'),
             pk=mkk('alicepk'),
             vf=1,
-            addrs='10.0.0.1',
+            v4a='10.0.0.1',
         )
         self._process_descriptor(
             hostname='mallory.local',
             vk=mkk('mallory'),
             pk=mkk('mallorypk'),
             vf=1,
-            addrs='10.0.0.1',
+            v4a='10.0.0.1',
             actions=['REMOVE_PEER', 'ACCEPT_NEW_PEER'],
         )
         self.assertEqual(
@@ -235,13 +237,13 @@ class TestOrganizeEngine(unittest.TestCase):
         _ = self.state.event_USER_EDIT('SET', 'prefs.pin_new_peers', True)
         self.assertEqual(s.prefs.pin_new_peers, True)
         self._process_descriptor(
-            hostname='alice.local', vk=mkk('alice'), vf=1, addrs='10.0.0.1'
+            hostname='alice.local', vk=mkk('alice'), vf=1, v4a='10.0.0.1'
         )
         self._process_descriptor(
             hostname='alice-1.local',
             vk=mkk('alice'),
             vf=2,
-            addrs='10.0.0.1',
+            v4a='10.0.0.1',
             actions=['UPDATE_PEER_DESCRIPTOR'],
         )
         self.assertEqual(
@@ -269,13 +271,13 @@ class TestOrganizeEngine(unittest.TestCase):
 
     def test_ignore_replay_unpinned(self):
         self._process_descriptor(
-            hostname='alice.local', vk=mkk(1), vf=2, addrs='10.0.0.2'
+            hostname='alice.local', vk=mkk(1), vf=2, v4a='10.0.0.2'
         )
         self._process_descriptor(
             hostname='alice.local',
             vk=mkk(1),
             vf=1,
-            addrs='10.0.0.1',
+            v4a='10.0.0.1',
             actions=['IGNORE'],
         )
         self.assertEqual(
@@ -286,13 +288,13 @@ class TestOrganizeEngine(unittest.TestCase):
     def test_ignore_replay_pinned(self):
         _ = self.state.event_USER_EDIT('SET', 'prefs.pin_new_peers', True)
         self._process_descriptor(
-            hostname='alice.local', vk=mkk(1), vf=2, addrs='10.0.0.2'
+            hostname='alice.local', vk=mkk(1), vf=2, v4a='10.0.0.2'
         )
         self._process_descriptor(
             hostname='alice.local',
             vk=mkk(1),
             vf=1,
-            addrs='10.0.0.1',
+            v4a='10.0.0.1',
             actions=['IGNORE'],
         )
         self.assertEqual(
@@ -372,7 +374,7 @@ class TestOrganizeEngine(unittest.TestCase):
     def test_user_edit_hostname_collision(self):
         self._add_alice_ok()
         self._assert_res_actions(
-            self._add_bob_maybe(addrs='10.0.0.2'), ['ACCEPT_NEW_PEER']
+            self._add_bob_maybe(v4a='10.0.0.2'), ['ACCEPT_NEW_PEER']
         )
         res = self.state.event_USER_EDIT(
             'SET', ['peers', mkk('bobvk'), 'petname'], 'alice.local'

@@ -70,7 +70,6 @@ class OrderedGroup(click.Group):
 
 
 class Debuggable(OrderedGroup):
-
     """
     This is a subclass of click.Group which adds a --debug option that enables
     two features which are useful for debugging:
@@ -137,9 +136,9 @@ class Debuggable(OrderedGroup):
         elif ctx.params.get('debug'):
             try:
                 cmd = reduce(
-                    lambda a, b: a.get(b)
-                    if type(a) is dict
-                    else getattr(a, b),
+                    lambda a, b: (
+                        a.get(b) if type(a) is dict else getattr(a, b)
+                    ),
                     command.split('.'),
                     self.scope,
                 )
@@ -190,7 +189,6 @@ def _click_command_from_annotated_function(cmd):
 
 
 class DualUse(click.Group):
-
     """
     @DualUse.object() is a class decorator which enables class instances to be
     usable both as normal python objects and as click commandline functions.
@@ -421,8 +419,18 @@ def bold(s):
     return click.style(s, bold=True)
 
 
+def top_level_params():
+    ctx = click.get_current_context()
+    while ctx.parent:
+        ctx = ctx.parent
+    return ctx.params
+
+
 def echo_maybepager(s):
-    if s.count("\n") < shutil.get_terminal_size()[1]:
+    if (
+        s.count("\n") < shutil.get_terminal_size()[1]
+        or top_level_params()['no_pager']
+    ):
         click.echo(s)
     else:
         click.echo_via_pager(s)

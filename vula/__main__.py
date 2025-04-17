@@ -52,6 +52,11 @@ from .notclick import Debuggable
     flag_value=INFO,
     help="Set log level INFO",
 )
+@click.option(
+    '--no-pager',
+    is_flag=True,
+    help="Disable automatic pager use for commands with long output",
+)
 @click.group(cls=Debuggable, scope=globals(), invoke_without_command=True)
 @click.pass_context
 def main(ctx, log_level, *args, **kwargs):

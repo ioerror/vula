@@ -5,6 +5,7 @@
  modifying routing information. It does not need network access.
 
 """
+
 from __future__ import annotations
 
 import os
@@ -24,6 +25,7 @@ from schema import Optional as Optional_
 from schema import Schema, Use
 
 from .common import (
+    IPs,
     addrs_in_subnets,
     attrdict,
     b64_bytes,
@@ -31,6 +33,7 @@ from .common import (
     jsonrepr,
     raw,
     schemattrdict,
+    sort_LL_first,
     yamlrepr,
     yamlrepr_hl,
 )
@@ -50,21 +53,23 @@ from .constants import (
     _PUBLISH_DBUS_NAME,
     _PUBLISH_DBUS_PATH,
     _WG_PORT,
-    IPv4_GW_ROUTES,
+    VULA_ULA_SUBNET,
+    GW_ROUTES,
+    IPv6_LL,
+    IPv6_ULA,
     _LRU_CACHE_MAX_SIZE,
 )
 from .csidh import ctidh, ctidh_parameters, hkdf
 from .discover import Discover
 from .engine import Engine, Result
 from .notclick import DualUse
-from .peer import Descriptor, PeerCommands, Peers
+from .peer import Descriptor, PeerCommands, Peers, Peer
 from .prefs import Prefs, PrefsCommands
 from .publish import Publish
 from .sys import Sys
 
 
 class SystemState(schemattrdict):
-
     """
     The SystemState object stores the parts of the system's state which are
     relevant to events in the organize state engine. The object should be
@@ -78,6 +83,7 @@ class SystemState(schemattrdict):
             current_interfaces={Optional_(str): [Use(ip_address)]},
             our_wg_pk=b64_bytes.with_len(32),
             gateways=[Use(ip_address)],
+            has_v6=bool,
         )
     )
 
@@ -86,16 +92,23 @@ class SystemState(schemattrdict):
         current_interfaces={},
         our_wg_pk=b'\x00' * 32,
         gateways=[],
+        has_v6=True,
     )
 
     @classmethod
     def read(cls, organize):
-        subnets, interfaces, gateways = organize.sys._get_system_state()
+        (
+            subnets,
+            interfaces,
+            gateways,
+            has_v6,
+        ) = organize.sys._get_system_state()
         return cls(
             gateways=gateways,
             current_subnets=subnets,
             current_interfaces=interfaces,
             our_wg_pk=organize.our_wg_pk,
+            has_v6=has_v6,
         )
 
     @property
@@ -143,10 +156,6 @@ class OrganizeState(Engine, yamlrepr_hl):
     default = dict(
         prefs=Prefs.default, system_state={}, peers={}, event_log=[]
     )
-
-    restricted = [
-        "peers.*.descriptor"
-    ]  # FIXME: implement filter for 1-op direct events?
 
     def _check_freshness(self, descriptor):
         # FIXME: check dt and vf here
@@ -230,7 +239,7 @@ class OrganizeState(Engine, yamlrepr_hl):
             # bug: this doesn't work for the REMOVE operation where there is no
             # path[1] but the peer remove command calls event_USER_REMOVE_PEER
             # so that is ok for now
-            self.result.add_triggers(sync_peer=(path[1],))
+            self._update_peer(Peer(self.next_state['peers'][path[1]]))
         elif path[0] == 'prefs':
             self.result.add_triggers(get_new_system_state=())
         # FIXME: with more granular actions for peers and prefs, we could
@@ -244,8 +253,6 @@ class OrganizeState(Engine, yamlrepr_hl):
 
     @Engine.action
     def action_ADJUST_TO_NEW_SYSTEM_STATE(self, new_system_state):
-        # IPv6 analysis: not ipv6 ready
-        # Please enhance this function to support ipv6
         cur_gw = list(self.peers.limit(use_as_gateway=True).values())
         cur_gw = cur_gw and cur_gw[0]
         if (
@@ -258,7 +265,7 @@ class OrganizeState(Engine, yamlrepr_hl):
             # if a non-pinned peer had our gateway IP but no longer does,
             # remove its gateway flag
             self._SET(('peers', cur_gw.id, 'use_as_gateway'), False)
-            self.result.add_triggers(remove_routes=(IPv4_GW_ROUTES,))
+            self.result.add_triggers(remove_routes=GW_ROUTES)
         if not (cur_gw and cur_gw.pinned):
             # if there isn't a pinned peer acting as the gateway.
             # FIXME: this could set two peers as the gateway if the system has
@@ -273,12 +280,8 @@ class OrganizeState(Engine, yamlrepr_hl):
                     # multiple default routes, but only one can get
                     # allowedips=/0 so we just take the first one.)
                     break
-        for peer in self.peers.limit(pinned=False).values():
-            if not addrs_in_subnets(
-                peer.enabled_ips, new_system_state.current_subnets
-            ):
-                # remove unpinned peers that are no longer local
-                self.action_REMOVE_PEER(peer)
+        for peer in self.peers.values():
+            self._update_peer(peer, system_state=new_system_state)
         self._SET('system_state', new_system_state)
 
         # TODO:
@@ -286,6 +289,15 @@ class OrganizeState(Engine, yamlrepr_hl):
 
     @Engine.event
     def event_INCOMING_DESCRIPTOR(self, descriptor):
+        """
+        Here we validate an incoming descriptor and decide if we will accept
+        it.
+        """
+        if descriptor.p not in IPv6_ULA:
+            return self.action_IGNORE(
+                descriptor, "primary IP is not in ULA subnet"
+            )
+
         if str(descriptor.pk) == str(self.system_state.our_wg_pk):
             return self.action_IGNORE(descriptor, "has our wg pk")
 
@@ -294,15 +306,15 @@ class OrganizeState(Engine, yamlrepr_hl):
         if not self._check_freshness(descriptor):
             return self.action_REJECT(descriptor, "timestamp too old")
 
-        if existing_peer and descriptor.vf <= existing_peer.descriptor.vf:
+        if existing_peer and descriptor.vf < existing_peer.descriptor.vf:
             return self.action_IGNORE(descriptor, "replay")
 
         if not addrs_in_subnets(
-            descriptor.addrs, self.system_state.current_subnets
+            descriptor.all_addrs, self.system_state.current_subnets
         ):
             return self.action_REJECT(
                 descriptor,
-                "wrong subnet, current subnets are %r"
+                "no addresses local to us; our current subnets are %r"
                 % (self.system_state.current_subnets,),
             )
 
@@ -332,12 +344,75 @@ class OrganizeState(Engine, yamlrepr_hl):
     @Engine.action
     def action_ACCEPT_NEW_PEER(self, descriptor):
         peer = descriptor.make_peer(
-            pinned=False
-            if descriptor.ephemeral
-            else bool(self.prefs.pin_new_peers)
+            pinned=(
+                False
+                if descriptor.ephemeral
+                else bool(self.prefs.pin_new_peers)
+            )
         )
         self._SET(('peers', descriptor.id), peer)
-        if set(descriptor.addrs) & set(self.system_state.gateways):
+        self._update_peer(peer)
+
+    @Engine.action
+    def action_UPDATE_PEER_DESCRIPTOR(self, peer, desc):
+        self._SET(('peers', peer.id, 'descriptor'), desc)
+        self._update_peer(peer, desc)
+
+    def _update_peer(self, peer, desc=None, system_state=None):
+        self.info_log("calling _update_peer for %s", peer.name_and_id)
+        if desc is None:
+            desc = peer.descriptor
+        if system_state is None:
+            system_state = self.system_state
+        subnets = list(system_state.current_subnets) + [VULA_ULA_SUBNET]
+        if peer.pinned:
+            v4 = {i: True for i in desc.IPv4addrs + list(peer.IPv4addrs)}
+            v6 = {i: True for i in desc.IPv6addrs + list(peer.IPv6addrs)}
+        else:
+            v4 = {
+                i: any(i in s for s in subnets)
+                and any(i in s for s in self.prefs.subnets_allowed)
+                for i in desc.IPv4addrs
+            }
+            v6 = {
+                i: any(i in s for s in subnets)
+                and any(i in s for s in self.prefs.subnets_allowed)
+                for i in desc.IPv6addrs
+            }
+        0 and print(
+            f"""
+
+{desc.IPv6addrs} -> {v6}
+{[((i,s), (i in s)) for i in desc.IPv6addrs for s in subnets]}
+
+"""
+        )
+        if v4 != peer.IPv4addrs:
+            self._SET(
+                ('peers', peer.id, 'IPv4addrs'),
+                v4,
+            )
+        if v6 != peer.IPv6addrs:
+            self._SET(
+                ('peers', peer.id, 'IPv6addrs'),
+                v6,
+            )
+        ips = dict(v4)
+        ips.update(v6)
+        if not any(v for i, v in ips.items() if i not in VULA_ULA_SUBNET):
+            self.action_REMOVE_PEER(peer)
+
+        if desc.hostname not in peer.nicknames and any(
+            desc.hostname.endswith(domain)
+            for domain in self.prefs.local_domains
+        ):
+            self._SET(('peers', peer.id, 'nicknames', desc.hostname), True)
+
+        if set(
+            a
+            for a in desc.all_addrs
+            if any(a in s for s in system_state.current_subnets)
+        ) & set(self.system_state.gateways):
             # BUG: this will fail (new peer won't be accepted) if the new peer
             # has a gateway IP and there is already another gateway. it fails
             # closed, but should perhaps do so more gracefully? this could only
@@ -345,32 +420,12 @@ class OrganizeState(Engine, yamlrepr_hl):
             # multiple default routes (because otherwise the other gateway
             # would've already been removed before action_ACCEPT_NEW_PEER was
             # called).
-            self._SET(('peers', descriptor.id, 'use_as_gateway'), True)
-        self.result.add_triggers(sync_peer=(peer.id,))
-
-    @Engine.action
-    def action_UPDATE_PEER_DESCRIPTOR(self, peer, desc):
-        self._SET(('peers', peer.id, 'descriptor'), desc)
-        self._ADD(
-            ('peers', peer.id, 'IPv4addrs'),
-            {i: True for i in desc.IPv4addrs if i not in peer.IPv4addrs},
-        )
-        self._ADD(
-            ('peers', peer.id, 'IPv6addrs'),
-            {i: True for i in desc.IPv6addrs if i not in peer.IPv6addrs},
-        )
-        if desc.hostname not in peer.nicknames:
-            self._SET(('peers', peer.id, 'nicknames', desc.hostname), True)
-
-        if set(desc.addrs) & set(self.system_state.gateways):
-            self._SET(('peers', desc.id, 'use_as_gateway'), True)
+            self._SET(('peers', peer.id, 'use_as_gateway'), True)
 
         self.result.add_triggers(sync_peer=(peer.id,))
 
     @Engine.action
     def action_REMOVE_PEER(self, peer):
-        # IPv6 analysis: not ipv6 ready.
-        # Please enhance this function to support ipv6
         self._REMOVE('peers', peer.id)
         self.result.add_triggers(
             remove_wg_peer=(str(peer.wg_pk),),
@@ -379,7 +434,7 @@ class OrganizeState(Engine, yamlrepr_hl):
         if peer.use_as_gateway:
             # FIXME: this doesn't specify the routing table. maybe need to make
             # triggers api accept kwargs too?
-            self.result.add_triggers(remove_routes=(IPv4_GW_ROUTES,))
+            self.result.add_triggers(remove_routes=GW_ROUTES)
             # these routes are currently only removed because we still call
             # sync (aka full repair) on system state change
 
@@ -535,6 +590,9 @@ class Organize(attrdict):
         </method>
       </interface>
       <interface name='local.vula.organize1.Prefs'>
+        <method name='get_prefs'>
+          <arg type='s' name='response' direction='out'/>
+        </method>
         <method name='show_prefs'>
           <arg type='s' name='response' direction='out'/>
         </method>
@@ -571,8 +629,9 @@ class Organize(attrdict):
         self._state: OrganizeState = self._load_state()
         self._state.trigger_target = self.sys
         self._state.save = self.save
+        self._state.info_log = self.log.info
         self._state.debug_log = self.log.debug
-        self._latest_descriptors = {}
+        self._current_descriptors = {}
 
         if ctx.invoked_subcommand is None:
             self.run(monolithic=False)
@@ -600,42 +659,72 @@ class Organize(attrdict):
         return psk
 
     @property
+    def v6_enabled(self):
+        return self.state.system_state.has_v6 and self.prefs.enable_ipv6
+
+    @property
+    def v4_enabled(self):
+        return self.prefs.enable_ipv4
+
+    @property
     def our_wg_pk(self):
         return str(self._keys.wg_Curve25519_pub_key)
 
     def our_latest_descriptors(self):
-        return repr(jsonrepr(self._latest_descriptors))
+        return repr(jsonrepr(self._current_descriptors))
+
+    @property
+    def hostname(self):
+        """
+        Return our hostname.
+
+        FIXME: make this a pref
+        """
+        return node() + _DOMAIN
 
     def _construct_service_descriptor(
         self, ip_addrs: str, vf: int
     ) -> Descriptor:
         self.log.info("Constructing service descriptor id: %s", vf)
-        # XXX add Curve448 pk for hybrid DH
+        addrs = sort_LL_first(ip_addrs)
         return Descriptor(
             {
+                "p": self.prefs.primary_ip,
                 "pk": self._keys.wg_Curve25519_pub_key,
                 "c": self._keys.pq_ctidhP512_pub_key,
-                "addrs": ip_addrs,
+                "v4a": ','.join(str(a) for a in addrs if a.version == 4)
+                if self.v4_enabled
+                else (),
+                "v6a": ','.join(str(a) for a in addrs if a.version == 6)
+                if self.v6_enabled
+                else (),
                 "vk": self._keys.vk_Ed25519_pub_key,
                 "vf": vf,
                 "dt": "86400",
                 "port": str(self.port),
-                "hostname": node() + _DOMAIN,
+                "hostname": self.hostname,
                 "r": '',
                 "e": False,
             }
         ).sign(self._keys.vk_Ed25519_sec_key)
 
     @DualUse.method()
-    def get_new_system_state(self):
+    def get_new_system_state(self, reason=None):
+        res = []
         old_state = self.state.system_state.copy()
         new_system_state = SystemState.read(self)
-        res = self.state.event_NEW_SYSTEM_STATE(new_system_state)
-        if res.error:
-            click.exit("Fatal unable to handle new system state: %r" % (res,))
         if old_state == new_system_state:
-            self.log.info("system state unchanged")
+            self.log.info(f"checked system state because {reason}; no changes")
         else:
+            self.log.info(
+                f"checked system state because {reason}; found changes,"
+                " running sync/repair"
+            )
+            res = self.state.event_NEW_SYSTEM_STATE(new_system_state)
+            if res.error:
+                raise Exception(
+                    "Fatal unable to handle new system state: %r" % (res,)
+                )
             # FIXME: ensure that triggers do everything necessary, and then
             # remove this full repair sync call here:
             self.sync()
@@ -659,7 +748,7 @@ class Organize(attrdict):
                 self.log.info(
                     "Existing state file will be overwritten because it was "
                     "malformed: %r",
-                    ex
+                    ex,
                     # XXX we should probably move the malformed file aside here
                 )
             self.log.debug("Created new OrganizeState")
@@ -689,17 +778,33 @@ class Organize(attrdict):
         """
         hosts_file: str = _ORGANIZE_HOSTS_FILE
         hosts = {
-            name: list(peer.descriptor.addrs)[0]
-            # XXX make this use the "best ip" logic
+            name: peer.primary_ip
             for peer in self.peers.limit(enabled=True).values()
             for name in peer.enabled_names
+        }
+        hosts_v4 = {
+            name: ips[0]
+            for peer in self.peers.limit(enabled=True).values()
+            for name in peer.enabled_names
+            if (ips := [a for a in peer.enabled_ips if a.version == 4])
         }
         Path(hosts_file).touch(mode=0o644)
         with click.open_file(
             hosts_file, mode='w', encoding='utf-8', atomic=True
         ) as fh:
+            fh.write(f"{self.prefs.primary_ip} {self.hostname}\n")
+            if v4s := IPs(self.state.system_state.current_ips).v4s:
+                fh.write(f"{v4s[0]} {self.hostname}\n")
             fh.write(
                 "\n".join("%s %s" % (ip, host) for host, ip in hosts.items())
+                + "\n"
+            )
+            fh.write(
+                "\n".join(
+                    "%s %s" % (ip, host)
+                    for host, ip in hosts_v4.items()
+                    if hosts[host] != ip
+                )
                 + "\n"
             )
         chown_like_dir_if_root(hosts_file)
@@ -758,7 +863,7 @@ class Organize(attrdict):
 
     @DualUse.method()
     def rediscover(self):
-        self.discover.listen([])
+        self.discover.listen([], self.our_wg_pk)
         self._instruct_zeroconf()
         return ",".join(map(str, self.state.system_state.current_ips))
 
@@ -808,9 +913,51 @@ class Organize(attrdict):
             )
 
         # remove old listener, if there is one
-        self.discover.listen([])
+        self.discover.listen([], self.our_wg_pk)
+
+        if self.prefs.primary_ip in (
+            None,
+            ip_address(False),
+            ip_address('0::'),
+        ):
+            if self.v6_enabled:
+                self.state.event_USER_EDIT(
+                    'SET',
+                    ('prefs', 'primary_ip'),
+                    ip_address(
+                        VULA_ULA_SUBNET.network_address.packed[:6]
+                        + os.urandom(10)
+                    ),
+                )
+            else:
+                self.state.event_USER_EDIT(
+                    'SET',
+                    ('prefs', 'primary_ip'),
+                    ip_address(
+                        VULA_ULA_SUBNET.network_address.packed[:6]
+                        + os.urandom(10)
+                    ),
+                )
+                raise Exception(
+                    "FIXME: v4-only hosts currently not "
+                    "supported. preliminary v4-only testing "
+                    "involves manually setting the primary_ip "
+                    "pref which will avoid hitting this "
+                    "exception"
+                )
 
         self.get_new_system_state()
+
+        if self.v6_enabled:
+            # we always want these two when v6 is enabled. they're in the
+            # default prefs, but we add them here to handle upgrading from a
+            # pre-v6 prefs file.
+            for net in (IPv6_LL, IPv6_ULA):
+                if net not in self.prefs.subnets_allowed:
+                    self.state.event_USER_EDIT(
+                        'ADD', ('prefs', 'subnets_allowed'), net
+                    )
+
         self.sys.start_monitor()
         self._instruct_zeroconf()
         self.sync()
@@ -823,32 +970,40 @@ class Organize(attrdict):
         descriptors = {}
         vf: int = int(time.time())
         ips_to_publish = []
+        discover_ips = []
         for iface, ips in self.state.system_state.current_interfaces.items():
             ips_to_publish.extend(list(map(str, ips)))
-            desc = {
-                k: str(v)
-                for k, v in self._construct_service_descriptor(
-                    ",".join(str(ip) for ip in ips), vf
-                )
-                ._dict()
-                .items()
-            }
-            descriptors[iface] = desc
-        current_ips = sorted(map(str, self.state.system_state.current_ips))
+            descriptors[iface] = str(
+                self._construct_service_descriptor(ips, vf)
+            )
+
+            # python-zeroconf irritatingly wants IPs instead of interfaces for
+            # its "interfaces" argument, so we give it one IP per interface.
+            # (giving it too many also causes problems...) FIXME?
+            ips = IPs(ips)
+            if v4s := ips.v4s:
+                discover_ips.append(str(v4s[0]))
+
+            if v6s := ips.v6s:
+                discover_ips.append(str(sort_LL_first(v6s)[0]))
+
+        ips_to_publish = sorted(i for i in map(str, ips_to_publish))
         self.log.info(
             "discovering on {ips} and publishing {pub}".format(
-                ips=current_ips,
-                pub='on same'
-                if ips_to_publish == current_ips
-                else ips_to_publish,
+                ips=discover_ips,
+                pub=(
+                    'on same'
+                    if sorted(ips_to_publish) == discover_ips
+                    else ips_to_publish
+                ),
             )
         )
-        self.discover.listen(current_ips)
+        self.discover.listen(discover_ips, self.our_wg_pk)
         self.publish.listen(descriptors)
-        self._latest_descriptors = descriptors
-        self.log.info("Current IP(s): {}".format(current_ips))
-        self.log.info(
-            "Current descriptors: {}".format(self._latest_descriptors)
+        self._current_descriptors = descriptors
+        self.log.info("Current IP(s): {}".format(ips_to_publish))
+        self.log.debug(
+            "Current descriptors: {}".format(self._current_descriptors)
         )
 
     @DualUse.method(opts=(click.argument('query', type=str),))
@@ -951,6 +1106,9 @@ class Organize(attrdict):
 
     def peer_addr_del(self, vk, ip):
         return str(yamlrepr(self.state.event_USER_PEER_ADDR_DEL(vk, ip)))
+
+    def get_prefs(self):
+        return str(jsonrepr(self.state.prefs))
 
     def show_prefs(self):
         return str(yamlrepr(self.state.prefs))

@@ -4,7 +4,8 @@ from ipaddress import ip_network
 
 import click
 import yaml
-from schema import Optional, Schema, Use
+from schema import Schema, Use
+from ipaddress import ip_address
 
 from .common import (
     DualUse,
@@ -14,11 +15,14 @@ from .common import (
     yamlrepr_hl,
 )
 
+from .constants import (
+    IPv4_LL,
+    IPv6_LL,
+    IPv6_ULA,
+)
+
 
 class Prefs(yamlrepr_hl, schemattrdict):
-    # IPv6 analysis: not ipv6 ready
-    # Please enhance this class to support ipv6
-
     schema = Schema(
         {
             'pin_new_peers': Flexibool,
@@ -30,9 +34,12 @@ class Prefs(yamlrepr_hl, schemattrdict):
             'local_domains': [str],
             'ephemeral_mode': Flexibool,
             'accept_default_route': Flexibool,
-            Optional('overwrite_unpinned'): Flexibool,  # TODO
-            Optional('expire_time'): Use(int),  # TODO
+            'overwrite_unpinned': Flexibool,  # TODO
+            'expire_time': Use(int),  # TODO
+            'primary_ip': Use(ip_address),  # TODO
             'record_events': Flexibool,
+            'enable_ipv6': Flexibool,
+            'enable_ipv4': Flexibool,
         }
     )
 
@@ -41,10 +48,12 @@ class Prefs(yamlrepr_hl, schemattrdict):
         accept_nonlocal=False,
         auto_repair=True,
         subnets_allowed=[
+            str(IPv6_LL),
+            str(IPv6_ULA),
+            str(IPv4_LL),
             "10.0.0.0/8",
             "192.168.0.0/16",
             "172.16.0.0/12",
-            "169.254.0.0/16",
         ],
         subnets_forbidden=[],
         iface_prefix_allowed=[
@@ -52,14 +61,16 @@ class Prefs(yamlrepr_hl, schemattrdict):
             'eth',
             'wl',
             'thunderbolt',
-            # 'mpqemubr0',
         ],
-        local_domains=["local."],
+        local_domains=["local.", "local"],
         ephemeral_mode=False,
         accept_default_route=True,
         record_events=False,
         expire_time=3600,
         overwrite_unpinned=True,
+        primary_ip=0,
+        enable_ipv6=True,
+        enable_ipv4=True,
     )
 
 

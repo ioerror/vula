@@ -65,24 +65,33 @@ for details.
 
 ## Test network
 
-### `make test`
+All of these make targets accept parameters such as N (number of vula peers to
+start containers for), i (the current peer to operate on, for targets where it
+is relevant), and dist (the distribution to run in the containers).
 
-This will create a `vula-net` podman internal network, run vula in two
-containers connected to that network, and send a ping between them.  It will
-also run the pytest test suite in one of them. Running it again will re-run the
-pytest and ping, but will not restart the services in the containers.
+### `make test N=2`
+
+This will create a `vula-net` podman internal network, run vula under systemd
+in N containers connected to that network, and send a ping between them. It
+will also run the pytest test suite in one of them. Running it again will
+re-run the pytest and ping, but will not restart the services in the
+containers.
 
 More advanced integration tests using podman should be implemented here,
 such as creating a router container which is in the internal network and also
 internet connected to test default route encryption functionality.
 
-### `make retest`
+### `make shell i=2`
+
+This will enter the shell for container number i
+
+### `make restart test`
 
 This will stop and restart the testnet containers, and re-run `make test`.
 
-### `make testnet-shell`
+### `make clean test`
 
-This will launch a shell in the first testnet container.
+This will remove the containers and (recreate and restart them and) run the tests.
 
 ### `make testnet-clean`
 

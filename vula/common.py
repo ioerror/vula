@@ -1,6 +1,7 @@
 """
 *vula* common functions.
 """
+
 from __future__ import annotations
 
 import copy
@@ -9,7 +10,7 @@ import os
 import pdb
 import re
 from base64 import b64decode, b64encode
-from ipaddress import ip_address, ip_network
+from ipaddress import ip_address, ip_network, IPv4Address, IPv6Address
 from logging import Logger, getLogger
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -451,25 +452,68 @@ class ConsistencyError(Exception):
 
 
 class comma_separated_IPs(object):
-    def __init__(self, _str):
+    addr_cls = lambda _, a: ip_address(a)
+    size = None
+
+    def __init__(self, arg):
         """
         Creates a list of IP addresses.
 
-        >>> comma_separated_IPs("127.0.0.1,15.15.15.15")
+        >>> comma_separated_IPs("127.0.0.1, 15.15.15.15")
         <comma_separated_IPs('127.0.0.1,15.15.15.15')>
-        >>> comma_separated_IPs("fe80::1,fe80::2")
+        >>> comma_separated_IPs("fe80::1, fe80::2")
         <comma_separated_IPs('fe80::1,fe80::2')>
-        >>> comma_separated_IPs("::1")
+        >>> comma_separated_IPs(comma_separated_IPs("::1"))
         <comma_separated_IPs('::1')>
         >>> comma_separated_IPs("invalid")
         Traceback (most recent call last):
         ...
         ValueError: 'invalid' does not appear to be an IPv4 or IPv6 address
+        >>> comma_separated_IPs("")
+        <comma_separated_IPs('')>
+        >>> comma_separated_IPv4s(b'We can also unpack from binary.')
+        Traceback (most recent call last):
+        ...
+        AssertionError: 31 is not divisible by 4
+        >>> s = b'We can also unpack from binary. '
+        >>> comma_separated_IPv4s(s)
+        <comma_separated_IPv4s('87.101.32.99,97.110.32.97,108.115.111.32,117.110.112.97,99.107.32.102,114.111.109.32,98.105.110.97,114.121.46.32')>
+        >>> comma_separated_IPv6s(s)
+        <comma_separated_IPv6s('5765:2063:616e:2061:6c73:6f20:756e:7061,636b:2066:726f:6d20:6269:6e61:7279:2e20')>
+        >>>
         """
-        self._str = str(_str)
-        self._items = tuple(
-            ip_address(ip) for ip in self._str.split(',') if ip
-        )
+        self._str = None
+
+        if type(arg) is str:
+            self._items = tuple(
+                self.addr_cls(ip.strip()) for ip in arg.split(',') if ip
+            )
+
+        elif type(arg) is bytes:
+            assert self.size, "can't unpack mixed-version list of IPs"
+            assert (
+                len(arg) % self.size == 0
+            ), f"{len(arg)} is not divisible by {self.size}"
+            self._items = tuple(
+                self.addr_cls(arg[n * self.size : (n + 1) * self.size])
+                for n in range(len(arg) // self.size)
+            )
+        elif isinstance(arg, (list, tuple, type(self))):
+            self._items = tuple(self.addr_cls(ip) for ip in arg)
+        else:
+            raise TypeError(f"{type(self)} can't instantiate from {type(arg)}")
+
+    @property
+    def packed(self):
+        """
+        >>> comma_separated_IPv4s('116.104.105.115,32.105.115.32,'
+        ...     '109.111.114.101,32.99.111.109,112.97.99.116').packed
+        b'this is more compact'
+        >>> comma_separated_IPv6s(b'is more compact.')
+        <comma_separated_IPv6s('6973:206d:6f72:6520:636f:6d70:6163:742e')>
+        """
+        assert self.size, "can't pack mixed-version list of IPs"
+        return b''.join(a.packed for a in self)
 
     def __iter__(self):
         """
@@ -525,7 +569,7 @@ class comma_separated_IPs(object):
         "<comma_separated_IPs('192.168.3.2,192.168.0.3,192.168.3.4, \
         192.168.0.2,192.168.0.3,192.168.3.4')>"
         """
-        return "<%s(%r)>" % (type(self).__name__, self._str)
+        return "<%s(%r)>" % (type(self).__name__, str(self))
 
     def __str__(self):
         """
@@ -549,8 +593,44 @@ class comma_separated_IPs(object):
         >>> ip_multiple.__str__()
         'fe80::1,fe80::2,fe80::3'
         """
-
+        if self._str is None:
+            self._str = ",".join(map(str, self))
         return self._str
+
+
+class IPs(comma_separated_IPs):
+    "TODO: rename comma_separated_IPs to IPs"
+
+    @property
+    def v4s(self):
+        return [a for a in self if a.version == 4]
+
+    @property
+    def v6s(self):
+        return [a for a in self if a.version == 6]
+
+
+class comma_separated_IPv4s(comma_separated_IPs):
+    addr_cls = IPv4Address
+    size = 4
+
+
+class comma_separated_IPv6s(comma_separated_IPs):
+    addr_cls = IPv6Address
+    size = 16
+
+
+use_comma_separated_IPv4s = Use(comma_separated_IPv4s)
+use_comma_separated_IPv6s = Use(comma_separated_IPv6s)
+use_ip_address = Use(ip_address)
+
+packable_types = {
+    # these are types which have a "packed" attribute which produces bytes
+    # which can be used to reinstantiate the object.
+    use_comma_separated_IPv4s: comma_separated_IPv4s,
+    use_comma_separated_IPv6s: comma_separated_IPv6s,
+    use_ip_address: ip_address,
+}
 
 
 class comma_separated_Nets(comma_separated_IPs):
@@ -877,11 +957,16 @@ Flexibool = And(
         And(
             str,
             Use(
-                lambda v: 1
-                if v.lower() in ('true', 'yes', 'on', '1', 'y', 'j', 'ja')
-                else 0
-                if v.lower() in ('false', 'no', 'off', '0', 'n', 'nein', 'nej')
-                else repr(v)
+                lambda v: (
+                    1
+                    if v.lower() in ('true', 'yes', 'on', '1', 'y', 'j', 'ja')
+                    else (
+                        0
+                        if v.lower()
+                        in ('false', 'no', 'off', '0', 'n', 'nein', 'nej')
+                        else repr(v)
+                    )
+                )
             ),
         ),
     ),
@@ -950,7 +1035,6 @@ class queryable(dict):
 
 
 class chunkable_values(dict):
-
     """
     This chunks and unchunks dictionary values.
 
@@ -1039,6 +1123,24 @@ def addrs_in_subnets(addrs, subnets):
     return [
         addr for addr in addrs if any(addr in subnet for subnet in subnets)
     ]
+
+
+def sort_LL_first(ips):
+    """
+    This sorts a list of IPs to put the link-local ones first, and v6 addresses
+    ahead of v4
+
+    >>> sort_LL_first([ip_address('169.254.0.1'), ip_address('127.0.0.1'),
+    ...                ip_address('ff00::1'), ip_address('169.254.0.2'),
+    ...                ip_address('fe80::1'), ip_address('0::1')]
+    ... ) # doctest: +NORMALIZE_WHITESPACE
+    [IPv6Address('fe80::1'), IPv4Address('169.254.0.1'),
+    IPv4Address('169.254.0.2'), IPv6Address('ff00::1'), IPv6Address('::1'),
+    IPv4Address('127.0.0.1')]
+    """
+    return sorted(
+        ips, key=lambda ip: (not ip.is_link_local, not ip.version == 6)
+    )
 
 
 class KeyFile(yamlrepr_hl, schemattrdict, yamlfile):

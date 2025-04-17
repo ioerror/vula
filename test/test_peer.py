@@ -4,11 +4,10 @@ from ipaddress import IPv4Address, IPv6Address
 
 import schema
 
-from vula.common import yamlrepr
 from vula.peer import Descriptor
 
 
-def desc(vk, addrs, hostname, **kw):
+def desc(vk, v4a, hostname, **kw):
     "make test descriptor"
     data = dict(
         pk=mkk('pubkey'),
@@ -19,8 +18,10 @@ def desc(vk, addrs, hostname, **kw):
         s=mkk('signature', 64),
         e=False,
         r='',
+        p='fdff::1',
+        v4a='10.0.0.1',
     )
-    data.update(vk=vk, addrs=addrs, hostname=hostname, **kw)
+    data.update(vk=vk, v4a=v4a, hostname=hostname, **kw)
     return Descriptor(data)
 
 
@@ -42,54 +43,26 @@ def mkk(n, length=32):
     return b64encode(b64decode(n + (b64len - len(n)) * '/')[:length]).decode()
 
 
-desc_str = (
-    "addrs=10.215.167.50; c=KNDxDMgmkH8Poa7TJBlIZrvTnQBN5w10gYlyY5"
-    "MfvkA7Eu12IhpheCdJzWIwap4PE5Ryv3PzvU4ikrEY6oXJNw==; dt=86400; e=0; "
-    "hostname=wg-mdns-test1.local.; pk=y9bQa4DAj4NT5lh8PffyAbXNbYCkxczMKLk/r"
-    "tP4CVY=; port=5354; r=; s=YJqLUPrI8G/IfA1wIbW2z5p0EtYcDFh4gxCjP5czMK2wi"
-    "GRgZdeBibs6shDoRusfHtSy+4m/Z9Jfhul+amQYAQ==; vf=1605737957; vk=XGQErb1N"
-    "Jmg4dMLZK7hXfhRahgZ6ix/oP3+BTq2+Dy8=;"
-)
-
-
 class TestDescriptor(unittest.TestCase):
+    """
+    Tests for descriptors.
+
+    Note there are many more, in the form of doctests.
+    """
+
     def test_descriptor_addrs_validate(self):
-        d = desc(hostname='alice.local', vk=mkk('1'), addrs='10.0.0.255,::0')
-        self.assertEqual(d.IPv6addrs, [IPv6Address("::0")])
-        self.assertEqual(d.IPv4addrs, [IPv4Address("10.0.0.255")])
-        with self.assertRaises(schema.SchemaError):
-            desc(hostname='alice.local', vk=mkk('1'), addrs='10.0.0.256')
-
-    def test_descriptor_parse_roundtrip(self):
-        self.maxDiff = None
-        desc = Descriptor.parse(desc_str)
-        self.assertEqual(desc_str, str(desc))
-        self.assertEqual(
-            str(yamlrepr(desc)),
-            """\
-r: ''
-addrs: 10.215.167.50
-c: KNDxDMgmkH8Poa7TJBlIZrvTnQBN5w10gYlyY5Mfvk"""
-            + """A7Eu12IhpheCdJzWIwap4PE5Ryv3PzvU4ikrEY6oXJNw==
-dt: 86400
-e: false
-hostname: wg-mdns-test1.local.
-pk: y9bQa4DAj4NT5lh8PffyAbXNbYCkxczMKLk/rtP4CVY=
-port: 5354
-s: YJqLUPrI8G/IfA1wIbW2z5p0EtYcDFh4gxCjP5czMK"""
-            + """2wiGRgZdeBibs6shDoRusfHtSy+4m/Z9Jfhul+amQYAQ==
-vf: 1605737957
-vk: XGQErb1NJmg4dMLZK7hXfhRahgZ6ix/oP3+BTq2+Dy8=
-""",  # noqa: E261
+        d = desc(
+            hostname='alice.local',
+            vk=mkk('1'),
+            v4a='10.0.0.255,1.2.3.4',
+            v6a='::0',
         )
-
-    def test_verify_signature(self):
-        desc = Descriptor.parse(desc_str)
-        self.assertEqual(desc.verify_signature(), True)
-        desc = Descriptor(desc, port=desc['port'] + 1)
-        self.assertEqual(desc.verify_signature(), False)
-        desc = Descriptor(desc, port=desc['port'] - 1)
-        self.assertEqual(desc.verify_signature(), True)
+        self.assertEqual(d.IPv6addrs, [IPv6Address("::0")])
+        self.assertEqual(
+            d.IPv4addrs, [IPv4Address("10.0.0.255"), IPv4Address("1.2.3.4")]
+        )
+        with self.assertRaises(schema.SchemaError):
+            desc(hostname='alice.local', vk=mkk('1'), v4a='10.0.0.256')
 
 
 class TestPeerShow(unittest.TestCase):
@@ -102,32 +75,72 @@ class TestPeerShow(unittest.TestCase):
 
     >>> import click
     >>> import time
+
+
+    Test a peer with only the IPv6 ULA:
+
     >>> peer = desc(
     ... hostname='alice.local', vk=mkk('Alice'), vf=time.time(),
-    ... addrs='10.0.0.1').make_peer(pinned=True,
+    ... v4a='', v6a='', p='fdff:ffff:ffdf::1').make_peer(pinned=True,
     ... _allow_unsigned_descriptor=True)
-
     >>> click.echo(peer.show().replace('1 ago', '0 ago'))
     peer: alice.local
       id: Alice/////////////////////////////////////8=
       warning: wireguard peer is not configured
       status: enabled pinned unverified
-      endpoint: 10.0.0.1:1234
-      allowed ips: 10.0.0.1/32
+      endpoint: 0.0.0.0:1234
+      primary ip: fdff:ffff:ffdf::1
+      allowed ips: fdff:ffff:ffdf::1/128
       latest signature: 0:00:00 ago
       latest handshake: none
       wg pubkey: pubkey////////////////////////////////////8=
+
+    Change the stats:
     >>> stats = dict(rx_bytes=1, tx_bytes=50_500_000_000,
     ... latest_handshake=int(time.time()))
     >>> click.echo(peer.show(stats).replace('1 ago', '0 ago'))
     peer: alice.local
       id: Alice/////////////////////////////////////8=
       status: enabled pinned unverified
-      endpoint: 10.0.0.1:1234
-      allowed ips: 10.0.0.1/32
+      endpoint: 0.0.0.0:1234
+      primary ip: fdff:ffff:ffdf::1
+      allowed ips: fdff:ffff:ffdf::1/128
       latest signature: 0:00:00 ago
       latest handshake: 0:00:00 ago
       transfer: 1 B received, 47.03 GiB sent
+      wg pubkey: pubkey////////////////////////////////////8=
+
+    >>> peer = desc(
+    ... hostname='alice.local', vk=mkk('Alice'), vf=time.time(),
+    ... v4a='10.0.0.1', v6a='::1').make_peer(pinned=True,
+    ... _allow_unsigned_descriptor=True)
+    >>> click.echo(peer.show().replace('1 ago', '0 ago'))
+    peer: alice.local
+      id: Alice/////////////////////////////////////8=
+      warning: wireguard peer is not configured
+      status: enabled pinned unverified
+      endpoint: [fdff::1]:1234
+      primary ip: fdff::1
+      allowed ips: fdff::1/128, ::1/128, 10.0.0.1/32
+      latest signature: 0:00:00 ago
+      latest handshake: none
+      wg pubkey: pubkey////////////////////////////////////8=
+
+    Test a peer with an IPv4 primary_ip:
+    >>> peer = desc(
+    ... hostname='alice.local', vk=mkk('Alice'), vf=time.time(),
+    ... v4a='10.0.0.1', p='1.2.3.4').make_peer(pinned=True,
+    ... _allow_unsigned_descriptor=True)
+    >>> click.echo(peer.show().replace('1 ago', '0 ago'))
+    peer: alice.local
+      id: Alice/////////////////////////////////////8=
+      warning: wireguard peer is not configured
+      status: enabled pinned unverified
+      endpoint: 1.2.3.4:1234
+      primary ip: 1.2.3.4
+      allowed ips: 1.2.3.4/32, 10.0.0.1/32
+      latest signature: 0:00:00 ago
+      latest handshake: none
       wg pubkey: pubkey////////////////////////////////////8=
     """
 
@@ -138,46 +151,46 @@ class TestDescriptor_qrcode(unittest.TestCase):
     >>> print(
     ...     '    '
     ...     + desc(
-    ...         addrs='1.2.3.4', hostname='vula-qrcode-test', vk=mkk('vk')
+    ...         v4a='1.2.3.4', hostname='vula-qrcode-test', vk=mkk('vk')
     ...     ).qr_code.strip()
     ... )
-        █▀▀▀▀▀█ █▄▀▀▀ ███▀█ █▄▀▄ █▄▀▀▄▄ ▀▀▄   █▄ █ ▀ █▄▀█▀  ▄▀█▄███  ▀█ ▀ █▀▀▀▀▀█    
-        █ ███ █ ▀▄  █▀▄▄█▀ █▀▄█ ▀█▀▀ █▄███ ▄▄▀▀▄▄ ▀▄█▀ ▀ ▀▄█  █▄ ▀█  ▄▄▄  █ ███ █    
-        █ ▀▀▀ █ ▀ ▄▀█▀ ██▀▀█▄  ██▀▀▀█ ▄▄▀▀▀  ▀▀▄ ▄ ▄█▀▀▀█  █████▀▀▄▄▄▄▄▀▀ █ ▀▀▀ █    
-        ▀▀▀▀▀▀▀ ▀ ▀ █ █▄▀ █▄█ ▀ █ ▀ █▄▀▄▀▄█ ▀ ▀ █ ▀ █ ▀ █▄▀▄█ █ ▀ ▀▄▀ █▄█ ▀▀▀▀▀▀▀    
-        █  ▀▀▀▀█▀▀ ▄▀▀ ▄▀ █▀▀ ▄ █▀▀▀▀█▄  █ ▀▀▄  ▀▀ ▀▀█▀▀█▀█ █▀▀ ▄▀▀ ▀ ██ ▀ ▄▀▄█▀▀    
-        █ ▀▀█ ▀▀▄▄█ ▀ █▀█ █ █▄  ▄▄▄█▄  ▀██▀▄▀██  █ ▀█▄▄▀▀█ ▀▀ ▄▄ ▄ ▀ █▄  ▄  ▀ ▀▄     
-        ▄▄▄▀▄▀▀█  ▄▀ ▀ ▀ ▀▀▀  █▀  █▀▄▄▄▄▀█▄ ▀ ▀ █  ▄▀▄  ▀█▀█▄▀▀ ▀▀█▀ █▀▄▀█▀▄█▄ ▄     
-         █ █▄▄▀▀  ██ ▀▀ █ ▄█▀▀█   ▀███   █ █▀▄ ▄▀▄   ██▀██▀█ ▄ ▄▄█ ▄▀█▀▄▄▀▀▀▀  ▀▀    
-        ▄ ▄ ▄█▀▄████  ▄▀█  ▄▄█ █▀████▀ ▀██▀▀▀▄▄▀ ▀ ██  ▀▄ ████▀▄ ▀ ██ █▄█ ▀▀▄ ▀▀     
-          ▄▄▀█▀▄▄ █▄ ▀▀ ▀▄▀▀▄▀▀▀ ▄▄ ▀▀▀ █████▀█▄ ▀██▀▄█▄ █ ▀▄▀ ▄ ▀▄▀ ▀ ▀▄ █▀ █ ▀█    
-        ▀▄ ▀█▀▀▄▀█▄▄▀  ▄▀█ ▀█▄▄ █████▄██▄▄█▄█▀▄██ ▄▄█▄▀▀▀▀█▀█ █▀▄▀  █▀▀ ▄█▀▀▄█▄█▀    
-         ▀ ▄▄▀▀▄█ ▀█▄▄▄   ▀█▄▀█▄▀▀▄▄█▄▀ █  ▀█▀▄█ █ ▄▀▄ █ █  ▀ ▄▀▄▄ ▄ ▀█▀ ▄█▄ ██▀█    
-         ▀▀██▀▀▀██  ▀▄▀▀ ▄ ▄ ▄ ██▀▀▀███▀ █▀▄▀▀█▀▄████▀▀▀█ ▄▀▀█ ██▀█▀██  █▀▀▀██ ▀█    
-         █ ██ ▀ █   ███▄▀ █▄ █ ▄█ ▀ █▀▀▀▀ ▀██  ▄ ▀▀▄█ ▀ █ █▄▀  ▄▀ ██▀▄█▀█ ▀ ██▄█▀    
-        ▄█  █▀▀▀█ █▀▄▄▀█▀    █▀█▀█▀█▀▀█▄▄█▄ ▀▄▀▀▀▀█▀████▀▀ ▀██▄ ▄ ██▀ ▀████▀▀█▀▄█    
-         ▄██ █▀ █▀ ▀ ██▀█ █ ▄▀▄▀▄▀ ▄▄▄█▀ ▄▀▄▀▄█  ▄█▀   █ ▄ ▀█▄ ██▄  █  ▄▀███▀ ▀▄▀    
-        ▄█▄██▀▀█ ▄▀▄▀██▄ █▀██▄▄█▀ ▀████▀▀████▄▄ ▄██ ▀▀▀  ▄▀▄▀▀  ▀▄▄▄██▀▀▀  █   ▀▀    
-         ▀▄███▀▀▄██▄ ▄█▀▀▄ ▄▀██▀  ▀▄█▄▄█▄█▀  █▄▄ ▀ ▄ █  ▀▀█ ▀▄ █  █▀▀ ▄▄▄▄▄▄  ██▄    
-        ▄▀▀▄▄█▀▄▀  ▄▄ █  ▄▄▄ ▀ ▄▀▄▀▀▄ ██ ▄ ▄█▀  ▄▄▀▀▄▀▄█  ▄▄    ▄▄██  ▀▀█ ▄ █▀▄██    
-        ██ █▀▄▀ ▀▄ ▄█▀▄▀█▄ ▄▄██▀  ▄▄█▄█▄▀▄ ▀ ▀█▀ ▀▀██▄▀  ▄ █▄█▄█▀▀ ▄ ▄ ▀▄▄▀███▄█▄    
-        ██  ▀█▀▀█  ▀▄▄▀▄▀█     █▄▀█▄ ▄ █▀▄█ ▀▀▀█▄▀▀█▄▀  ▀█ ▄  ▄ ▄▀  █▀▄█  ▀█▀ ▀ ▄    
-        ▀▄▄▀▀█▀   ▄ █▄█▄▄▀▀ ▄▄▄ ▄▄▀  ▄▄▄▄ ▄▀█ ▄▀▀█ █ █▄▀▄█▄ █▀▄▄▀██▄▀▄ ▄ ▄▄█ ▄▄▄▄    
-        ▀ ▀▄█▀▀▀█▀  █▄▀▀▄█ █▀▄▀▄█▀▀▀██▀▄ ▄ █▀ ▀▄▀█▄▄█▀▀▀█▀██▀▀▀█  █▄█ █ █▀▀▀█ ▀█▄    
-        █ ▀██ ▀ █▀ ▄█▄ ▄ ▀█▀ ▀ ▄█ ▀ █▀▄▀▀  ▄██  ▄  ▄█ ▀ █▀▄█▀▄▀▄█ █▀▀▀▄▄█ ▀ ███ ▀    
-         ██▀▀█▀██▄ ▀█ ▄ ▄▀▀ █ ▀ ▀▀▀█▀▄▀ ▀▄▄▄▀▄ ▄█▄▄▀▀▀▀▀█▄ ▄▀   ▄ ▄█▄▄  ██▀▀█▀█▄▀    
-        ▄  ▄█ ▀▄  ▀█▄▀▀▀ █▀ █ █▀▀█▀ █ ▄ ▄ █▀▀ █ ▀▀▄█▄▀ ▀▄▀█▄  ▄▄█▀▄██▀█▄▄█▀▄▀█  █    
-        ▄▄▄▄▄ ▀▄▀▀▄███▀ ▀ ▄█▀█ ▀█ █▄▀▄███ ▄▄█▀▀█ ▄██ ▀▀▄▄▀▄█▀▄  ▀ ▀▀▄▀▄█  ▀█▀▄▀▀▀    
-        ▀▄ ██▀▀▄▀▀█▄ ▀ ▀ ▄█▄ ▄▀██▄█ ▄ ▀▄█ █▀█▄▀▀▀▄▀▀██  ▄▀▄▄██▄▀▀█ ▄▀█▄ ▄█  ▄█▀▄▀    
-        ▄█ ▄█▀▀▄ ▀▀█  ▀▀▄▀▄█▀▄█▄█▄▄ █ █ ▀▄█▀  █   ▄▄█▄ ▀  ██▀ ██ ▀ ▄▀▀▄█▀█▄▀▄▀ ▄█    
-         █▄█ █▀▄ ▀  █▄█ ▄ █▀ ▄▄ █ ▀ ▀█▀█▄     ▄ ▀▄   █▀▄▄█ █ ▄▄▄█  ▀▀▀█▄ ▀█ ▀█▄ █    
-        █▄▀▄▄ ▀█▀▀█▄▀▄  █ ▄█ ▄▀███▀ ▀█  █▄▀   █▄ ▄█▄█▄▄ ▀ ▀██▄ ▀▀▀▀█▀▄█▄▄ ▀ ▄ ██▄    
-        ▀▀ █▄▀▀ ▀▄██▀▄    ▀▄ ▄▀█ ▀▀█▄█ ▄▀ ▀▄    ▀▀▀█  ▀ ▀█▀█▀█▀█ █▄▄▀▄█▀ ▀▀▄ ████    
-        ▀   ▀ ▀ █▄   ▄▀▀█ ▀▀█ ▀ █▀▀▀██ █▀▄▄▄ █▀▄█ █▄█▀▀▀██▀█▄▄█ █▀▄█ ▀▀▄█▀▀▀█▄ ▀▄    
-        █▀▀▀▀▀█ █▀█▄▀██▀▀ ▀ ▀█▀▄█ ▀ █▄ ▄ ▄▀█▄▄█ █▄▀ █ ▀ █ ▄    █▄▄▄▀▀▄▄▄█ ▀ █ ▀▄█    
-        █ ███ █ █▄█▄█▄██▄▀ ▀▄▄███▀▀▀▀  ▄█ ██ ██  ▄█ ▀█▀▀█▄▄▀▄▄ ▄ ▄▀ ▀▄▀▀███▀█ ▄ ▄    
-        █ ▀▀▀ █   ▄▀█ ▀█▄ █▀▄█▄▄▀▀ ▀█  ▀███▀█ ▄█▀▀▄█ ▄ ██▀▄██▄▄▀▀▀▀██▀█  ▀▄▀██▄██    
-        ▀▀▀▀▀▀▀ ▀ ▀▀▀  ▀▀ ▀▀▀▀  ▀▀▀  ▀    ▀    ▀     ▀ ▀▀ ▀ ▀  ▀  ▀▀▀ ▀ ▀▀  ▀   ▀
+        █▀▀▀▀▀█ ████▄▄█▄▀█▄▄███▀▄ █▄▀▄▀█ ▄ ▄▀█  ▄▄█ ▄  █▀▀   ▄▀▄▀▄█ █▄█ ▀ █▀▀▀▀▀█    
+        █ ███ █ ▀██   ████  ▄▀ ▀ ▄  ▄▀ ▀█▄▄▀▄█▀█▄   █▀▄▄▀█▄▄▄▀▀█▀▄██▀▄▄▄  █ ███ █    
+        █ ▀▀▀ █ ▀█   ▄ █ ▄ ██ ▄ █▀▀▀█▄ ▀▄▄█▀▄ ▄▄ ▄█ █▀▀▀█ ▀▄█▀ ▄ ▄  ██▄▀▀ █ ▀▀▀ █    
+        ▀▀▀▀▀▀▀ ▀▄█▄▀ █ ▀ █ █▄▀ █ ▀ █▄█ ▀▄█▄▀ ▀ █▄▀ █ ▀ █ █ █ ▀ ▀ █▄▀ █ ▀ ▀▀▀▀▀▀▀    
+        ▀▄ ▀██▀▀██▄██ ▄  █▀▄▄██▄█▀▀██▀ █▄▄▄ ██▀ ██▀█▀█▀▀█▀▀▄█▀▀ ▄▀▀▀█ █▀ █▄▄▀▄██▀    
+           █ ▄▀ ▀█▄▀ █  ▄█ ▀ ▀▄▀▄▄ ▄   ▀ ▄▀██  ▀▄ █▄▀  ▄▄▄▄█▄ ▄ ▄▄ ▀▄█▄   ▀▀▄▄█ ▀    
+        ▄▀▀█ ▀▀▀▀██▄▄▄▄▀▄██▀██▄▀ ▀█ ▀▀  ▀▄▀▄▀█▄▄█▀ ██ ▄ ▄██▄ ▀█▀ ▀▀▄▀██▀▄█▀▄▄▄ ▄▄    
+        ▀▄█▄▀▀▀▀▀▀▀▄▄▀ ▄▄▄▀▄▄▄██ ▄██▀▀▄ ▄ ▄▀█▀▄ █▀▄▄  ▄▀ █▀▄▀▄ █▀█ █ █▀ ▄▀▀▄ ▄▄▀▄    
+        ▀▄▄ ▄▀▀█▄█▀█ ▄███▄  ▀▄▀ ▀█▄█▀▄███ ▄ ▀▀▀▄ ▄█▀▀▄ ▀█ ▀█▀██ ▄▀▄▀▀ ▀ █▀▄██▄▄▀▀    
+        █▄█ ▀ ▀█ ▄█   ▄▀▀▄ ▄▄▄█▄▀  █▀▄█▄█▄▀ █ █ ▀▄█ ▀▄█▄▄█ ▄█▀  ▀▀▄█▀▀ ▀▄▄█ ▄█ █▀    
+        █▄▀▀▄ ▀▄█ ▄▄█▄▄ ▀█▀▄▀█▄ ▄▄▄▀▀▄▄ ▀█▄▀ ██  ▄▄ ▄█  ▀▀██▀ ▀█ ▀ ▄▀▀▀  ▄▄▀ █▄      
+        █ ▀▄  ▀▄ ▀█▄▄ ▄   ████▄▀█▀▀█▄▀▄▀▄██ ▄▄ ▄▀▀▄▀▄██▄██ █   ▄█▄█▀▀█ ▀█ █▄ ▄█▄█    
+        █▀▀ █▀▀▀█▄▄  ▀█▀█▄▄▀ █▄▀█▀▀▀██▄ ▄█ ▄ ▀▄▀▄█▄ █▀▀▀█▄ ██▄▄▀▀█▄█▀█▀▄█▀▀▀██▀██    
+        █▀▄██ ▀ █▄██▄██ ▀▄▄▀▀▀███ ▀ █ ▄▄▄▀   ██▄█▄ ██ ▀ █▄▀█▄▀▄█▀▀ ▄▀ ▄██ ▀ █▄▄██    
+        █ ▀▄██▀██▀ █▄██  ▄█▀ ██▄▀▀▀█▀███  █▀ ▄▀▄ ▄█▀██▀▀██ ██▄▄ ▄▀██▀▀ ▀█▀██▀▀ ▀▄    
+        ▀██▄█▀▀▄▄ ██ ▀  ▄█▄ ▄ ▄▀█▀█▀▄ ▄ ▄▀▄█  ▄▄█  ▄ ▄█▄▄▀ ▀█  █ ▄▄▄▄ ▄█ ██ ▀█▀▄█    
+        ▀▀▄▄▄▀▀  ██ █ ▀▄▀  ▀ ▀▄▄▄▄ ▄▄▄█▄ ▀▄  ██▄█▀▄▄▄█ █▀▄ ▀▀█ ▄█  █ ▄██▄ ▄▄ █       
+         ▀█▄▄ ▀ ▄ ██▄█  ▀ ▀█▀ █▄▀▀▄ ▄▄ ██ █  ▄▄▄▀▀ █ █▄ █ ▄▀▄▄▀█  ▀█▄▀ ██▀▄▄▀▄▄█▄    
+        ▀▀▄█ ▄▀██▄ █▀ ███ ▀▀ █▀▀█ ▄▄ █▄██ ▀▀  ▄▄▀█ ▀▄▀▀█▄▄▄█▀ ▀▀▄ ██▄▄▄█ ▀ ▄█▄▄█▀    
+        ▀▄▄▀▄ ▀█ ▀█ ▄ ▄▀█ ▄▄▀█ █▄  ▀▄▀ █ ██▀ ▄▀▄  ▄▀▀█ █▀ █▀ ▄▄██ █▄ █ ▀▄▄▄███ ▀     
+        ▄ █  █▀█▄▀█▀  ▄▄▀█▀▀▀▀▀██▀██   ▄▀ ▀▄▀█ ▀▄▄██ ▀▄   ▀█▀ ▀██ ▀█ █ █ ▀▄▀▀██▀▄    
+         █▀█▄ ▀▀▀███▄ ▄▄ ███  █ █▄██  ▀▀▀▄ ▄▀▄ ▀█▄▄ ▀█▄▀ ▀█▀▄ █▄▀█▄ ▀▄▀▄   █ ▄█▄▄    
+         ████▀▀▀█▀█▀█▄▄▄█▀▀▀▄▄▄▀█▀▀▀█▄▄█▄▄▀▄█▄▀█▀▀ ▄█▀▀▀█▀ ▄▀▀▀█  █▄▀ █▄█▀▀▀█▀▄ ▀    
+        ▀▄▄ █ ▀ ██▀▀██▄█▀█ █▄▄▀██ ▀ █▀▀█▀▀▀ ▄█▀██▄▄▄█ ▀ █▄▄█▀ ▀▄▄▄█▀▀█▄▄█ ▀ █▄▀▀     
+        ▀ ██▀▀▀▀█▄▀ █▀▄█▀▀▀  ▀██▀█▀█▀▄▀ █ ▄▄█▄█▄▀▄ ▄█▀▀███▀▀▄▀▀ █▀█▄▄█▀███▀▀█▄█▀     
+        █▄▄█▀▀▀▄██▄▄  ▄█▀▄█ ▀▄  ▄ ▀▀▀█▀███ ▄▄▄▀█▄█▀▄▄▀▀  █▀▄▀▄ ▄▄█ █ █▀█  ▀▄▀█ ▀▄    
+        █▀▀█▀▀▀████ ▀▄ ▄ ███▄▀▄▄▄▀  █▀ █▀█▀ █▄▄▄▄▀ ▀█▀▀▄▄ ████▀  ▀ █  ██▀█████▀█▀    
+        ▀▄▄█▄▄▀ ▄▄▀█▀▄█▀ █▀ ▀▄ ███▀ ▄██▀▄▀██▄█▀█ ▀▀ ██▄▀ █ ▀█▀ █▀█▄ ▀█ ▄▀█ ▄ █▀ █    
+        █▄▄ ▀▄▀█▀ ▄▀ █▀▄   ▀███ ▄█ ▀ ▄▄█▄██▄██▄██▄█  █ ▀▄▀▀█ ▀██▀▀▄▄ ▀▀▄▀  ▄ █▄ ▀    
+        █▄   █▀▀▄█▀  ▄▀▀█▄█▄█▄ ▀█▀█ ▀▀▀▄█  █▀▀█▀ ▄▀█▀▄██ ▀▀▀  ▄ █ ██▀▀██▄▀█▀ ██▀▀    
+        ███  ▀▀█▄███ ▄▄ █ ▀ ▄▀█▄▄▄█▄ ▄█ ▀█▀  ▀█▄███▄▀▄   ▀ █▄▄▀▀ ▄▄█ ████ ▀▄ █ █▄    
+        ▀▀ █▄▀▀▄▄▀▀▀    ▀ ▄▀█   ▀▀█ ▄▀▄▄▀ ██ ▄▄▄▀█▀▀▄▄▀ ▀▄██▀▄ █ ▄▀▄▀███▄█▀█▀█▄▀█    
+        ▀   ▀ ▀▀███▀▀ ▄ █ ▀▀▄█▀ █▀▀▀███ ▄█▄ █ ▀ ▀▄█ █▀▀▀█▄ █▄ █ █ ▄█  ▀ █▀▀▀██▀▀▄    
+        █▀▀▀▀▀█ █▄ ▀ ▀▀▀█ █▄▄  ▀█ ▀ ███  ▀▄   ▄█  ▄██ ▀ █▀▄▄▄▄▄▀▀ ▄▀   ▄█ ▀ █▄  █    
+        █ ███ █ █ ▀█▄██ ▄▄ ▀▀▄▀█▀█▀█▀▀  ▀▀▄█▄█▄▄ ▄█▀█▀█▀█▀▀█ ██▄ █ ▀ ▄ ▀▀██▀▀ ▄ ▄    
+        █ ▀▀▀ █  ▀▄▄▄███▄▄▀   ▀█▀▀▄██▄▄   ▀▄▀▄ █▄▄ ▄▀█▀█ ▀▄▄█▄ ██ █▄  ▄ █▀█▀ █▄██    
+        ▀▀▀▀▀▀▀ ▀▀ ▀▀   ▀ ▀   ▀▀▀▀ ▀▀ ▀▀▀▀▀   ▀    ▀▀     ▀   ▀ ▀ ▀   ▀ ▀   ▀   ▀
         """
 # fmt: on
 

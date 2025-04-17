@@ -70,7 +70,7 @@ class VerifyCommands(object):
 
         self.organize = organize
         self.my_descriptors = {
-            ip: Descriptor(d)
+            ip: Descriptor.parse(d)
             for ip, d in json.loads(
                 self.organize.our_latest_descriptors()
             ).items()

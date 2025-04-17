@@ -10,16 +10,16 @@
 
 """
 
-from ipaddress import ip_address
 from logging import Logger, getLogger
-from platform import node
+from platform import node as hostname
 
 import click
 import pydbus
 from gi.repository import GLib
 from zeroconf import NonUniqueNameException, ServiceInfo, Zeroconf
 
-from .constants import _LABEL, _PUBLISH_DBUS_NAME
+from .constants import _LABEL, _PUBLISH_DBUS_NAME, VULA_ULA_SUBNET
+from .peer import Descriptor
 
 
 class Publish(object):
@@ -27,7 +27,7 @@ class Publish(object):
     <node>
       <interface name='local.vula.publish1.Listen'>
         <method name='listen'>
-          <arg type='a{sa{ss}}' name='new_announcements' direction='in'/>
+          <arg type='a{ss}' name='new_announcements' direction='in'/>
         </method>
       </interface>
     </node>
@@ -50,18 +50,24 @@ class Publish(object):
         # Now we add a zeroconf listener for each new IP and ServiceInfo if it
         # is not already existing, else we update the old zc object with the
         # new desc
-        for iface, desc in new_announcements.items():
-            self.log.debug("Starting mDNS service announcement for %r", iface)
-            name: str = node() + "." + _LABEL
+        for iface, desc_string in new_announcements.items():
+            desc = Descriptor.parse(desc_string)
+            listen_IPs = [
+                str(a) for a in desc.all_addrs if a not in VULA_ULA_SUBNET
+            ]
+            self.log.debug(
+                "Starting mDNS service announcement for %r with listen_IPs %r",
+                iface,
+                listen_IPs,
+            )
+            name: str = hostname() + "." + _LABEL
             service_info: ServiceInfo = ServiceInfo(
                 _LABEL,
                 name=name,
-                addresses=[
-                    ip_address(ip).packed for ip in desc['addrs'].split(',')
-                ],
-                port=int(desc['port']),
-                properties=desc,
-                server=desc['hostname'],
+                addresses=listen_IPs,
+                port=desc.port,
+                properties=desc.as_zeroconf_properties,
+                server=desc.hostname,
             )
             zeroconf = self.zeroconfs.get(iface)
             if zeroconf:
@@ -74,7 +80,7 @@ class Publish(object):
                 zeroconf = self.zeroconfs[iface] = Zeroconf(
                     # note that the "interfaces" argument to zeroconf is a list
                     # of IPs
-                    interfaces=desc['addrs'].split(',')
+                    interfaces=listen_IPs
                 )
                 self.log.debug("Registering vula service: %s", service_info)
                 try:

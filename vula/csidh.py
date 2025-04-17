@@ -1,6 +1,7 @@
 """
 *vula* CTIDH interface functions.
 """
+
 from hashlib import sha512
 from typing import ByteString
 

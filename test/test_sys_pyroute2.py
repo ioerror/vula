@@ -19,10 +19,6 @@ class TestSys:
             sys.stop_monitor()
             # HACK to force monitor_thread to run
             time.sleep(0.1)
-
-            mock_organize.log.info.assert_called_once_with(
-                "Stopping netlink monitor thread"
-            )
             mock_ipr.return_value.close.assert_called_once()
 
     def test_monitor_newneigh(self):
@@ -71,4 +67,4 @@ class TestSys:
             sys._monitor()
 
             sys.get_new_system_state.assert_not_called()
-            assert mock_organize.log.info.call_count == 2
+            assert mock_organize.log.info.call_count == 3
