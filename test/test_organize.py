@@ -34,7 +34,6 @@ class TestOrganize(unittest.TestCase):
         ctx = MagicMock()
         push_context(ctx)
         organize = Organize(
-            ctx=ctx,
             keys_file=keys_file.as_posix(),
             state_file=state_file.as_posix(),
             interface=MagicMock(),
