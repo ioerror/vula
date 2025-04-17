@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from unittest.mock import MagicMock, patch
-from click.globals import push_context
+from click.globals import push_context, pop_context
 from highctidh import ctidh
 
 from vula.csidh import ctidh_parameters
@@ -38,6 +38,7 @@ class TestOrganize(unittest.TestCase):
             state_file=state_file.as_posix(),
             interface=MagicMock(),
         )
+        pop_context()
         _ctidh = ctidh(ctidh_parameters)
         private_key_one = _ctidh.generate_secret_key()
         public_key_one = private_key_one.derive_public_key()
