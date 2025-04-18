@@ -972,6 +972,12 @@ class Organize(attrdict):
         ips_to_publish = []
         discover_ips = []
         for iface, ips in self.state.system_state.current_interfaces.items():
+            ips = [
+                ip
+                for ip in ips
+                if any(ip in net for net in self.prefs.subnets_allowed)
+                and not any(ip in net for net in self.prefs.subnets_forbidden)
+            ]
             ips_to_publish.extend(list(map(str, ips)))
             descriptors[iface] = str(
                 self._construct_service_descriptor(ips, vf)

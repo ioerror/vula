@@ -14,14 +14,18 @@ automatically protected in the same manner as IPv4 traffic using RFC1918 IPs.
 
 Default route encryption over v6 is also enabled, but further testing of it is
 required before this branch should be merged. IPv6 link-local and ULA subnets
-are allowed, but other subnets are not allowed by default. IPv6 gateways
-running vula and assigning IPs outside of fc00::/7 and fc00::/7 (eg public IPv6
-space) MUST add their LAN subnets to subnets_allowed (using the `vula prefs`
-command) for vula peers to be able to route through them, so that the router
-will accept the peers' advertized addresses.
+are allowed, but other subnets are not allowed by default.
+
+For vula-enabled IPv6 gateways to be able to assign IPs outside of fc00::/7 and
+fc00::/7 (eg, using public IPv6 space) both gateway and clients must add their
+LAN prefix to subnets_allowed (using the `vula prefs` command).
+
+***
 
 The report below identified eight places in the code which were explicitly
 IPv4-only, all of which have now been fixed.
+
+***
 
 TODO:
 
