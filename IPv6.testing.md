@@ -34,6 +34,16 @@ make test
 The `test` target will run both the unit tests, and integration tests. You can
 also run `make sh` to get a shell in one of the containers.
 
+To run with N containers (instead of the default of `N=2`) you can add N= to
+all of the make targets. The `sh` target also accepts `i=` to  get a shell in
+other containers than the first one:
+
+```
+make clean test N=6
+make run cmd="vula status -v" N=6
+make run sh i=5
+```
+
 ## Testing on a real system with other vula peers on the same LAN
 
 First build all of the vula related packages and the vula package from the root
