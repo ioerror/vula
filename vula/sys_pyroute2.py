@@ -170,7 +170,6 @@ class Sys(object):
             self.log.debug(f"{kind} link {name!r} exists")
             return []
         elif not dryrun:
-            breakpoint()
             self.ipr.link("add", kind=kind, ifname=name)
             self.ipr.link(
                 "set",
@@ -209,9 +208,19 @@ class Sys(object):
             + self.addr_add(
                 self.organize.prefs.primary_ip,
                 _DUMMY_INTERFACE,
-                mask=VULA_ULA_SUBNET.prefixlen,
+                mask=128,
                 dryrun=dryrun,
             )
+# FIXME: this is necessary (but not sufficient) for situations where there
+# could be a different source address (eg other ULAs are present). TODO add
+# correct source on our routes.
+#            + [
+#                self.sync_routes(
+#                    [str(VULA_ULA_SUBNET)],
+#                    table=_LINUX_MAIN_ROUTING_TABLE,
+#                    dryrun=dryrun,
+#                )
+#            ]
         )
 
     def addr_add(self, addr, dev, mask, dryrun=False):
