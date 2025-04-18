@@ -56,6 +56,12 @@ endif
 ifeq ($(dist),noble)
 	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=24.04
 endif
+ifeq ($(dist),oracular)
+	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=24.10
+endif
+ifeq ($(dist),plucky)
+	build_args=--build-arg DISTRO=ubuntu --build-arg VERSION=25.04
+endif
 ifeq ($(dist),bullseye)
 	build_args=--build-arg DISTRO=debian --build-arg VERSION=bullseye
 endif
@@ -67,6 +73,12 @@ systemd_path=/bin/systemd
 bin_sh=bash
 pkgmgr=dpkg
 
+ifeq ($(dist),oracular)
+    systemd_path=/lib/systemd/systemd
+endif
+ifeq ($(dist),plucky)
+    systemd_path=/lib/systemd/systemd
+endif
 ifeq ($(dist),fedora34)
 	installed_image_stamp=.rpm-install-$(dist)-stamp
 	systemd_path=/usr/sbin/init
@@ -88,7 +100,7 @@ else
     installed_image_stamp=.editable-$(dist)-image-stamp
 endif
 
-.deps-bullseye-stamp .deps-bookworm-stamp .deps-focal-stamp .deps-jammy-stamp .deps-mantic-stamp .deps-noble-stamp: # Dockerfile.vula-deps ../misc/install-highctidh.sh ../misc/install-debian-deps.sh
+.deps-bullseye-stamp .deps-bookworm-stamp .deps-focal-stamp .deps-jammy-stamp .deps-mantic-stamp .deps-noble-stamp .deps-oracular-stamp .deps-plucky-stamp: # Dockerfile.vula-deps ../misc/install-highctidh.sh ../misc/install-debian-deps.sh
 	cd .. && podman build -t vula-deps-$(dist) -f podman/Dockerfile.vula-deps $(build_args) .
 	touch .deps-$(dist)-stamp
 
