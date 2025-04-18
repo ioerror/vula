@@ -19,8 +19,8 @@ The dependencies required for running a podman test network on Ubuntu 24.10 are
 simply:
 
 ```
-apt update
-apt install -y make podman uidmap
+sudo apt update
+sudo apt install -y make podman uidmap
 ```
 
 The test network is driven by a Makefile in the podman directory. To start a
