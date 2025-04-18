@@ -54,3 +54,10 @@ sudo dpkg -i dist/python3-vula_0.2.2025040600-1_all.deb
 
 Once vula is installed, you can check its status using the `vula status`
 command, and see a list of peers using `vula peer`.
+
+TODO:
+
+* test ipv4 default route encryption encryption
+* test ipv6 default route encryption encryption
+* public addresses
+* test v6-only client and gateway with public addresses
