@@ -741,7 +741,8 @@ class PeerCommands(object):
             else:
                 res.append(self.organize.show_peer(query))
 
-        echo_maybepager(("\n" if descriptor else "\n\n").join(res))
+        if output:=("\n" if descriptor else "\n\n").join(res):
+            echo_maybepager(output)
 
     @DualUse.method(short_help="Import peer descriptors", name='import')
     @click.argument('file', type=click.File(), default='-')
