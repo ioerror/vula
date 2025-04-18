@@ -8,6 +8,7 @@ from ipaddress import ip_network
 _LOG_FMT: str = "%(asctime)s: %(message)s"
 _DATE_FMT: str = "%Y-%m-%d-%H:%M:%S"
 _WG_INTERFACE: str = "vula"
+_DUMMY_INTERFACE: str = "vula-net"
 
 VULA_ULA_SUBNET: str = ip_network("fdff:ffff:ffdf::/48")
 
@@ -55,6 +56,9 @@ _DISCOVER_ALT_DBUS_PATH: str = "/local/vula/discoveralt"
 _PUBLISH_ALT_DBUS_PATH: str = "/local/vula/publishalt"
 
 _LINUX_MAIN_ROUTING_TABLE = 254
+
+# from linux/include/uapi/linux/if_link.h
+_IN6_ADDR_GEN_MODE_NONE = 1
 
 IPv4_GW_ROUTES = ('0.0.0.0/1', '128.0.0.0/1')
 IPv6_GW_ROUTES = ('::/1', '8000::/1')

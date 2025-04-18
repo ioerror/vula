@@ -6,8 +6,9 @@ from pyroute2 import IPRoute, IPRSocket
 
 from .constants import (
     _LINUX_MAIN_ROUTING_TABLE,
+    _IN6_ADDR_GEN_MODE_NONE,
     GW_ROUTES,
-    _WG_INTERFACE,
+    _DUMMY_INTERFACE,
     VULA_ULA_SUBNET,
 )
 from .wg import Interface as WgInterface
@@ -140,7 +141,6 @@ class Sys(object):
                 [
                     iface.startswith(prefix)
                     for prefix in self.organize.prefs.iface_prefix_allowed
-                    + [_WG_INTERFACE]
                 ]
             ):
                 continue
@@ -159,17 +159,59 @@ class Sys(object):
     def get_new_system_state(self, reason=None):
         return self.organize.get_new_system_state(reason)
 
-    def sync_interface(self, dryrun=False):
-        return self.wgi.sync_interface(
-            private_key=str(self.organize._keys.wg_Curve25519_sec_key),
-            listen_port=self.organize.port,
-            fwmark=self.organize.fwmark,
-            dryrun=dryrun,
-        ) + self.addr_add(
-            self.organize.prefs.primary_ip,
-            'lo',
-            mask=VULA_ULA_SUBNET.prefixlen,
-            dryrun=dryrun,
+    def link_add(self, name, kind, dryrun=False):
+        existing = self.ipr.get_links(ifname=name)
+        if existing and (
+            dict(existing[0].get_attr('IFLA_LINKINFO')['attrs'])[
+                'IFLA_INFO_KIND'
+            ]
+            == kind
+        ):
+            self.log.debug(f"{kind} link {name!r} exists")
+            return []
+        elif not dryrun:
+            breakpoint()
+            self.ipr.link("add", kind=kind, ifname=name)
+            self.ipr.link(
+                "set",
+                ifname=name,
+                IFLA_AF_SPEC={
+                    "attrs": [
+                        (
+                            'AF_INET6',
+                            {
+                                "attrs": [
+                                    (
+                                        'IFLA_INET6_ADDR_GEN_MODE',
+                                        _IN6_ADDR_GEN_MODE_NONE,
+                                    )
+                                ]
+                            },
+                        )
+                    ]
+                },
+            )
+            self.ipr.link("set", ifname=name, state='up')
+        return [
+            f"ip link add name {name} type {kind}",
+            "ip link set dev {name} addrgenmode none",
+        ]
+
+    def sync_interfaces(self, dryrun=False):
+        return (
+            self.wgi.sync_interface(
+                private_key=str(self.organize._keys.wg_Curve25519_sec_key),
+                listen_port=self.organize.port,
+                fwmark=self.organize.fwmark,
+                dryrun=dryrun,
+            )
+            + self.link_add(_DUMMY_INTERFACE, kind="dummy")
+            + self.addr_add(
+                self.organize.prefs.primary_ip,
+                _DUMMY_INTERFACE,
+                mask=VULA_ULA_SUBNET.prefixlen,
+                dryrun=dryrun,
+            )
         )
 
     def addr_add(self, addr, dev, mask, dryrun=False):

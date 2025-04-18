@@ -837,7 +837,7 @@ class Organize(attrdict):
         Sync system to the desired organized state.
         """
         res = []
-        res += self.sys.sync_interface(dryrun=dryrun)
+        res += self.sys.sync_interfaces(dryrun=dryrun)
         res += self.sys.sync_iprules(dryrun=dryrun)
         for peer in self.peers.values():
             self.log.debug("syncing peer %s", peer.name_and_id)
