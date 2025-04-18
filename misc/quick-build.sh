@@ -3,6 +3,13 @@
 set -e;
 
 sudo apt update;
+
+sudo DEBIAN_FRONTEND=noninteractive apt install -y libgcc-s1 libstdc++6 python3 python3-click \
+  python3-cryptography python3-hkdf python3-nacl python3-pillow \
+  python3-pyaudio python3-pydbus python3-pyroute2 python3-pystray \
+  python3-qrcode python3-schema python3-tk python3-yaml \
+  python3-zeroconf
+
 sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
   build-essential ca-certificates clang coreutils debhelper dh-python dpkg-dev \
   fakeroot flit gcc git gnome-shell-extension-appindicator make python3 \
