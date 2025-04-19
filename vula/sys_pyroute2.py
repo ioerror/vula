@@ -213,16 +213,6 @@ class Sys(object):
                 mask=128,
                 dryrun=dryrun,
             )
-            # FIXME: this is necessary (but not sufficient) for situations
-            # where there could be a different source address (eg other ULAs
-            # are present). TODO add correct source on our routes.
-            #            + [
-            #                self.sync_routes(
-            #                    [str(_VULA_ULA_SUBNET)],
-            #                    table=_LINUX_MAIN_ROUTING_TABLE,
-            #                    dryrun=dryrun,
-            #                )
-            #            ]
         )
 
     def addr_add(self, addr, dev, mask, dryrun=False):
