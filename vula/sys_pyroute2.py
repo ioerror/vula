@@ -8,7 +8,7 @@ from .constants import (
     _LINUX_MAIN_ROUTING_TABLE,
     _IN6_ADDR_GEN_MODE_NONE,
     _DUMMY_INTERFACE,
-    #    _VULA_ULA_SUBNET,
+    _VULA_ULA_SUBNET,
     _GW_ROUTES,
 )
 from .wg import Interface as WgInterface
@@ -153,6 +153,8 @@ class Sys(object):
             ):
                 current_subnets.setdefault(this_subnet, []).append(addr)
                 current_interfaces.setdefault(iface, []).append(addr)
+
+        current_subnets[_VULA_ULA_SUBNET] = [self.organize.prefs.primary_ip]
 
         return current_subnets, current_interfaces, gateways, has_v6
 

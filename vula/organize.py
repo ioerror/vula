@@ -135,6 +135,14 @@ class SystemState(schemattrdict):
             ip for subnet in self.current_subnets.values() for ip in subnet
         ]
 
+    @property
+    def current_subnets_no_ULA(self):
+        return {
+            k: v
+            for k, v in self.current_subnets.items()
+            if k != _VULA_ULA_SUBNET
+        }
+
 
 class OrganizeState(Engine, yamlrepr_hl):
     schema = Schema(
@@ -310,12 +318,12 @@ class OrganizeState(Engine, yamlrepr_hl):
             return self.action_IGNORE(descriptor, "replay")
 
         if not addrs_in_subnets(
-            descriptor.all_addrs, self.system_state.current_subnets
+            descriptor.all_addrs, set(self.system_state.current_subnets_no_ULA)
         ):
             return self.action_REJECT(
                 descriptor,
                 "no addresses local to us; our current subnets are %r"
-                % (self.system_state.current_subnets,),
+                % (self.system_state.current_subnets_no_ULA,),
             )
 
         if not any(
@@ -370,7 +378,7 @@ class OrganizeState(Engine, yamlrepr_hl):
             desc = peer.descriptor
         if system_state is None:
             system_state = self.system_state
-        subnets = list(system_state.current_subnets) + [_VULA_ULA_SUBNET]
+        subnets = list(system_state.current_subnets_no_ULA)
         if peer.pinned:
             v4 = {i: True for i in desc.IPv4addrs + list(peer.IPv4addrs)}
             v6 = {i: True for i in desc.IPv6addrs + list(peer.IPv6addrs)}
@@ -397,8 +405,11 @@ class OrganizeState(Engine, yamlrepr_hl):
             )
         ips = dict(v4)
         ips.update(v6)
-        if not any(v for i, v in ips.items() if i not in _VULA_ULA_SUBNET):
-            self.action_REMOVE_PEER(peer)
+        if not any(ips.values()):
+            self.info_log(
+                f"Removing {peer.name_and_id!r} because it has no currently-local IPs"
+            )
+            return self.action_REMOVE_PEER(peer)
 
         if desc.hostname not in peer.nicknames and any(
             desc.hostname.endswith(domain)
@@ -409,7 +420,7 @@ class OrganizeState(Engine, yamlrepr_hl):
         if set(
             a
             for a in desc.all_addrs
-            if any(a in s for s in system_state.current_subnets)
+            if any(a in s for s in system_state.current_subnets_no_ULA)
         ) & set(self.system_state.gateways):
             # BUG: this will fail (new peer won't be accepted) if the new peer
             # has a gateway IP and there is already another gateway. it fails
