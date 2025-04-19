@@ -33,11 +33,11 @@ make test
 
 The `test` target will run both the unit tests and integration tests. You can
 also run `make sh` to get a shell in one of the containers, and when you're
-done `make stop` to stop them and `make clean-all` to remove the images.
+done `make stop` to stop them and `make clean-all` to remove the podman images
+it creates.
 
 To run with N containers (instead of the default of `N=2`) you can add `N=` to
-all of the make targets.
-
+all of the make targets which involve multiple containers.
 
 ```
 $ make N=5 clean test
@@ -55,9 +55,9 @@ $ make run cmd="vula status -v" N=1
 [ active ] vula-bookworm-test1.local.'s vula ULA is fdff:ffff:ffdf:5a51:f134:b2e9:8baf:d952
 ```
 ```
-$ make run cmd="vula --no-pager peer" N=1|cat
-# running "vula --no-pager peer" on 1 hosts
-# podman exec -it vula-bookworm-test1 vula --no-pager peer
+$ make run cmd="vula peer" N=1
+# running "vula peer" on 1 hosts
+# podman exec -it vula-bookworm-test1 vula peer
 peer: vula-bookworm-test2.local.
   id: XXto6t0g0HufO2ZdiMZT8l3W9Y57kKpBE9nj0bEB1E8=
   status: enabled unpinned unverified
@@ -114,7 +114,13 @@ make sh i=2
 ```
 To observe the vula state engine in action, you can run `watch -n 1 vula peer`
 in one container while you add and remove IPs from your ethernet interface with
-the `ip` command in the other container.
+the `ip` command in the other container with commands like these:
+
+```
+ip addr add dev eth0 fdff:1234::5678/128
+ip addr del dev eth0 fdff:1234::5678/128
+```
+
 
 ## Testing on a real system with other vula peers on the same LAN
 
@@ -167,12 +173,19 @@ peer: vula-bookworm-test2.local.
 
 Applications which use glibc to resolve peer names ending with the suffix
 `local.` will receive peer's vula-generated IPv6 addresses in our
-fdff:ffff:fffd:://48 block. You can query nssswitch's host resolution manually
-to confirm vula IPs are being provided from it:
+fdff:ffff:fffd::/48 block via our libnss plugin without using DNS.
 
+You can query nssswitch's host resolution manually to confirm vula IPs are
+being provided from it:
 ```
-# getent hosts vula-bookworm-test2.local.
-fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa vula-bookworm-test2.local.
+root@vula-bookworm-test1:~/vula# getent ahostsv6 vula-bookworm-test2.local.
+fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa STREAM vula-bookworm-test2.local.
+fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa DGRAM
+fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa RAW
+root@vula-bookworm-test1:~/vula# getent ahostsv4 vula-bookworm-test2.local.
+10.89.0.3       STREAM vula-bookworm-test2.local.
+10.89.0.3       DGRAM
+10.89.0.3       RAW
 ```
 
 You can confirm connectivity using these addresses using the ping command:
@@ -220,22 +233,18 @@ fd54:f27a:17c1:3a61::3 from :: dev vula table 666 proto static src fd54:f27a:17c
 
 ## Testing default route encryption
 
-If a vula peer's current default route for IPv4 or IPv6 is via the configured
-IP of a vula peer, it will automatically route all internet traffic to that
-peer over vula. If the router is configured to announce its own ULA suffix, and
-performs NAT or NPTv6 from these IPs to the internet, vula default gateway
-encryption will work automatically.
+If a vula peer's current default route for IPv4 or IPv6 is via a configured IP
+of a vula peer, it will automatically route all internet traffic via that
+peer over its vula interface. If the vula-enabled gateway is performing IPv4
+NAT with RFC1918 addresses, and/or if it is configured to announce its own ULA
+suffix, and performs NAT66 or NPTv6 from these IPs to the internet, vula's
+default gateway encryption will work automatically.
 
 However, if the network is configured to use public IP addresses, vula will, by
 default, not accept these IPs. As a result, IPv6 connectivity will currently be
 non-functional when the router is running vula unless the clients and router
 are manually configured to have its prefix added to their `subnets_allowed`
-preference. We will soon improve this so that (unprotected) connectivity is not
-impaired in the case that a client is not configured to allow a vula-enabled
-IPv6 router's prefix.
-
-This document does not (yet) contain instructions for configuring an IPv6
-router with ULA addresses.
+preference.
 
 For the purpose of testing default gateway encryption with public addresses,
 one can use an Ubuntu 24.10 computer with ethernet and wifi, where the ethernet
