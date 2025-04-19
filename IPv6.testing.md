@@ -79,11 +79,11 @@ command, and see a list of peers using `vula peer`.
 
 ## Testing default route encryption
 
-If a vula peer's current default route is via the configured IP of a vula peer,
-it will automatically route all internet traffic to it over vula. If the router
-is configured to announce its own ULA suffix, and performs NAT or NPTv6 from
-these IPs to the internet, vula default gateway encryption will work
-automatically.
+If a vula peer's current default route for IPv4 or IPv6 is via the configured
+IP of a vula peer, it will automatically route all internet traffic to that
+peer over vula. If the router is configured to announce its own ULA suffix, and
+performs NAT or NPTv6 from these IPs to the internet, vula default gateway
+encryption will work automatically.
 
 However, if the network is configured to use public IP addresses, vula will, by
 default, not accept these IPs. As a result, IPv6 connectivity will currently be
@@ -93,49 +93,43 @@ preference. We will soon improve this so that unprotected connectivity is not
 impaired in the case that a client is not configured to allow a vula-enabled
 IPv6 router's prefix.
 
-To test default encryption using public IP addresses, the command to run on
-both the gateway and client(s) is:
-
-```
-vula prefs add subnets_allowed 2001:db8::/64
-```
+This document does not (yet) contain instructions for configuring an IPv6
+router with ULA addresses.
 
 For the purpose of testing default gateway encryption with public addresses,
 one can use an Ubuntu 24.10 computer with ethernet and wifi, where the ethernet
 is connected to a gateway that offers prefix delegation (via the DHCPv6 `IA_PD`
 option). Ubuntu's "network connection sharing" feature will create an IPv4-only
 router by default; the steps to get it to become an IPv6 router (and request a
-prefix from its upstream router, and announce it on its wifi interface) is
-this:
+prefix from its upstream router, and announce it on its wifi interface) are as
+follows:
 
 1. Configure internet sharing from ethernet to wifi using the "create hotspot"
 button under Settings -> Wi-Fi.
 
 2. Stop the hotspot
 
-3. Locate the netplan YAML file where the Network Manager configuration is stored:
-```
-grep -rl access-points /etc/netplan/
-```
+3. Run `grep -rl access-points /etc/netplan/` to locate the netplan YAML file
+where the Network Manager hotspot configuration is stored.
 
 4. Edit this file to add `ipv6.method: "shared"` to the `passthrough` section
-underneath `networkmanager` under `access-points`.
+underneath `networkmanager` under `access-points`. (This change causes Network
+Manager to request a prefix delegation via DHCPv6 from its other interface,
+from which it will announce addresses on the hotspot.)
 
 5. Re-enable the hotspot, and confirm that other computers can connect through
 it using the public IPv6 addresses it is announcing.
 
-In this configuration, if the router is also running vula, vula-enabled clients
-will use it as their default route for both v4 and v6 but will not be able to
-get online because vula's default `subnets_allowed` prevents the public IPs
-from being added to the `allowsed-ips` list. To enable this, first determine
-the prefix the addresses are in using `ip -6 route`. Add this prefix to vula
-using the command `vula prefs add subnets_allowed` on both the gateway and
-client device.
+In this configuration, if the Ubuntu hotspot is also running vula, vula-enabled
+clients will use it as their default route for both v4 and v6 *but* they will
+not be able to actually get online because vula's default `subnets_allowed`
+prevents the public IPs from being added to the `allowsed-ips` list. To enable
+connectivity using public addresses, determine the prefix the addresses are in
+using `ip -6 route` and then add this prefix to vula using the command
+`vula prefs add subnets_allowed` on both the gateway and client device. IPv6
+connectivity should then be restored, with all internet-bound traffic routed
+over the vula device.
 
-At this point, IPv6 connectivity should be restored. You can confirm that your
-packets are going over vula using `ip route get`, `tcpdump`, etc.
-
-TODO for these instructions:
-
-* describe how to configure a gateway using ULAs, which vula can use automatically
-* test v6-only client and gateway with public addresses
+When using a vula peer with a vula-enabled router, you can verify that your
+traffic is being sent via vula by using the `ip route get` and `tcpdump`
+commands.
