@@ -461,7 +461,8 @@ class Interface(attrdict, yamlrepr_hl):
                         else ''
                     ),
                     args="".join(
-                        f"{k} {'<redacted psk>' if k == 'preshared_key' else v} "
+                        f"{k}"
+                        f" {'<redacted psk>' if k == 'preshared_key' else v} "
                         for k, v in new.items()
                         if k in ('persistent_keepalive', 'preshared_key')
                     ),

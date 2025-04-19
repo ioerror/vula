@@ -407,7 +407,8 @@ class OrganizeState(Engine, yamlrepr_hl):
         ips.update(v6)
         if not any(ips.values()):
             self.info_log(
-                f"Removing {peer.name_and_id!r} because it has no currently-local IPs"
+                f"Removing {peer.name_and_id!r} because it has "
+                "no currently-local IPs"
             )
             return self.action_REMOVE_PEER(peer)
 
