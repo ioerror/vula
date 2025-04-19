@@ -413,6 +413,8 @@ class Interface(attrdict, yamlrepr_hl):
                         "# {key} is {cur}; should be {new}".format(
                             key=key, cur=cur.get(key), new=new[key]
                         )
+                        if key != 'preshared_key'
+                        else f'# {key} (redacted) is incorrect'
                     )
             # workaround for pyroute2 irritatingly handling endpoint addr
             # and port separately (while they actually need to be set
@@ -459,7 +461,8 @@ class Interface(attrdict, yamlrepr_hl):
                         else ''
                     ),
                     args="".join(
-                        "%s %s " % (k, v)
+                        "%s %s "
+                        % (k, '<redacted psk>' if k == 'preshared_key' else v)
                         for k, v in new.items()
                         if k in ('persistent_keepalive', 'preshared_key')
                     ),
