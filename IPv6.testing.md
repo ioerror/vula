@@ -117,10 +117,14 @@ in one container while you add and remove IPs from your ethernet interface with
 the `ip` command in the other container with commands like these:
 
 ```
-ip addr add dev eth0 fdff:1234::5678/128
-ip addr del dev eth0 fdff:1234::5678/128
+ip addr add dev eth0 fd54:f27a:17c1:3a61::2
+ip addr del dev eth0 fd54:f27a:17c1:3a61::2
 ```
 
+As you remove and re-add the podman-assigned ULA from one container, you can
+see in the other container running `watch -n 1 vula peer` that the peer's
+allowed IPs are changing to reflect its new descriptors it is publishing after
+each change.
 
 ## Testing on a real system with other vula peers on the same LAN
 
@@ -222,9 +226,9 @@ root@vula-bookworm-test1:~/vula# ip route get fdff:ffff:ffdf:2428:7c68:40e8:c2ad
 fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa from :: dev vula table 666 proto static src fdff:ffff:ffdf:e3bf:2e05:d70f:d2f7:1fde metric 1024 pref medium
 ```
 
-In the example above, there are also existing ULAs (assigned by podman, in this
-case). You can confirm that traffic between these IPs is also protected by
-vula:
+In the example above, there are also existing ULAs (RFC 4193 Unique Local
+Addresses) which have been assigned by podman. You can confirm that traffic
+between these IPs is also protected by vula:
 ```
 root@vula-bookworm-test1:~/vula# ip route get fd54:f27a:17c1:3a61::3
 fd54:f27a:17c1:3a61::3 from :: dev vula table 666 proto static src fd54:f27a:17c1:3a61::2 metric 1024 pref medium
