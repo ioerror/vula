@@ -35,14 +35,27 @@ The `test` target will run both the unit tests, and integration tests. You can
 also run `make sh` to get a shell in one of the containers.
 
 To run with N containers (instead of the default of `N=2`) you can add N= to
-all of the make targets. The `sh` target also accepts `i=` to  get a shell in
-other containers than the first one:
+all of the make targets.
+
 
 ```
 make clean test N=6
 make run cmd="vula status -v" N=6
-make run sh i=5
 ```
+
+The `sh` target also accepts `i=` to  get a shell in other containers than the
+first one. You can start a shell in two containers:
+```
+make run sh
+```
+(in another window)
+```
+make run sh i=2
+```
+
+To observe the vula state engine in action, you can run `watch -n 1 vula peer`
+in one while you add and remove IPs from your ethernet interface with the `ip`
+command in the other container.
 
 ## Testing on a real system with other vula peers on the same LAN
 
