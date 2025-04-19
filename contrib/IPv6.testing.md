@@ -237,18 +237,110 @@ fd54:f27a:17c1:3a61::3 from :: dev vula table 666 proto static src fd54:f27a:17c
 
 ## Testing default route encryption
 
-If a vula peer's current default route for IPv4 or IPv6 is via a configured IP
-of a vula peer, it will automatically route all internet traffic via that
-peer over its vula interface. If the vula-enabled gateway is performing IPv4
-NAT with RFC1918 addresses, and/or if it is configured to announce its own ULA
-suffix, and performs NAT66 or NPTv6 from these IPs to the internet, vula's
-default gateway encryption will work automatically.
+The original vula IPv4 default route encryption continues to work and the
+`ipv6` branch enhancements bring a similar IPv6 default route encryption
+enhancement to vula.
 
-However, if the network is configured to use public IP addresses, vula will, by
-default, not accept these IPs. As a result, IPv6 connectivity will currently be
-non-functional when the router is running vula unless the clients and router
-are manually configured to have its prefix added to their `subnets_allowed`
-preference.
+If a vula peer's current default route for IPv4 is through an IPv4 IP of a vula
+peer, it will automatically route all internet IPv4 traffic via that peer over
+its vula interface. If the vula peer acting as a gateway is performing IPv4 NAT
+for vula peers on the local-area network for vula peers with RFC1918 or IPv4
+link-local addresses, vula's default gateway encryption will work
+automatically.
+
+If a vula peer's current default route for IPv6 is through an IPv6 IP of a vula
+peer, it will automatically route all internet IPv6 traffic via that peer over
+its vula interface. If the vula peer acting as a gateway is configured to
+announce its own ULA suffix, and the vula peer acting as a gateway performs
+NPTv6 from these IPs to the internet, vula's default gateway encryption will
+work automatically. It is additionally possible with only one IPv6 address on
+the vula peer acting as a gateway to use IPv6 NAT66 though NPTv6 is generally
+considered the prefered method of internet sharing with IPv6.
+
+With a properly configured IPv6 enabled Ubuntu 24.10 system, a gateway should
+have at least one public IPv6 address or ideally an IPv6 prefix that is large
+enough to perform NPTv6 on all of the hosts on the local-area network.
+Configuring a full Ubuntu 24.10 system as an IPv4/IPv6 router with upstream
+public IPv6 addresses and downstream ULA prefix advertisements is out of scope
+for this document. As an example, the vula peer acting as a gateway for a
+local-area network of vula peers announces the ULA of `fdfd:deed:dfdf::/64` on
+its `internal` interface and it has one or more public IPs on its `external`
+interface.
+
+One vula peer may act as a gateway for both IPv4 and IPv6.
+
+### Default route encryption using network assigned ULAs
+
+When vula is present on a network that announces ULAs within the `fc00::/7`
+IPv6 address space and performs NAT66 or NPTv6 works automatically
+
+As an example we show the `vula peer` command listing current peers and if a
+vula peer is acting as your gateway, the status line for the peer will include
+the string `gateway`. Showing the example of ```vula peer|grep -A 7 -B 2
+gateway```:
+```
+peer: apu4d4.local.
+  id: Yr1NcQZpSe+JY2b9+/4BM5b6X6/yN4JzTnmUnxUDhCw=
+  status: enabled unpinned unverified gateway
+  endpoint: [fe80::20d:b9ff:fe59:e570]:5354
+  primary ip: fdff:ffff:ffdf:7e3d:113c:6d4e:812a:9ec7
+  allowed ips: fdff:ffff:ffdf:7e3d:113c:6d4e:812a:9ec7/128, fdfd:deed:df00:0:20d:b9ff:fe59:e570/128, 192.168.2.1/32, 0.0.0.0/0, ::/0
+  latest signature: 5:23:36 ago
+  latest handshake: 0:00:33 ago
+  transfer: 5.42 GiB received, 3.18 GiB sent
+  wg pubkey: 56BndBP+S8owAw9Rgmt5GcoM08Sl0fbmYrtZ+t+r0Ew=
+```
+
+Checking the route of a public IPv4 address will show that it is routed through
+the `vula` device:
+```
+ip route get 62.176.231.184
+62.176.231.184 dev vula src 192.168.2.24 uid 1001 
+```
+
+For informational purposes, we provide an ip6tables NAT66 example with ethernet
+interfaces `internal` and `external`:
+```
+# Outbound (LAN -> Internet): map ULA -> public address
+ip6tables -t nat -A POSTROUTING -o external -j MASQUERADE
+# Inbound (Internet -> LAN): map public -> ULA
+ip6tables -A FORWARD -i external -o internal -m state --state RELATED,ESTABLISHED -j ACCEPT
+ip6tables -A FORWARD -i internal -o external -j ACCEPT
+```
+
+For informational purposes, we also provide an ip6tables NPTv6 example with
+ethernet interfaces `internal` and `external` to translate between ULA prefix
+`fdfd:deed:dfdf::/64` and an example public IPv6:
+```
+# Outbound (LAN -> Internet): map ULA -> public prefix
+ip6tables -t nat -A POSTROUTING \
+  -s fdfd:deed:dfdf::/64 \
+  -o external \
+  -j NETMAP --to 2001:db8::/64
+
+# Inbound (Internet -> LAN): map public prefix -> ULA
+ip6tables -t nat -A PREROUTING \
+  -d 2001:db8::/64 \
+  -i external \
+  -j NETMAP --to fdfd:deed:dfdf::/64
+```
+
+Additional `ip6tables` or `nft` policy rules are certainly required for
+firewalling and other forwarding configuration.
+
+# Experimental IPv6 addresses
+
+The vula project does not encourage using IPv4 public addresses or IPv6 public
+addresses directly, without NPTv6 or NAT66, as signifigant design and security
+analysis remains.  Using public IPv6 (or IPv4) addresses may be unsafe in ways
+that we have not specified. This is a footgun that we have included for risk
+taking experimenters who wish to provide us feedback in the future design of
+such a possible feature enhancemnet.
+
+IPv6 public address connectivity requires that a vula peer acting as a gateway
+manually be configured with public IPv6 address prefixes. The vula peers using
+the vula peer acting as a gateway must be manually configured to have the same
+public IPv6 prefix added to their `subnets_allowed` preference.
 
 For the purpose of testing default gateway encryption with public addresses,
 one can use an Ubuntu 24.10 computer with ethernet and wifi, where the ethernet
