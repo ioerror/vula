@@ -31,34 +31,94 @@ cd podman
 make test
 ```
 
-The `test` target will run both the unit tests, and integration tests. You can
-also run `make sh` to get a shell in one of the containers.
+The `test` target will run both the unit tests and integration tests. You can
+also run `make sh` to get a shell in one of the containers, and when you're
+done `make stop` to stop them and `make clean-all` to remove the images.
 
-To run with N containers (instead of the default of `N=2`) you can add N= to
+To run with N containers (instead of the default of `N=2`) you can add `N=` to
 all of the make targets.
 
 
 ```
-make clean test N=6
-make run cmd="vula status -v" N=6
+$ make N=5 clean test
+```
+```
+$ make run cmd="vula status -v" N=1
+# running "vula status -v" on 1 hosts
+# podman exec -it vula-bookworm-test1 vula status -v
+[ active ] vula-publish.service                (0:00:38)
+[ active ] vula-discover.service               (0:00:42)
+[ active ] vula-organize.service               (0:00:46)
+[ active ] local.vula.organize dbus service (running repair --dry-run)
+[ active ] Publishing on eth0: fe80::c69:f9ff:fe4b:e0b9, fd54:f27a:17c1:3a61::2, 10.89.0.2
+[ active ] 4 enabled peers correctly configured; 0 disabled
+[ active ] vula-bookworm-test1.local.'s vula ULA is fdff:ffff:ffdf:5a51:f134:b2e9:8baf:d952
+```
+```
+$ make run cmd="vula --no-pager peer" N=1|cat
+# running "vula --no-pager peer" on 1 hosts
+# podman exec -it vula-bookworm-test1 vula --no-pager peer
+peer: vula-bookworm-test2.local.
+  id: XXto6t0g0HufO2ZdiMZT8l3W9Y57kKpBE9nj0bEB1E8=
+  status: enabled unpinned unverified
+  endpoint: [fe80::7cf3:92ff:fe58:53de]:5354
+  primary ip: fdff:ffff:ffdf:dda:efda:c76b:7f12:2735
+  allowed ips: fdff:ffff:ffdf:dda:efda:c76b:7f12:2735/128, fd54:f27a:17c1:3a61::3/128, 10.89.0.3/32
+  latest signature: 0:01:32 ago
+  latest handshake: 0:01:11 ago
+  transfer: 236 B received, 324 B sent
+  wg pubkey: l7gw8UzhoYx9u0sWkGtXRgLP766+tcsox3YENbQ/83k=
+
+peer: vula-bookworm-test3.local.
+  id: BCeZ0pMpJpSlv1xl3Pd2MaMI1zHEIcAE9rmLoXQ6C9Y=
+  status: enabled unpinned unverified
+  endpoint: [fe80::54e3:4ff:fe15:66ca]:5354
+  primary ip: fdff:ffff:ffdf:e502:f69d:d711:2d98:f672
+  allowed ips: fdff:ffff:ffdf:e502:f69d:d711:2d98:f672/128, fd54:f27a:17c1:3a61::4/128, 10.89.0.4/32
+  latest signature: 0:01:30 ago
+  latest handshake: 0:01:11 ago
+  transfer: 236 B received, 324 B sent
+  wg pubkey: 0FsmcIMCld+auN/u0WvA8kumJItSXi+Ia1gklTZNHTM=
+
+peer: vula-bookworm-test4.local.
+  id: kJhdm4CXaXK3pZAKlMaxlb8OQdBW+1upnbtLSr9dQdM=
+  status: enabled unpinned unverified
+  endpoint: [fe80::d49a:1fff:fe65:a00e]:5354
+  primary ip: fdff:ffff:ffdf:397d:5b16:7625:4db5:20
+  allowed ips: fdff:ffff:ffdf:397d:5b16:7625:4db5:20/128, fd54:f27a:17c1:3a61::5/128, 10.89.0.5/32
+  latest signature: 0:01:30 ago
+  latest handshake: 0:01:10 ago
+  transfer: 236 B received, 324 B sent
+  wg pubkey: SU5AcYfCL5na9ZT3O7Skh8kuJwg9fs+KNvcJDDQvtDg=
+
+peer: vula-bookworm-test5.local.
+  id: C+QctiYllHgwT2HWZgmqK017GnbyM1HlGiD2strJNBY=
+  status: enabled unpinned unverified
+  endpoint: [fe80::98b1:a5ff:fe56:179e]:5354
+  primary ip: fdff:ffff:ffdf:3ddb:6dec:e966:7238:ac02
+  allowed ips: fdff:ffff:ffdf:3ddb:6dec:e966:7238:ac02/128, fd54:f27a:17c1:3a61::6/128, 10.89.0.6/32
+  latest signature: 0:01:28 ago
+  latest handshake: 0:01:10 ago
+  transfer: 236 B received, 324 B sent
+  wg pubkey: f/UwEfPfLBVYUvsOfEXB0NUOUGLshPSSthCo16Gk+iU=
 ```
 
-The `sh` target also accepts `i=` to  get a shell in other containers than the
+The `sh` target also accepts `i=` to  get a shell in containers other than the
 first one. You can start a shell in two containers:
 ```
-make run sh
+make sh
 ```
 (in another window)
 ```
-make run sh i=2
+make sh i=2
 ```
 To observe the vula state engine in action, you can run `watch -n 1 vula peer`
-in one while you add and remove IPs from your ethernet interface with the `ip`
-command in the other container.
+in one container while you add and remove IPs from your ethernet interface with
+the `ip` command in the other container.
 
 ## Testing on a real system with other vula peers on the same LAN
 
-First build all of the vula related packages and the vula package from the root
+First, build all of the vula related packages and the vula package from the root
 of the git repository:
 ```
 # build debs:
@@ -73,9 +133,90 @@ sudo dpkg -i vula_libnss/dist/python3-vula-libnss_0.0.2024120900-1_amd64.deb
 # install vula:
 sudo dpkg -i dist/python3-vula_0.2.2025040600-1_all.deb
 ```
-
 Once vula is installed, you can check its status using the `vula status`
-command, and see a list of peers using `vula peer`.
+command, and see a list of peers with `vula peer`.
+
+The examples below show output from a podman test container (using `make sh` as
+described above). You can run the same commands on a real system using your
+peers' hostnames to confirm similar output.
+
+```
+root@vula-bookworm-test1:~/vula# vula status
+[ active ] vula-publish.service                (0:15:29)
+[ active ] vula-discover.service               (0:15:33)
+[ active ] vula-organize.service               (0:15:36)
+[ active ] local.vula.organize dbus service (running repair --dry-run)
+[ active ] Publishing 3 IPs on eth0
+[ active ] 1 enabled peers correctly configured; 0 disabled
+[ active ] vula-bookworm-test1.local.'s vula ULA is fdff:ffff:ffdf:e3bf:2e05:d70f:d2f7:1fde
+```
+
+```
+root@vula-bookworm-test1:~/vula# vula peer
+peer: vula-bookworm-test2.local.
+  id: 06IEe9qeL9rkfrN9tYbfTDZbu6ihDkZ1SXpe7nDgYpE=
+  status: enabled unpinned unverified
+  endpoint: [fe80::38b0:80ff:fef7:ec9f]:5354
+  primary ip: fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa
+  allowed ips: fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa/128, fd54:f27a:17c1:3a61::3/128, 10.89.0.3/32
+  latest signature: 0:38:49 ago
+  latest handshake: 0:28:17 ago
+  transfer: 508 B received, 596 B sent
+  wg pubkey: qvhMODx7aoHkU/t2ATcks+SRYavnjNvk/qMFlvG4hTw=
+```
+
+Applications which use glibc to resolve peer names ending with the suffix
+`local.` will receive peer's vula-generated IPv6 addresses in our
+fdff:ffff:fffd:://48 block. You can query nssswitch's host resolution manually
+to confirm vula IPs are being provided from it:
+
+```
+# getent hosts vula-bookworm-test2.local.
+fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa vula-bookworm-test2.local.
+```
+
+You can confirm connectivity using these addresses using the ping command:
+
+```
+root@vula-bookworm-test1:~/vula# ping6 -c 1 vula-bookworm-test2.local.
+PING vula-bookworm-test2.local.(vula-bookworm-test2.local. (fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa)) 56 data bytes
+64 bytes from vula-bookworm-test2.local. (fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa): icmp_seq=1 ttl=64 time=0.144 ms
+
+--- vula-bookworm-test2.local. ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.144/0.144/0.144/0.000 ms
+```
+
+You can confirm an IPv4 name resolution for the name-with-dot returns peers' IPv4 addresses:
+```
+root@vula-bookworm-test1:~/vula# ping -4 -c 1 vula-bookworm-test2.local.
+PING  (10.89.0.3) 56(84) bytes of data.
+64 bytes from vula-bookworm-test2.local. (10.89.0.3): icmp_seq=1 ttl=64 time=1.17 ms
+
+---  ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 1.170/1.170/1.170/0.000 ms
+```
+
+You can use the `ip route get` command to see how packets to a given
+destination will be routed:
+
+```
+root@vula-bookworm-test1:~/vula# ip route get 10.89.0.3
+10.89.0.3 dev vula table 666 src 10.89.0.2 uid 0
+    cache
+root@vula-bookworm-test1:~/vula# ip route get fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa
+fdff:ffff:ffdf:2428:7c68:40e8:c2ad:bafa from :: dev vula table 666 proto static src fdff:ffff:ffdf:e3bf:2e05:d70f:d2f7:1fde metric 1024 pref medium
+```
+
+In the example above, there are also existing ULAs (assigned by podman, in this
+case). You can confirm that traffic between these IPs is also protected by
+vula:
+```
+root@vula-bookworm-test1:~/vula# ip route get fd54:f27a:17c1:3a61::3
+fd54:f27a:17c1:3a61::3 from :: dev vula table 666 proto static src fd54:f27a:17c1:3a61::2 metric 1024 pref medium
+
+```
 
 ## Testing default route encryption
 
@@ -87,9 +228,9 @@ encryption will work automatically.
 
 However, if the network is configured to use public IP addresses, vula will, by
 default, not accept these IPs. As a result, IPv6 connectivity will currently be
-non-functional if the router is running vula until the clients and router are
-not manually configured to have its prefix added to their `subnets_allowed`
-preference. We will soon improve this so that unprotected connectivity is not
+non-functional when the router is running vula unless the clients and router
+are manually configured to have its prefix added to their `subnets_allowed`
+preference. We will soon improve this so that (unprotected) connectivity is not
 impaired in the case that a client is not configured to allow a vula-enabled
 IPv6 router's prefix.
 
@@ -98,7 +239,7 @@ router with ULA addresses.
 
 For the purpose of testing default gateway encryption with public addresses,
 one can use an Ubuntu 24.10 computer with ethernet and wifi, where the ethernet
-is connected to a gateway that offers prefix delegation (via the DHCPv6 `IA_PD`
+is connected to a gateway which offers prefix delegation (via the DHCPv6 `IA_PD`
 option). Ubuntu's "network connection sharing" feature will create an IPv4-only
 router by default; the steps to get it to become an IPv6 router (and request a
 prefix from its upstream router, and announce it on its wifi interface) are as
@@ -126,10 +267,45 @@ not be able to actually get online because vula's default `subnets_allowed`
 prevents the public IPs from being added to the `allowsed-ips` list. To enable
 connectivity using public addresses, determine the prefix the addresses are in
 using `ip -6 route` and then add this prefix to vula using the command
-`vula prefs add subnets_allowed` on both the gateway and client device. IPv6
-connectivity should then be restored, with all internet-bound traffic routed
-over the vula device.
+`vula prefs add subnets_allowed 2001:db8::/64` (with your own subnet) on both
+the gateway and client device. Connectivity should then be restored, with all
+internet-bound traffic routed over the vula device.
 
-When using a vula peer with a vula-enabled router, you can verify that your
-traffic is being sent via vula by using the `ip route get` and `tcpdump`
-commands.
+You can confirm that a peer is configured as the gateway using the `vula peer`
+command. A peer which is the current gateway will have the string "gateway"
+included in its status line, and will have default routes included in its
+allowed-ips.
+
+This example is from a system with `2a00:1f:6f58:72bd::/64` in its
+`subnets_allowed`:
+
+```
+$ vula peer
+peer: ubuntu-router.local.
+  id: At0ya5C/VNGLL3XNeaSBnY3PAl3UiMydzqCtS2WDopU=
+  status: enabled unpinned unverified gateway
+  endpoint: [fe80::f690:e486:b85:794e]:5354
+  primary ip: fdff:ffff:ffdf:142a:c9cf:406c:c4ac:8bc5
+  allowed ips: fdff:ffff:ffdf:142a:c9cf:406c:c4ac:8bc5/128, 2a00:1f:6f58:72bd::1/128, 10.42.0.1/32, 0.0.0.0/0, ::/0
+  latest signature: 3:32:30 ago
+  latest handshake: 0:01:51 ago
+  transfer: 1.39 GiB received, 1.07 GiB sent
+  wg pubkey: 32P7hYDgRxWMJieYbPXGKuNH+UkAtMYXNIthaPTk9RU=
+```
+
+Using a vula-enabled gateway, you can confirm that your route to internet
+destinations is via the vula device and is using the same source address as it
+would without vula. This example is from a system with `2a00:1f:6f58:72bd::/64`
+in its `subnets_allowed` (which its vula-enabled gateway also has):
+
+```
+$ ip route get 2a01:584:31::1
+2a01:584:31::1 from :: dev vula proto static src 2a00:1f:6f58:72bd:762:a121:38d2:fe41 metric 1024 pref medium
+$ ip route get 185.15.59.224
+185.15.59.224 dev vula src 10.42.0.162 uid 1000
+    cache
+```
+
+Finally, after reconnecting to a different network where the vula gateway is no
+longer the default gateway, you can confirm that the `vula peer` command no
+longer lists it as the gateway.
