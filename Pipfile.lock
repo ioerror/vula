@@ -129,13 +129,6 @@
             "markers": "python_full_version >= '3.9.6'",
             "version": "==1.0.2024050500"
         },
-        "hkdf": {
-            "hashes": [
-                "sha256:622a31c634bc185581530a4b44ffb731ed208acf4614f9c795bdd70e77991dca"
-            ],
-            "index": "pypi",
-            "version": "==0.0.3"
-        },
         "ifaddr": {
             "hashes": [
                 "sha256:085e0305cfe6f16ab12d72e2024030f5d52674afad6911bb1eee207177b8a748",
