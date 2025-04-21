@@ -2,21 +2,17 @@
 
 This document addresses enhancing vula with IPv6 support by breaking down the
 various tasks into milestones:
-a. Perform assessment of Python reference implementation
-b. Research possibility of encrypting existing fe80 vs using vula-generated
-  fc00 addresses
-c. Write design document describing IPv6 plan
-d. Implement plan for protecting either fe80 or fc00 addresses for LAN peer
-  traffic
-e. Implement plan for default route encryption
-f. Add containerized integration tests of IPv6 functionality
-g. Perform analysis and review of IPv6 implementation
+- a. Perform assessment of Python reference implementation
+- b. Research possibility of encrypting existing fe80 vs using vula-generated fc00 addresses
+- c. Write design document describing IPv6 plan
+- d. Implement plan for protecting either fe80 or fc00 addresses for LAN peer traffic
+- e. Implement plan for default route encryption
+- f. Add containerized integration tests of IPv6 functionality
+- g. Perform analysis and review of IPv6 implementation
 
 Please refer to related documents in `vula/contrib/`:
 - An early historical initial IPv6 assessment of the Python reference
   implementation: `vula/contrib/IPv6.initial.assessment.md`
-- A concise research and design document for IPv6:
-  `vula/contrib/`IPv6.research.design.md
 - The testing and verification document for IPv6:
   `vula/contrib/IPv6.testing.md`
 
@@ -65,30 +61,31 @@ the `subnets_allowed` may include additional subnets for IPv6 IP addresses:
   IPv6 addresses at their own risk.
 
 The primary research questions that we identified are as follows:
-0. Is it possible to use `fe80::/64` addresses as peer endpoints? 
-1. It is possible for vula to operate without DHCPv4 or DHCPv6 given the
+
+- 0. Is it possible to use `fe80::/64` addresses as peer endpoints? 
+- 1. It is possible for vula to operate without DHCPv4 or DHCPv6 given the
   requirement of automatic `fe80::/64` addresses in IPv6 enabled networks?
-2. It is possible we protect `fe80::/64` addresses?
-3. Is it possible to register a ULA prefix `fd::/` for use in vula?
-4. Is it possible to protect the `fd::/` addresses with vula as we would any
+- 2. It is possible we protect `fe80::/64` addresses?
+- 3. Is it possible to register a ULA prefix `fd::/` for use in vula?
+- 4. Is it possible to protect the `fd::/` addresses with vula as we would any
   other IP in `subnets_allowed`?
-5. Will `vula_libnss` continue to be a viable way to resolve vula peer names
+- 5. Will `vula_libnss` continue to be a viable way to resolve vula peer names
   to an IPv4 and/or an IPv6 address for the peer?
-6. Is it possible to protect internet destined traffic on non-airgapped
+- 6. Is it possible to protect internet destined traffic on non-airgapped
   networks for IPv6 with only non-public addresses as we do with IPv4?
-7. Is it possible to protect internet destined traffic on non-airgapped
+- 7. Is it possible to protect internet destined traffic on non-airgapped
   networks for IPv6 with public addresses as we do with IPv4?
-8. Is it possible for IPv4 only vula hosts to bidirectionally communicate with
+- 8. Is it possible for IPv4 only vula hosts to bidirectionally communicate with
   IPv4/IPv6 dual-stack vula peers?
-9. Is it possible to enhance vula's protection to use a multilayered security
+- 9. Is it possible to enhance vula's protection to use a multilayered security
   enforcement approach to ensure IP packets destined for vula peers are not sent
   unencrypted to the local-area network?
-10. Is it possible to construct meaningful integration tests in a container
+- 10. Is it possible to construct meaningful integration tests in a container
   framework or are virtual machines required?
-11. Given answers to items zero through ten, what is the minimal viable IPv6
+- 11. Given answers to items zero through ten, what is the minimal viable IPv6
   enhancement to vula to protect IPv6 enabled vula hosts in an airgapped or NAT
   context?
-12. What discrete problems need to be solved generally that would benefit other
+- 12. What discrete problems need to be solved generally that would benefit other
   projects?
 
 ## Milestone A: Perform assessment of Python reference implementation
@@ -96,7 +93,7 @@ The primary research questions that we identified are as follows:
 We began our work to answer our research questions with an initial assessment
 of the vula codebase to see if various functions were suitable to use with IPv4
 and IPv6 addresses. This assessment scope with results are documented in
-`contrib/IPv6.initial.assessment.md`. This initial assessment contains findings
+`vula/contrib/IPv6.initial.assessment.md`. This initial assessment contains findings
 related to handling of IPv6 addresses in an abstract sense. The assessment did
 not consider possible changes to the vula descriptor format, or differences
 with IPv6 such as the often mandatory link-scope identifier included in various
@@ -129,17 +126,17 @@ may be used for policy based routing, in addition to other IP packet flow and
 state management strategies.
 
 Our experimental findings for research question include:
-- Setting the vula peer's endpoint to be an `fe80::/128` with a link scope
+* Setting the vula peer's endpoint to be an `fe80::/128` with a link scope
   identifier is a viable strategy for bidirectional communication between vula
   peers
-- Automatic addressing of `fe80::/64` removes the need for manual address
+* Automatic addressing of `fe80::/64` removes the need for manual address
   configuration in an otherwise empty network
-- The use of link-local addresses for peer endpoints allows for regular
+* The use of link-local addresses for peer endpoints allows for regular
   rotation of addresses as seen by a third party adversary monitoring traffic
-- The continued use of a firewall mark may allow for routing of endpoint addresses
+* The continued use of a firewall mark may allow for routing of endpoint addresses
   over the vula device such that the primary IP traffic visible on the local
   network segment is peer to peer WireGuard encrypted IP packets
-- To ensure communication with IPv4 only vula hosts, IPv6 enabled hosts are
+* To ensure communication with IPv4 only vula hosts, IPv6 enabled hosts are
   required to have at least one IPv4 address bound to a vula protected
   interface that is in the default `subnets_allowed`
 
@@ -218,11 +215,12 @@ compatible with IPv4 and IPv6. We additionally modified the `subnets_allowed`
 to include `fd::/8`:
 ```
 subnets_allowed:
+- fe80::/10
+- fc00::/7
+- 169.254.0.0/16
 - 10.0.0.0/8
 - 192.168.0.0/16
 - 172.16.0.0/12
-- 169.254.0.0/16
-- fd::/8
 ```
 
 There are a number of benefits to having a stable, unique IPv6 address on a
@@ -244,11 +242,116 @@ for both IPv4 and IPv6 addresses of peer names.
 
 # Milestone C: Write design document describing IPv6 plan
 
-The canonical design document for IPv6 is located in
-`contrib/IPv6.research.design.md`.
+Combining the previous context, experimental findings, and implementation
+constraints the design document for IPv6 is described in the following
+subsections.
 
-A summary of the aforementioned design document for IPv6 support in the Python
-reference implementation of vula follows from the answers to our research
+## IPv6 considerations for vula
+
+In the common setting of an IPv4 LAN using RFC1918 addresses, vula's automatic
+encryption is applied to connections using the same IP addresses which clients
+would be using without vula. This is desirable, because it can protect traffic
+between applications which are using means other than vula's name system to
+learn each other's addresses.
+
+However, in IPv6 things are a bit different. We consider four categories of
+IPv6 addresses which peers may use:
+* Link-local addresses (fe80::/10)
+* Addresses from RFC 4193's Unique Local Address (ULA) block (fc00::/7)
+* Multicast addresses
+* All other unicast addresses (including publicly-routable addresses)
+
+The first category is link-local, the fe80::/10 addresses every interface has
+bound. Addresses in this block are are specified to be unique only to a single
+interface. The IPv6 address notation for them can optionally include %zone-id
+appended to the address, where zone-id is a local identifier for the interface
+it is related to. Binding these addresses to an interface with a scope other
+than "link" is not possible in the Linux kernel, and we were unable to find a
+way to use these IPs bound to a physical interface as a source address for
+packets on a wireguard interface with no IPs bound to it the way that we we can
+do with other types of addresses. We considered binding a doppelgänger of
+the link-local addresses of each physical interface to a wireguard interface,
+but rejected this approach because it would only be able to protect traffic
+which obtained peer addresses along with the correct zone-id - meaning traffic
+which is using our name system, which is traffic that can already get a
+non-link-local address instead. We therefore do not protect application traffic
+which uses physical interfaces' existing link-local addresses. It may be
+possible to automatically encrypt fe80 traffic even with the correct zone-id
+using nftables or other Linux technologies; future research in this area is
+warranted.
+
+We can, however, use these link-local addresses as our wireguard endpoints.
+
+The second category, ULA, is the IPv6 analogue of IPv4's RFC1918 space, and we
+can indeed protect it the same way that we do RFC1918 addresses. On networks
+with presently-existing ULA addresses, adding vula can automatically encrypt
+existing traffic using these addresses.
+
+The third category, multicast, we will use for mDNS in the same manner as with
+IPv4. We do not automatically encrypt multicast traffic.
+
+The fourth category, public IPs, we will treat the same as non-RFC1918 IPv4
+addresses: we do not accept peer descriptors using these addresses, and will
+only route traffic to these addresses via vula if the current default route is
+via a vula peer. This is analogous to how vula works with IPv4, in that it does
+not protect traffic using public addresses, but it is more unfortunate because
+in IPv6 it is far more likely that LANs are using public IPs.
+
+LANs often have ULA addresses  alongisde public IPs, which vula can
+automatically protect, but there are many settings where there no ULA addresses
+being assigned. In a LAN without a router, there will be only self-assigned
+link-local addresses.
+
+## Design: Vula's approach to IPv6 
+
+In order to provide automatic encryption in the absence of ULA or RFC1918
+addresses, we decided to make vula peers each generate their own ULA address
+within a vula-specific network prefix.
+
+We registered the fdff:ffff:ffdf::/48
+block with the Ungleich IPv6 ULA registry for this purpose. These are the IPv6
+addresses which vula names will now resolve to. The address is bound to
+*localhost* rather than the vula interface, because having no address bound to
+the vula interface is what enables the correct source IP to be determiend for
+internet-bound traffic via a vula-enabled gateway. The vula-provided ULA
+address is never used outside of the tunnel. Wireguard's encrypted traffic is
+sent on the physical interface using link-local addresses.
+
+Besides IPv6 connectivity in the absence of a router advertizing ULA prefixes,
+this solution also provides vula-protected connectivity absent any router at
+all. Also, previously, two IPv6-capable pinned peers who found themselves on a
+network assigning only public IPv4 addresses would be unable to communicate
+over vula: applications using vula to resolve names of pinned peers would
+resolve to the last acceptable address they had, and these packes would be
+routed to the wireguard interface where that pinned peer has a stale session
+with an unroutable old IP and therefore cannot route traffic. Now, instead, the
+hosts can resolve ULA IPs for each other and communicate using link-local
+addresses for the wireguard packets.
+
+Default route encryption in a LAN using ULA addresses and prefix translation
+should work similarly to the way it works on IPv4 networks with RFC1918
+addresses. In the more common IPv6 environment where clients are given public
+IPs, a vula enabled router must add the subnet(s) that it advertizes to its
+`subnets_allowed` list so that it will allow peers to route packets to it using
+source addresses from that subnet.
+
+To make automatic default route encruption possible, vula peers must now
+announce all of their IP addresses that vula is enabled for including addresses
+that are not in their `allowed_subnets` list. This will only work in the common
+case that the announced route is actually a link-local address (in fe80::/10)
+as this is what allows clients to identify the peer as their gateway. With the
+default `subnets_allowed` settings peers will not recognize routers advertising
+non-link-local addresses as the default route. We do not provide automatic
+encryption for those routers in our default configuration.
+
+In the course of implementing IPv6 support, a number of other issues were also
+addressed, inclduing fixing support for multihomed hosts: now when vula is
+enabled on multiple interfaces, different descriptors are sent on each with the
+correct IP addresses for that interface.
+
+## Design summary of IPv6 in the Python reference implementation
+
+The summary of IPv6 support in vula follows from the answers to our research
 questions:
 
 - Use existing `fe80::/64` endpoints configured automatically by the Linux
@@ -269,7 +372,7 @@ ULA block  `fdff:ffff:ffdf::/48` of IPv6 addresses. In addition to many other
 IPv6 related enhancements to realize IPv6 support in vula.
 
 The initial research results using the traffic control subsystem allow us to
-redirect, route, and otherwise prevent packets addressed two and from
+redirect, route, and otherwise prevent packets addressed to and from
 `fe80::/128` addresses from leaking when they belong to a vula peer. This
 experimental protection still allows for other non-vula `fe80::` traffic to
 pass without issue but we have not yet adopted it by default. This means that
@@ -317,7 +420,7 @@ In research question nine we ask: "Is it possible to enhance vula's protection
 to use a multilayered security enforcement approach to ensure IP packets
 destined for vula peers are not sent unencrypted to the local-area network?"
 
-As previously mentioned in `Protecting `fe80::/64` with vula`, the use of the
+As previously mentioned in `Protecting fe80::/64 with vula`, the use of the
 Linux traffic control subsystem is a lower layer subsystem is able to augment
 technical measures at other layers to enforce a consistent vula peer policy
 that ensures peer packets do not leak in unexpected ways.

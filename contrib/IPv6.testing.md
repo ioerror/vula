@@ -1,6 +1,9 @@
 Testing IPv6 support
 ====================
 
+Please refer to `vula/contrib/README.ipv6.overview.md` to understand the IPv6
+feature branch.
+
 Testing the `ipv6` branch is possible using podman and as well by building
 packages and installing vula on a normal Ubuntu 24.10 system. Other systems are
 also possible, but some distributions lack certain dependencies.
