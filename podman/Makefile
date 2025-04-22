@@ -24,7 +24,7 @@ NET_NAME := vula-net
 SO_NAME := /usr/local/lib64/python3.9/site-packages/lib/libnss_vula.so.2
 #dists := bookworm jammy mantic noble
 podman_args := --volume $(shell readlink -f ..):/root/vula:z --workdir /root/vula --uts=private
-add_caps := --cap-add NET_ADMIN,NET_RAW
+add_caps := --cap-add NET_ADMIN,NET_RAW,SYS_ADMIN
 test1 := vula-$(dist)-test1
 test2 := vula-$(dist)-test2
 host_basename := vula-$(dist)-test
@@ -165,6 +165,7 @@ $(RPM_NAME): .deps-$(dist)-stamp
 	podman run --replace --name vula-tmp $(podman_args) --network none --detach vula-deps-$(dist) $(systemd_path)
 	# install the deb:
 	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp dpkg -i dist/$(DEB_NAME)
+	podman exec vula-tmp systemd-sysusers # needed in oracular but not bookworm
 	# stop container:
 	podman stop vula-tmp
 	# save container as new image, over old one if it exists:
@@ -242,6 +243,7 @@ editable-image: .editable-$(dist)-image-stamp testnet-clean
 	podman exec vula-tmp python3 setup.py install
 	podman exec vula-tmp python3 setup.py develop
 	podman exec vula-tmp chmod 755 .. # so that systemd users can read it
+	podman exec vula-tmp systemd-sysusers # needed in oracular but not bookworm
 	podman exec -e VULA_POSTINST_DONT_START=1 vula-tmp ./misc/python3-vula.postinst
 
 	# stop container
