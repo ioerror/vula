@@ -32,7 +32,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
 # reunion
 sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
   build-essential python3 python3-venv flit dh-python debhelper git \
-  pybuild-plugin-pyproject python3-setuptools python3-hkdf python3-flask \
+  pybuild-plugin-pyproject python3-setuptools python3-flask \
   python3-stem;
 
 # ggwave
