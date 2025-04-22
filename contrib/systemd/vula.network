@@ -1,0 +1,7 @@
+[Match]
+Name=vula
+
+[Network]
+DHCP=no
+LinkLocalAddressing=no
+IPForward=yes
