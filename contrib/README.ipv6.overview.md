@@ -52,13 +52,27 @@ subnets_allowed:
 - 169.254.0.0/16
 ```
 
-For IPv6 enhancements to vula need to update functionality for vula such that
-the `subnets_allowed` may include additional subnets for IPv6 IP addresses:
-- Each interface with IPv6 enabled should have `fe80::/64`
-- Each peer should have an IPv6 Unique Local Address such as an example in our
-  own Unique Local Address (ULA) block of `fd::`
+For IPv6 enhancements to update relevant functionality for vula then:
+- `subnets_allowed` likely needs to include additional subnets for IPv6 IP
+  addresses
+- A peer's vula descriptor(s) will need to be updated to include the relevant
+  IPv6 addresses
+- Each interface with IPv6 enabled must have one `fe80::/10` per interface for
+  basic IPv6 functionality; the Linux kernel automatically assigns `fe80::/64`
+  addresses to interfaces
+- A peer's IPv6 link-local addresses should be used by other peers as the vula
+  device endpoint
+- Each peer will likely need a vula assigned IPv6 Unique Local Address such as
+  an example in our own Unique Local Address (ULA) block of `fd::/8` for peer's
+  to perform IPv6 name resolution
+- To support the vula gateway feature for IPv6 as functions with IPv4, each
+  peer will require an additional ULA such as one provided by DHCPv6 or other
+  IPv6 Route Announcements by routers on local-area network for the gateway to
+  provide NAT66 or NPTv6 support to reach the internet
 - Optionally if a LAN is not airgapped, a user may experimentally set public
-  IPv6 addresses at their own risk.
+  IPv6 addresses at their own risk but this configuration will not be automatic
+  and must match on the vula peer acting as a gateway, and all peers which
+  intend to use those public addresses on the internet.
 
 The primary research questions that we identified are as follows:
 
