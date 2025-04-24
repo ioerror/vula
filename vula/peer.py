@@ -56,8 +56,34 @@ _qrcode = None
 @DualUse.object()
 class Descriptor(schemattrdict, serializable):
     """
-    Descriptors are the objects which are communicated between publish
-    and discover (via mDNS) and between discover and organize (via strings).
+    Descriptors are used to announce a host's current keys and IP addresses to
+    other vula peers.
+
+    Descriptors are encoded in two different ways: as strings, and in DNS-SD
+    packets.
+
+    The string encoding serves several purposes:
+    * It is what the signature is over (minus the signature field)
+    * It is used by organize to communicate with the publish and discover
+      daemons
+    * It is used in QR codes for peer verification or out-of-band descriptor
+      exchange
+    * It can be used by other, non-mDNS, peer discovery mechanisms
+
+    In DNS-SD (RFC 6763) packets, a DNS TXT record contains multiple
+    length-prefixed key=value strings where the value can be arbitrary binary
+    data but the total length of key=value cannot exceed 255 bytes (due to the
+    single prefix byte to encode its length). Due to the length, storing our
+    full descriptor encoded as a single string here is not possible, so, we
+    encode the fields of the descriptor as individual strings from which the
+    zeroconf library can construct the TXT record.
+
+    Initially, all values were utf8 string encoded in this form, but with the
+    addition of IPv6 support our list of IP addresses began to exceed the 255
+    byte limit. So, now, in the DNS-SD form, we store IPv4 and IPv6 addresses
+    in separate fields and also pack them as raw bytes in network (big-endian)
+    order to save some space. See tests for Descriptor.as_zeroconf_properties
+    and comma_separated_IPs.packed for examples.
     """
 
     schema = Schema(
