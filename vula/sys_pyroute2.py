@@ -4,7 +4,13 @@ from socket import AddressFamily
 
 from pyroute2 import IPRoute, IPRSocket
 
-from .constants import _LINUX_MAIN_ROUTING_TABLE, IPv4_GW_ROUTES
+from .constants import (
+    _LINUX_MAIN_ROUTING_TABLE,
+    _IN6_ADDR_GEN_MODE_NONE,
+    _DUMMY_INTERFACE,
+    _VULA_ULA_SUBNET,
+    _GW_ROUTES,
+)
 from .wg import Interface as WgInterface
 
 # FIXME: find where the larger canonical version of this table lives
@@ -77,8 +83,7 @@ class Sys(object):
                 'RTM_DELROUTE',
                 'RTM_NEWROUTE',
             ]:
-                self.log.debug("acting on netlink message: %r", msg)
-                self.get_new_system_state()
+                self.get_new_system_state(f"{event} netlink event")
             elif event == 'RTM_NEWNEIGH':
                 # this happens often, so we don't even debug log it
                 pass
@@ -94,15 +99,23 @@ class Sys(object):
         self._monitor_thread = None
         ip.close()
 
-    def _get_system_state(self):
-        "WIP"
-
-        links = {
+    @property
+    def idx_to_link_name(self):
+        return {
             L['index']: dict(L['attrs'])['IFLA_IFNAME']
             for L in self.ipr.get_links()
         }
 
+    def _get_all_addrs(self):
+        links = self.idx_to_link_name
         addrs = self.ipr.get_addr()
+        for a in addrs:
+            addr = ip_address(dict(a['attrs'])['IFA_ADDRESS'])
+            iface = links[a['index']]
+            yield addr, a, iface
+
+    def _get_system_state(self):
+        "WIP"
 
         gateways = list(
             set(
@@ -115,12 +128,15 @@ class Sys(object):
         current_subnets = {}
         current_interfaces = {}
 
-        for a in addrs:
-            addr = ip_address(dict(a['attrs'])['IFA_ADDRESS'])
-            iface = links[a['index']]
-            this_subnet = ip_network(
-                "%s/%s" % (addr, a['prefixlen']), strict=False
-            )
+        addrs = list(self._get_all_addrs())
+
+        has_v6 = any(addr for addr in addrs if addr[0].version == 6)
+
+        for addr, a, iface in addrs:
+            if addr.version == 4 and not self.organize.v4_enabled:
+                continue
+            if addr.version == 6 and not self.organize.v6_enabled:
+                continue
             if not any(
                 [
                     iface.startswith(prefix)
@@ -128,36 +144,95 @@ class Sys(object):
                 ]
             ):
                 continue
-
-            if any(
-                addr in subnet
-                for subnet in self.organize.prefs.subnets_allowed
-            ) and not any(
+            this_subnet = ip_network(
+                "%s/%s" % (addr, a['prefixlen']), strict=False
+            )
+            if not any(
                 addr in subnet
                 for subnet in self.organize.prefs.subnets_forbidden
             ):
                 current_subnets.setdefault(this_subnet, []).append(addr)
                 current_interfaces.setdefault(iface, []).append(addr)
 
-        return current_subnets, current_interfaces, gateways
+        current_subnets[_VULA_ULA_SUBNET] = [self.organize.prefs.primary_ip]
 
-    def get_new_system_state(self):
-        return self.organize.get_new_system_state()
+        return current_subnets, current_interfaces, gateways, has_v6
 
-    def sync_interface(self, dryrun=False):
-        return self.wgi.sync_interface(
-            private_key=str(self.organize._keys.wg_Curve25519_sec_key),
-            listen_port=self.organize.port,
-            fwmark=self.organize.fwmark,
-            dryrun=dryrun,
+    def get_new_system_state(self, reason=None):
+        return self.organize.get_new_system_state(reason)
+
+    def link_add(self, name, kind, dryrun=False):
+        existing = self.ipr.get_links(ifname=name)
+        if existing and (
+            dict(existing[0].get_attr('IFLA_LINKINFO')['attrs'])[
+                'IFLA_INFO_KIND'
+            ]
+            == kind
+        ):
+            self.log.debug(f"{kind} link {name!r} exists")
+            return []
+        elif not dryrun:
+            self.ipr.link("add", kind=kind, ifname=name)
+            self.ipr.link(
+                "set",
+                ifname=name,
+                IFLA_AF_SPEC={
+                    "attrs": [
+                        (
+                            'AF_INET6',
+                            {
+                                "attrs": [
+                                    (
+                                        'IFLA_INET6_ADDR_GEN_MODE',
+                                        _IN6_ADDR_GEN_MODE_NONE,
+                                    )
+                                ]
+                            },
+                        )
+                    ]
+                },
+            )
+            self.ipr.link("set", ifname=name, state='up')
+        return [
+            f"ip link add name {name} type {kind}",
+            "ip link set dev {name} addrgenmode none",
+        ]
+
+    def sync_interfaces(self, dryrun=False):
+        return (
+            self.wgi.sync_interface(
+                private_key=str(self.organize._keys.wg_Curve25519_sec_key),
+                listen_port=self.organize.port,
+                fwmark=self.organize.fwmark,
+                dryrun=dryrun,
+            )
+            + self.link_add(_DUMMY_INTERFACE, kind="dummy")
+            + self.addr_add(
+                self.organize.prefs.primary_ip,
+                _DUMMY_INTERFACE,
+                mask=128,
+                dryrun=dryrun,
+            )
         )
+
+    def addr_add(self, addr, dev, mask, dryrun=False):
+        res = []
+        if not [
+            a
+            for _addr, a, _iface in self._get_all_addrs()
+            if addr == _addr and dev == _iface
+        ]:
+            res.append(f"ip addr add {addr}/{mask} dev {dev}")
+            if not dryrun:
+                oif = self.ipr.link_lookup(ifname=dev)[0]
+                self.log.info("[#] %s", str(res[-1]))
+                self.ipr.addr("add", index=oif, address=str(addr), mask=mask)
+        return res
 
     def sync_peer(self, vk: str, dryrun: bool = False):
         """
         Syncs peer's wg config and routes. Returns a string.
         """
-        # IPv6 analysis: not ipv6 ready.
-        # Please enhance this function to support ipv6
         peer = self.organize.peers[vk]
         res = []
         if peer.enabled:
@@ -176,7 +251,7 @@ class Sys(object):
             if peer.use_as_gateway:
                 res.append(
                     self.sync_routes(
-                        [*IPv4_GW_ROUTES],
+                        _GW_ROUTES,
                         table=_LINUX_MAIN_ROUTING_TABLE,
                         dryrun=dryrun,
                     )
@@ -300,8 +375,6 @@ class Sys(object):
         know need to be removed, and then this method will actually only be
         used to remove rogue entries.
         """
-        # IPv6 analysis: not ipv6 ready
-        # Please enhance this function to support ipv6
         routing_table = self.organize.table
         res = []
         enabled_pks = [
@@ -323,7 +396,7 @@ class Sys(object):
         expected_routes = [
             str(dst)
             for peer in self.organize.peers.limit(enabled=True).values()
-            for dst in peer.allowed_ips
+            for dst in peer.routes
         ]
 
         current_routes = self.ipr.get_routes()
@@ -339,9 +412,18 @@ class Sys(object):
                 scope = route['scope']
                 if not dryrun:
                     self.log.info("Removing unexpected route: (%s)", dst)
-                    self.ipr.route(
-                        'del', table=routing_table, dst=str(dst), scope=scope
-                    )
+                    try:
+                        self.ipr.route(
+                            'del',
+                            table=routing_table,
+                            dst=str(dst),
+                            scope=scope,
+                        )
+                    except Exception as e:
+                        raise Exception(
+                            f"{e} on ip route del {dst} table {routing_table}"
+                            f" scope {scope}"
+                        )
                 if scope in SCOPES:
                     # this is strictly cosmetic
                     # the printed "ip route" command is runnable with the scope
@@ -357,8 +439,8 @@ class Sys(object):
                 r
                 for r in current_routes
                 if r['attrs'].get('RTA_TABLE') == _LINUX_MAIN_ROUTING_TABLE
-                and r['attrs'].get('RTA_DST') in ('0.0.0.0', '128.0.0.0')
-                and r['attrs'].get('RTA_DST')
+                and f"{r['attrs'].get('RTA_DST')}/{r.get('dst_len')}"
+                in _GW_ROUTES
             ]
             for route in default_routes:
                 dst = route['attrs']['RTA_DST'] + "/" + str(route['dst_len'])

@@ -1,11 +1,12 @@
 """
 *vula* CTIDH interface functions.
 """
-from hashlib import sha512
+
 from typing import ByteString
 
 from highctidh import ctidh  # noqa: F401
-from hkdf import Hkdf
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 from .common import b64_bytes
 
@@ -15,6 +16,8 @@ ctidh_parameters = 512
 
 def hkdf(raw_key: ByteString) -> str:
     """
+    >>> hkdf(b"test string")
+    'P39kOvTABj0XVj0wFMcZZw1F/njgFOlJDE44i8QG2LA='
     >>> s = hkdf(b"my_raw_key")
     >>> s
     'Y52eWgiYuPYtHlnqZpRqAG2USxILzRS57s61ePUdWO4='
@@ -25,8 +28,12 @@ def hkdf(raw_key: ByteString) -> str:
      ...
     TypeError: ...
     """
-    kdf = Hkdf(salt=None, input_key_material=raw_key, hash=sha512)
-    key = kdf.expand(b"vula-organize-1", 32)
+    key = HKDF(
+        algorithm=hashes.SHA512(),
+        length=32,
+        salt=None,
+        info=b"vula-organize-1",
+    ).derive(raw_key)
     psk = str(b64_bytes.with_len(32).validate(key))
     return psk
 

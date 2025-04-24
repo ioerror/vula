@@ -238,16 +238,18 @@ class TestInterface:
             attrdict(
                 public_key=existing_peer_pubkey,
                 allowed_ips=['10.89.0.3/32', '10.89.0.5/32'],
+                preshared_key=b"X" * 32,
             )
         )
 
         expected_result = (
             "# allowed_ips is ['10.89.0.3/32']; should be ['10."
-            "89.0.3/32', '10.89.0.5/32']\n# reconfigure wiregua"
-            "rd peer hDzSznlwlq9mk07QpNk+AcsfprrLg2DxSv3JAOLXhF"
+            "89.0.3/32', '10.89.0.5/32']\n# preshared_key (redacted) is "
+            "incorrect\n# reconfigure wireguard peer "
+            "hDzSznlwlq9mk07QpNk+AcsfprrLg2DxSv3JAOLXhF"
             "Q=\nvula wg set vula peer hDzSznlwlq9mk07QpNk+Acsf"
-            "prrLg2DxSv3JAOLXhFQ= allowed-ips 10.89.0.3/32,10.8"
-            "9.0.5/32 "
+            "prrLg2DxSv3JAOLXhFQ= preshared_key <redacted psk> "
+            "allowed-ips 10.89.0.3/32,10.89.0.5/32 "
         )
         assert res == expected_result
 
@@ -258,6 +260,7 @@ class TestInterface:
             peer=attrdict(
                 public_key='hDzSznlwlq9mk07QpNk+AcsfprrLg2DxSv3JAOLXhFQ=',
                 allowed_ips=['10.89.0.3/32', '10.89.0.5/32'],
+                preshared_key=b"X" * 32,
             ),
         )
 

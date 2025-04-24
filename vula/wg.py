@@ -129,9 +129,9 @@ class PeerConfig(schemattrdict, serializable):
         KeyError:
         """
         res = {
-            k.replace('WGPEER_A_', '').lower(): dict(v)
-            if isinstance(v, netlink_atom)
-            else v
+            k.replace('WGPEER_A_', '').lower(): (
+                dict(v) if isinstance(v, netlink_atom) else v
+            )
             for k, v in dict(peer['attrs']).items()
         }
         res['allowed_ips'] = [
@@ -232,7 +232,6 @@ class PeerConfig(schemattrdict, serializable):
 @DualUse.object()
 @click.argument('name', type=str)
 class Interface(attrdict, yamlrepr_hl):
-
     """
     This is a wrapper for pyroute2's WireGuard interface.
 
@@ -362,9 +361,9 @@ class Interface(attrdict, yamlrepr_hl):
             return self
 
         res = {
-            k.replace('WGDEVICE_A_', '').lower(): dict(v)
-            if isinstance(v, netlink_atom)
-            else v
+            k.replace('WGDEVICE_A_', '').lower(): (
+                dict(v) if isinstance(v, netlink_atom) else v
+            )
             for k, v in dict(res[0]['attrs']).items()
         }
         res['peers'] = list(map(PeerConfig.from_netlink, res.get('peers', ())))
@@ -414,6 +413,8 @@ class Interface(attrdict, yamlrepr_hl):
                         "# {key} is {cur}; should be {new}".format(
                             key=key, cur=cur.get(key), new=new[key]
                         )
+                        if key != 'preshared_key'
+                        else f'# {key} (redacted) is incorrect'
                     )
             # workaround for pyroute2 irritatingly handling endpoint addr
             # and port separately (while they actually need to be set
@@ -450,19 +451,27 @@ class Interface(attrdict, yamlrepr_hl):
                 "vula wg set {interface} peer {pk} "
                 "{remove}{endpoint}{args}{allowed_ips}".format(
                     remove="remove " if new.get('remove') else "",
-                    endpoint="endpoint %s:%s "
-                    % (new['endpoint_addr'], new['endpoint_port'])
-                    if (new.get('endpoint_addr') and new.get('endpoint_port'))
-                    else '',
+                    endpoint=(
+                        "endpoint %s:%s "
+                        % (new['endpoint_addr'], new['endpoint_port'])
+                        if (
+                            new.get('endpoint_addr')
+                            and new.get('endpoint_port')
+                        )
+                        else ''
+                    ),
                     args="".join(
-                        "%s %s " % (k, v)
+                        f"{k}"
+                        f" {'<redacted psk>' if k == 'preshared_key' else v} "
                         for k, v in new.items()
                         if k in ('persistent_keepalive', 'preshared_key')
                     ),
-                    allowed_ips='allowed-ips %s '
-                    % ",".join(ip for ip in new.get('allowed_ips', ()))
-                    if 'allowed_ips' in new
-                    else "",
+                    allowed_ips=(
+                        'allowed-ips %s '
+                        % ",".join(ip for ip in new.get('allowed_ips', ()))
+                        if 'allowed_ips' in new
+                        else ""
+                    ),
                     interface=self.name,
                     pk=new['public_key'],
                 )
@@ -634,8 +643,6 @@ class wg(object):
         reading them from files, as wg does). Yes, this is not a great idea,
         but it makes testing easier.
         """
-        # IPv6 analysis: not ipv6 ready.
-        # Please enhance this function to support ipv6
         dev = Interface(interface)
         kwargs = {k: v for k, v in kwargs.items() if v not in (None, ())}
         current = {}
@@ -676,9 +683,10 @@ class wg(object):
             res.append(dev.set(**kwargss.pop(0)))
         for peer in kwargss:
             if 'endpoint' in peer:
-                peer['endpoint_addr'], peer['endpoint_port'] = peer[
+                peer['endpoint_addr'], _, peer['endpoint_port'] = peer[
                     'endpoint'
-                ].split(':')
+                ].rpartition(':')
+                peer['endpoint_addr'] = peer['endpoint_addr'].strip("[]")
                 del peer['endpoint']
             peer = PeerConfig(peer)._dict()
             res.append(dev.apply_peerconfig(peer))

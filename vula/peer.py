@@ -5,13 +5,15 @@ import time
 from base64 import b64encode
 from datetime import timedelta
 from io import StringIO
-from ipaddress import IPv4Address, IPv6Address, ip_network
+from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
 from typing import List
 
 import click
 from nacl.exceptions import BadSignatureError
 from nacl.signing import SigningKey, VerifyKey
 from schema import And, Optional, Regex, Schema, Use
+
+from .constants import _VULA_ULA_SUBNET
 
 from .common import (
     Bug,
@@ -20,8 +22,12 @@ from .common import (
     Length,
     attrdict,
     b64_bytes,
-    comma_separated_IPs,
     comma_separated_Nets,
+    use_ip_address,
+    use_comma_separated_IPv4s,
+    use_comma_separated_IPv6s,
+    packable_types,
+    sort_LL_first,
     format_byte_stats,
     int_range,
     organize_dbus_if_active,
@@ -49,49 +55,42 @@ _qrcode = None
 
 @DualUse.object()
 class Descriptor(schemattrdict, serializable):
-
     """
-    Descriptors are the objects which are communicated between publish
-    and discover (via mDNS) and between discover and organize (via strings).
+    Descriptors are used to announce a host's current keys and IP addresses to
+    other vula peers.
 
-    This ridiculous test uses the fact that this is commandline-accessible:
+    Descriptors are encoded in two different ways: as strings, and in DNS-SD
+    packets.
 
-    >>> x = Descriptor.cli.main(standalone_mode=False, args=tuple("--addrs 10.168.128.160 --c "
-    ... "vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIRH49QmNYDw=="
-    ... " --dt 86400 --e false --hostname wg-mdns-test3.local.  --pk EqcQ5gYxzGtzg7B4xi83kLyfuSMp8K"
-    ... "v3cmAJMs12nDM= --port 5354 --s T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3s"
-    ... "SbVTYjzFGZSCO6n80SRaR+BIeOCg== --vf 1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yB"
-    ... "buf3Zg= valid".split()))
-    True
+    The string encoding serves several purposes:
+    * It is what the signature is over (minus the signature field)
+    * It is used by organize to communicate with the publish and discover
+      daemons
+    * It is used in QR codes for peer verification or out-of-band descriptor
+      exchange
+    * It can be used by other, non-mDNS, peer discovery mechanisms
 
-    For testing purposes, one could run the same command on the commandline like so:
-    vula -d peer.Descriptor --addrs 10.168.128.160 --c
-    vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIRH49QmNYDw== --dt
-    86400 --e false --hostname wg-mdns-test3.local.  --pk
-    EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM= --port 5354 --r '' --s
-    T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3sSbVTYjzFGZSCO6n80SRaR+BIeOCg== --vf
-    1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yBbuf3Zg= valid
+    In DNS-SD (RFC 6763) packets, a DNS TXT record contains multiple
+    length-prefixed key=value strings where the value can be arbitrary binary
+    data but the total length of key=value cannot exceed 255 bytes (due to the
+    single prefix byte to encode its length). Due to the length, storing our
+    full descriptor encoded as a single string here is not possible, so, we
+    encode the fields of the descriptor as individual strings from which the
+    zeroconf library can construct the TXT record.
 
-    ... IPv6
-    Unfortunately, this test can't be adapted to IPv6 as it's not possible to get a valid signature.
-
-    For testing purposes, one could run the same command on the commandline like so:
-    vula -d peer.Descriptor --addrs fe80::377b:d17:9b74:1b91 --c
-    vdDpRSGtsqvui8dox0iBq0SSp/zXSEU2dx5s5x+qcquSp0oIWgDuqJw50e9wrIuGub+SXzU0s5EIRH49QmNYDw== --dt
-    86400 --e false --hostname wg-mdns-test3.local.  --pk
-    EqcQ5gYxzGtzg7B4xi83kLyfuSMp8Kv3cmAJMs12nDM= --port 5354 --r '' --s
-    T6htsKgwCp5MAXjPiWxtVkccg+K2CePsVa7uyUgxE2ouYKXg2qNL+0ut3sSbVTYjzFGZSCO6n80SRaR+BIeOCg== --vf
-    1606276812 --vk 90Y5JGEjoklSDw51ffoHYXhWs49TTnCQ/D5yBbuf3Zg= valid
-
-    ... but this is of course not the correct way to use this object.
+    Initially, all values were utf8 string encoded in this form, but with the
+    addition of IPv6 support our list of IP addresses began to exceed the 255
+    byte limit. So, now, in the DNS-SD form, we store IPv4 and IPv6 addresses
+    in separate fields and also pack them as raw bytes in network (big-endian)
+    order to save some space. See tests for Descriptor.as_zeroconf_properties
+    and comma_separated_IPs.packed for examples.
     """
 
     schema = Schema(
         {
-            'addrs': Use(
-                comma_separated_IPs
-            ),  # This is a list of endpoints by preference and is also used for AllowedIPs;
-            # fixme in the future
+            Optional('p'): use_ip_address,
+            Optional('v4a'): use_comma_separated_IPv4s,
+            Optional('v6a'): use_comma_separated_IPv6s,
             'pk': b64_bytes.with_len(32),
             'c': b64_bytes.with_len(64),
             'hostname': And(
@@ -116,77 +115,65 @@ class Descriptor(schemattrdict, serializable):
     default = dict(r="")
 
     @classmethod
+    def from_zeroconf_properties(cls, props: dict):
+        """
+        This instantiates a descriptor from a dictionary of bytes values, as
+        the zeroconf library gives us.
+
+        This function is tested via as_zeroconf_properties's doctest below.
+
+        This function should be called from within a try block, as invalid
+        descriptors with raise an exception.
+        """
+        data = {}
+        for k, v in props.items():
+            k = k.decode()
+            typ = cls.schema._schema.get(k) or cls.schema._schema.get(
+                Optional(k)
+            )
+            if typ := packable_types.get(typ):
+                # here we have a type that knows how to pack and unpack itself
+                data[k] = typ(v)
+            elif v is None:
+                data[k] = ''
+            else:
+                data[k] = v.decode()
+        return cls(**data)
+
+    @property
+    def as_zeroconf_properties(self):
+        r"""
+        This returns the descriptor as a dictionary of bytes, for sending to
+        zeroconf.
+
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> Descriptor.parse(_TEST_DESC_UNSIGNED).as_zeroconf_properties
+        {b'r': b'', b'c': b'NnoGEZ4W+d6TE22+Qyau0LF513FM43EagOP9aiSX9KhTCS1Gryt7qDoM04j7p0KQRJxwkcPEO/MpIJE5/bJKYQ==', b'dt': b'86400', b'e': b'0', b'hostname': b'vula-bookworm-test1.local.', b'p': b'\xfd\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01', b'pk': b'3w5/xje5jsdUCX30JfS/L/bMuwZRniK69dAVprN7t3c=', b'port': b'5354', b'v4a': b'\nY\x00\x02', b'v6a': b'\xfd\xff\xff\xff\xff\xdf\x98\x9f$\xcf\x0b\xda\x12b\xcf\xc6\xfe\x80\x00\x00\x00\x00\x00\x00\xbc\x92M\xff\xfe\x82\x03\r\xfdT\xf2z\x17\xc1:a\x00\x00\x00\x00\x00\x00\x00\x02', b'vf': b'1743974365', b'vk': b'afToKyN29ubu4DkhUMLoGIt5WjbsgEHYuccNtxvbjmA='}
+
+        # Full round trip:
+        >>> str(Descriptor.from_zeroconf_properties(
+        ...         Descriptor.parse(_TEST_DESC_UNSIGNED).as_zeroconf_properties)
+        ... ) == _TEST_DESC_UNSIGNED
+        True
+        """
+        data = {}
+        for k, v in self.items():
+            typ = self.schema._schema.get(k) or self.schema._schema.get(
+                Optional(k)
+            )
+            data[k.encode()] = (
+                v.packed if packable_types.get(typ) else str(v).encode()
+            )
+        return data
+
+    @classmethod
     def parse(cls, desc: str) -> Descriptor:
         """
         Parse the *descriptor* string line into a dictionary-like object. Carefully.
 
-        This relies on the schema to coerce values into the right types.
-        >>> d = Descriptor.parse("addrs=192.168.2.106;"
-        ...            "pk=/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg=;"
-        ...            "c=SbS/v8aTX2Ti3E1jp4T7d8lHoW4v5iRcBcdQ6tSv5bzCuYg9h56A4YFjkKv9aFA+"
-        ...            "A7u0yrqYhTdpuAWuBgL2BQ==;"
-        ...            "hostname=bubu.local;"
-        ...            "port=5354;"
-        ...            "vk=/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg=;"
-        ...            "dt=86400;"
-        ...            "vf=1636045801;"
-        ...            "e=false")
-        >>> d
-        {'r': <comma_separated_Nets('')>, 'addrs': <comma_separated_IPs('192.168.2.106')>, 'pk': \
-<b64:/O6SlK...(32)>, 'c': <b64:SbS/v8...(64)>, 'hostname': 'bubu.local', 'port': 5354, \
-'vk': <b64:/O6SlK...(32)>, 'dt': 86400, 'vf': 1636045801, 'e': 0}
-        >>> str(d.addrs)
-        '192.168.2.106'
-        >>> str(d.pk)
-        '/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg='
-        >>> str(d.c)
-        'SbS/v8aTX2Ti3E1jp4T7d8lHoW4v5iRcBcdQ6tSv5bzCuYg9h56A4YFjkKv9aFA+A7u0yrqYhTdpuAWuBgL2BQ=='
-        >>> d.hostname
-        'bubu.local'
-        >>> d.port
-        5354
-        >>> str(d.vk)
-        '/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg='
-        >>> d.dt
-        86400
-        >>> d.vf
-        1636045801
-        >>> d.e
-        0
-
-        This relies on the schema to coerce values into the right types.
-        >>> d = Descriptor.parse("addrs=fe80::377b:d17:9b74:1b91;"
-        ...            "pk=/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg=;"
-        ...            "c=SbS/v8aTX2Ti3E1jp4T7d8lHoW4v5iRcBcdQ6tSv5bzCuYg9h56A4YFjkKv9aFA+"
-        ...            "A7u0yrqYhTdpuAWuBgL2BQ==;"
-        ...            "hostname=bubu.local;"
-        ...            "port=5354;"
-        ...            "vk=/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg=;"
-        ...            "dt=86400;"
-        ...            "vf=1636045801;"
-        ...            "e=false")
-        >>> d
-        {'r': <comma_separated_Nets('')>, 'addrs': <comma_separated_IPs('fe80::377b:d17:9b74:1b91')>, 'pk': \
-<b64:/O6SlK...(32)>, 'c': <b64:SbS/v8...(64)>, 'hostname': 'bubu.local', 'port': 5354, \
-'vk': <b64:/O6SlK...(32)>, 'dt': 86400, 'vf': 1636045801, 'e': 0}
-        >>> str(d.addrs)
-        'fe80::377b:d17:9b74:1b91'
-        >>> str(d.pk)
-        '/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg='
-        >>> str(d.c)
-        'SbS/v8aTX2Ti3E1jp4T7d8lHoW4v5iRcBcdQ6tSv5bzCuYg9h56A4YFjkKv9aFA+A7u0yrqYhTdpuAWuBgL2BQ=='
-        >>> d.hostname
-        'bubu.local'
-        >>> d.port
-        5354
-        >>> str(d.vk)
-        '/O6SlKeiGWHyK0VpA1V5emqseJqWdDs/J8Mu6SGEQHg='
-        >>> d.dt
-        86400
-        >>> d.vf
-        1636045801
-        >>> d.e
-        0
+        >>> from vula.constants import _TEST_DESC
+        >>> _TEST_DESC == str(Descriptor.parse(_TEST_DESC))
+        True
         """
         try:
             split_desc: List = desc.split(";")
@@ -208,62 +195,24 @@ class Descriptor(schemattrdict, serializable):
         ).encode()
 
     def __str__(self):
-        """
-        Return the number or IP as a string.
-
-        >>> ip = comma_separated_IPs('192.168.13.37')
-        >>> ip.__str__()
-        '192.168.13.37'
-
-        >>> ip = comma_separated_IPs('fe80::377b:d17:9b74:1b91')
-        >>> ip.__str__()
-        'fe80::377b:d17:9b74:1b91'
-        """
         return " ".join("%s=%s;" % kv for kv in sorted(self.items()))
 
     @property
     def id(self):
         """
         This returns the peer ID (aka the verify key, base64-encoded).
-        >>> desc_s = (
-        ... "addrs=192.168.6.9;"
-        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
-        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;"
-        ... "vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> d = Descriptor.parse(desc_s)
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> d = Descriptor.parse(_TEST_DESC_UNSIGNED)
         >>> d.id
-        'Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M='
-
-        >>> desc_s = (
-        ... "addrs=fe80::377b:d17:9b74:1b91;"
-        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
-        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;"
-        ... "port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> d = Descriptor.parse(desc_s)
-        >>> d.id
-        'Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M='
-
+        'afToKyN29ubu4DkhUMLoGIt5WjbsgEHYuccNtxvbjmA='
         """
         return str(self.vk)
 
     @property
     def ephemeral(self):
         """
-        >>> desc_s = (
-        ... "addrs=192.168.6.9;"
-        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
-        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;"
-        ... "port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> d = Descriptor.parse(desc_s)
-        >>> d.ephemeral
-        0
-
-        >>> desc_s = (
-        ... "addrs=fe80::377b:d17:9b74:1b91;"
-        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
-        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;"
-        ... "port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> d = Descriptor.parse(desc_s)
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> d = Descriptor.parse(_TEST_DESC_UNSIGNED)
         >>> d.ephemeral
         0
         """
@@ -278,46 +227,28 @@ class Descriptor(schemattrdict, serializable):
     @property
     def IPv4addrs(self):
         """
-        >>> desc_s = (
-        ... "addrs=2001:0db8:85a3:0000:0000:8a2e:0370:7334;"
-        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
-        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;"
-        ... "port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> d = Descriptor.parse(desc_s)
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> d = Descriptor.parse(_TEST_DESC_UNSIGNED)
         >>> d.IPv4addrs
-        []
-        >>> desc_s = (
-        ... "addrs=192.168.6.9;"
-        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;"
-        ... "hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;vf=1601388653;"
-        ... "vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> d = Descriptor.parse(desc_s)
-        >>> d.IPv4addrs
-        [IPv4Address('192.168.6.9')]
+        [IPv4Address('10.89.0.2')]
         """
-        return [ip for ip in self.addrs if isinstance(ip, IPv4Address)]
+        return list(getattr(self, 'v4a', ()))
 
     @property
     def IPv6addrs(self):
         """
-        >>> desc_s = (
-        ... "addrs=2001:0db8:85a3:0000:0000:8a2e:0370:7334;"
-        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
-        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=5354;"
-        ... "vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> d = Descriptor.parse(desc_s)
-        >>> d.IPv6addrs
-        [IPv6Address('2001:db8:85a3::8a2e:370:7334')]
-        >>> desc_s = (
-        ... "addrs=192.168.6.9;"
-        ... "c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;"
-        ... "dt=86400;e=0;hostname=alice.local;pk=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;"
-        ... "port=5354;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> d = Descriptor.parse(desc_s)
-        >>> d.IPv6addrs
-        []
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> d = Descriptor.parse(_TEST_DESC_UNSIGNED)
+        >>> d.IPv6addrs # doctest: +NORMALIZE_WHITESPACE
+        [IPv6Address('fdff:ffff:ffdf:989f:24cf:bda:1262:cfc6'),
+         IPv6Address('fe80::bc92:4dff:fe82:30d'),
+         IPv6Address('fd54:f27a:17c1:3a61::2')]
         """
-        return [ip for ip in self.addrs if isinstance(ip, IPv6Address)]
+        return list(getattr(self, 'v6a', ()))
+
+    @property
+    def all_addrs(self):
+        return self.IPv6addrs + self.IPv4addrs
 
     def sign(self, seed) -> Descriptor:
         signing_key: SigningKey = SigningKey(seed=seed)
@@ -331,23 +262,24 @@ class Descriptor(schemattrdict, serializable):
         Verifies the signature.
         Returns true if valid, false if invalid.
 
+        Missing signature:
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> desc = Descriptor.parse(_TEST_DESC_UNSIGNED)
+        >>> assert desc.verify_signature() is False
+
         Valid signature:
-        >>> desc_str = (
-        ... "addrs=10.215.167.50; c=KNDxDMgmkH8Poa7TJBlIZrvTnQBN5w10gYlyY5"
-        ... "MfvkA7Eu12IhpheCdJzWIwap4PE5Ryv3PzvU4ikrEY6oXJNw==; dt=86400; e=0; "
-        ... "hostname=wg-mdns-test1.local.; pk=y9bQa4DAj4NT5lh8PffyAbXNbYCkxczMKLk/r"
-        ... "tP4CVY=; port=5354; r=; s=YJqLUPrI8G/IfA1wIbW2z5p0EtYcDFh4gxCjP5czMK2wi"
-        ... "GRgZdeBibs6shDoRusfHtSy+4m/Z9Jfhul+amQYAQ==; vf=1605737957; vk=XGQErb1N"
-        ... "Jmg4dMLZK7hXfhRahgZ6ix/oP3+BTq2+Dy8=;")
-        >>> desc = Descriptor.parse(desc_str)
+        >>> from vula.constants import _TEST_DESC
+        >>> desc = Descriptor.parse(_TEST_DESC)
         >>> assert desc.verify_signature() is True
 
         Invalid signature:
         >>> desc = Descriptor(desc, port=desc['port'] + 1)
         >>> assert desc.verify_signature() is False
         """
+        sig = self.get('s')
+        if not sig:
+            return False
         verify_public_key = VerifyKey(self.vk)
-        sig = self.s
         buf_to_verify: bytes = self._build_sig_buf()
         try:
             verify_public_key.verify(buf_to_verify, sig)
@@ -431,32 +363,9 @@ class Peer(schemattrdict):
 
         It is either the petname, or the last name announced, or, if the last
         name announced is disabled, another enabled name.
-        >>> desc_string = ("addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
-        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
-        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
-        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> descriptor = Descriptor.parse(desc_string)
-        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,
-        ... verified=False,nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip
-        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name
-        'george'
-        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
-        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
-        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name
-        'george.local'
-        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
-        ... nicknames={descriptor.hostname: False, "schnubbi": True},IPv4addrs={ip: True for ip
-        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name
-        'schnubbi'
-
-        >>> desc_string = ("addrs=fe80::377b:d17:9b74:1b91;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
-        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
-        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
-        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> descriptor = Descriptor.parse(desc_string)
-        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,
-        ... verified=False,nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip
-        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> peer = Descriptor.parse(_TEST_DESC_UNSIGNED).make_peer(petname='george')
+        >>> peer.name
         'george'
         """
         latest = self.descriptor.hostname
@@ -473,68 +382,28 @@ class Peer(schemattrdict):
         """
         Returns a sorted list of all names other than self.name
 
-        >>> desc_string = ("addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
-        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
-        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
-        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> descriptor = Descriptor.parse(desc_string)
-        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
-        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
-        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
-        []
-        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,
-        ... verified=False,nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip
-        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
-        ['george.local']
-        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,verified=False,
-        ... nicknames={descriptor.hostname: False, "schnubbi": True},IPv4addrs={ip: True for ip
-        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
-        ['george.local', 'schnubbi']
-
-        >>> desc_string = ("addrs=fe80::377b:d17:9b74:1b91;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
-        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
-        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
-        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> descriptor = Descriptor.parse(desc_string)
-        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
-        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
-        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
-        []
-        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,
-        ... verified=False,nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip
-        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
-        ['george.local']
-        >>> Peer(dict(descriptor=descriptor,petname="george",pinned=False,enabled=True,verified=False,
-        ... nicknames={descriptor.hostname: False, "schnubbi": True},IPv4addrs={ip: True for ip
-        ...  in descriptor.IPv4addrs},IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).other_names
-        ['george.local', 'schnubbi']
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> peer = Descriptor.parse(_TEST_DESC_UNSIGNED).make_peer(
+        ...      petname='abc', nicknames=dict(xyz=True,xxx=False,yyy=True))
+        >>> peer.other_names
+        ['xyz', 'yyy']
         """
-        return list(sorted(set(self.nicknames) - set([self.name])))
+        return list(
+            sorted(
+                {n for n, e in self.nicknames.items() if e} - set([self.name])
+            )
+        )
 
     @property
     def name_and_id(self):
         """
         Returns the name and ID of the peer.
 
-        >>> desc_string = ("addrs=192.168.6.9;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
-        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
-        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
-        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> descriptor = Descriptor.parse(desc_string)
-        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
-        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
-        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name_and_id
-        'george.local (Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=)'
-
-        >>> desc_string = ("addrs=fe80::377b:d17:9b74:1b91;c=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
-        ... f"BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==;dt=86400;e=0;hostname=george.local;pk=QkJCQkJCQ"
-        ... f"kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=;port=123;vf=1601388653;vk=Q0NDQ0NDQ0NDQ0NDQ0NDQ0N"
-        ... f"DQ0NDQ0NDQ0NDQ0NDQ0M=")
-        >>> descriptor = Descriptor.parse(desc_string)
-        >>> Peer(dict(descriptor=descriptor,petname="",pinned=False,enabled=True,verified=False,
-        ... nicknames={descriptor.hostname: True},IPv4addrs={ip: True for ip in descriptor.IPv4addrs
-        ... },IPv6addrs={ip: True for ip in descriptor.IPv6addrs})).name_and_id
-        'george.local (Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=)'
+        >>> from vula.constants import _TEST_DESC_UNSIGNED
+        >>> peer = Descriptor.parse(_TEST_DESC_UNSIGNED).make_peer(
+        ...                                         petname='abc')
+        >>> peer.name_and_id
+        'abc (afToKyN29ubu4DkhUMLoGIt5WjbsgEHYuccNtxvbjmA=)'
         """
         return "%s (%s)" % (self.name, self.id)
 
@@ -549,53 +418,76 @@ class Peer(schemattrdict):
 
     @property
     def enabled_ips(self):
-        return [ip for ip, on in self.IPv4addrs.items() if on] + [
-            ip for ip, on in self.IPv6addrs.items() if on
-        ]
+        return (
+            [self.primary_ip]
+            + [ip for ip, on in self.IPv6addrs.items() if on]
+            + [ip for ip, on in self.IPv4addrs.items() if on]
+        )
 
     @property
     def disabled_ips(self):
-        return [ip for ip, on in self.IPv4addrs.items() if not on] + [
-            ip for ip, on in self.IPv6addrs.items() if not on
+        return [ip for ip, on in self.IPv6addrs.items() if not on] + [
+            ip for ip, on in self.IPv4addrs.items() if not on
         ]
+
+    @property
+    def primary_ip(self):
+        return self.descriptor.p
 
     @property
     def enabled_ips_str(self):
         return [str(ip) for ip in self.enabled_ips]
 
     @property
-    def endpoint_addr(self):
-        return self.descriptor.addrs[0]  # XXX use better "best ip" logic,
-        # allowing for disabled IPs, etc
+    def routable_ips(self):
+        return [
+            ip
+            for ip in self.enabled_ips
+            if not (ip.version == 6 and ip.is_link_local)
+        ]
 
     @property
     def routes(self):
-        res = [
+        return [
             ip_network("%s/%s" % (ip, ip.max_prefixlen))
-            for ip in self.enabled_ips
+            for ip in self.routable_ips
         ]
-        return res
 
     @property
-    def allowed_ips(self):
+    def _wg_allowed_ips(self):
         res = [
             ip_network("%s/%s" % (ip, ip.max_prefixlen))
-            for ip in self.enabled_ips
+            for ip in self.routable_ips
         ]
         if self.use_as_gateway:
-            res.append(ip_network("0.0.0.0/0"))  # FIXME: ipv6
-        return res
+            res.append(ip_network("0.0.0.0/0"))
+            res.append(ip_network("::/0"))
+        return list(map(str, res))
+
+    @property
+    def endpoint_addr(self):
+        if ips := sort_LL_first(
+            i for i in self.enabled_ips if i not in _VULA_ULA_SUBNET
+        ):
+            return ips[0]
+        return ip_address('0.0.0.0')
 
     @property
     def endpoint(self):
-        return "%s:%s" % (self.endpoint_addr, self.descriptor.port)
+        """
+        Return endpoint host:port address, for display purposes.
+        """
+        return "%s:%s" % (
+            f"[{a}]" if (a := self.endpoint_addr).version == 6 else a,
+            self.descriptor.port,
+        )
 
     def wg_config(self: Peer, ctidh_psk):
         return attrdict(
             public_key=str(self.descriptor.pk),
             endpoint_addr=str(self.endpoint_addr),
             endpoint_port=self.descriptor.port,
-            allowed_ips=list(map(str, self.allowed_ips)),
+            allowed_ips=self._wg_allowed_ips,
             preshared_key=ctidh_psk,
         )
 
@@ -627,7 +519,8 @@ class Peer(schemattrdict):
                     )
                 ),
                 'endpoint': self.endpoint,
-                'allowed ips': ", ".join(map(str, self.allowed_ips)),
+                'primary ip': self.primary_ip,
+                'allowed ips': ", ".join(self._wg_allowed_ips),
                 'disabled ips': ", ".join(map(str, self.disabled_ips)),
                 'latest signature': (
                     str(
@@ -663,7 +556,6 @@ class Peer(schemattrdict):
 
 
 class Peers(yamlrepr, queryable, schemadict):
-
     """
     A dictionary of peers. Note that, despite being the home of the conflict
     detection code, a Peers object can be valid (from a schema standpoint) even
@@ -693,10 +585,9 @@ class Peers(yamlrepr, queryable, schemadict):
         return res[0]
 
     def with_ip(self, ip):
-        # IPv6 analysis: not ipv6 ready
-        # Please enhance this function to support ipv6
-        ip = IPv4Address(ip)
-        res = self.limit(enabled=True).by('IPv4addrs').get(ip, [])
+        "Return peer with given IP address"
+        ip = ip_address(ip)
+        res = self.limit(enabled=True).by('enabled_ips').get(ip, [])
         if len(res) > 1:
             raise ConsistencyError(
                 # this should also not be possible, because the state logic
@@ -856,9 +747,11 @@ class PeerCommands(object):
         queries = (
             available
             if peers == ()
-            else [peer for peer in peers if peer in available]
-            if which
-            else peers
+            else (
+                [peer for peer in peers if peer in available]
+                if which
+                else peers
+            )
         )
 
         res = []
@@ -869,14 +762,15 @@ class PeerCommands(object):
                 if descriptor:
                     res.append(d)
                 else:
-                    res.append("{vk} {hostname} {addrs}".format(**desc))
+                    res.append("{vk} {hostname} {v4a}".format(**desc))
                 res.append(desc.qr_code)
             elif descriptor:
                 res.append(self.organize.peer_descriptor(query))
             else:
                 res.append(self.organize.show_peer(query))
 
-        echo_maybepager(("\n" if descriptor else "\n\n").join(res))
+        if output := ("\n" if descriptor else "\n\n").join(res):
+            echo_maybepager(output)
 
     @DualUse.method(short_help="Import peer descriptors", name='import')
     @click.argument('file', type=click.File(), default='-')

@@ -1,3 +1,42 @@
+This README documents the current state of vula's IPv6 support.
+
+This document contains the assessment of the vula codebase for IPv6 support at
+the implementation and at the protocol level. The purpose of the assessment was
+to consider the state of IPv6 support in vula to identify what needed to be
+enhanced, changed, or otherwise carefully checked for correctness. Following
+assessment report's observations and during our subsequent IPv6 research, design
+and implementation phases, IPv6 support has been improved substantially, and it
+is now enabled in the podman test environment.
+
+Names now resolve to these vula-generated ULAs, instead of to some preexisting
+RFC1918 IPv4 address. LAN traffic using preexisting ULA IPs will be
+automatically protected in the same manner as IPv4 traffic using RFC1918 IPs.
+
+Default route encryption over v6 is also enabled, but further testing of it is
+required before this branch should be merged. IPv6 link-local and ULA subnets
+are allowed, but other subnets are not allowed by default.
+
+For vula-enabled IPv6 gateways to be able to assign IPs outside of fc00::/7 and
+fc00::/7 (eg, using public IPv6 space) both gateway and clients must add their
+LAN prefix to subnets_allowed (using the `vula prefs` command).
+
+***
+
+The report below identified eight places in the code which were explicitly
+IPv4-only, all of which have now been fixed.
+
+***
+
+TODO:
+
+* test on hard v4-only system (eg, ipv6 disabled in kernel, so we cannot bind our ULA to the vula interface). at the least, binding the ULA will fail currently. but what else?
+* restore support for default route encryption in a v4-only router setting
+* subnets_forbidden only blocks smaller system_state subnets from being current_subnets, it does not prevent /32 routes within a forbidden_subnet from being routed to. it should.
+* test more on multi-homed systems. we might want descriptor origin tracking?
+* fix podman (currently "make ping" works after "make clean-all editable-image")
+
+***
+
 # Abstract
 We did an IPv6 compatibility analysis for the Vula project in which we sought to answer whether Vula in its current state is IPv6-compatible.
 If Vula turns out not to be compatible yet, we would perform a code analysis to determine which parts of Vula are not yet compatible.
@@ -73,16 +112,16 @@ Generally, most code seems to be IPv6 compatible, thanks to the flexible librari
 
 These problems have surfaced though:
 
-|file           | function                     | comments                                                               |
-|---------------|------------------------------|------------------------------------------------------------------------|
-| constants.py  | IPv4\_GW\_ROUTES             | IPv4 specific constant                                                 |
-| organize.py   | action\_ADJUST\_TO\_NEW\_SYSTEM\_STATE | Usage of IPv4 only constant.                                           |
-| organize.py   |  action\_REMOVE\_PEER            | Usage of IPv4 only constant.                                           |
-| peer.py       | Peers.with_ip                 | Usage of IPv4Address data type                                         |
-| prefs.py      | default                      | Hardcoded IPv4 addresses.                                              |
-| syspyroute.py | sync\_peer                     | Usage of IPv4 only constant.                                           |
-| syspyroute.py | remove\_unknown                | Hardcoded IPv4 addresses.                                              |
-| wg.py         | set                          | IPv6 incompatible string splitting of IP and port (splitting with ':') |
+|file                  | function                     | comments                                                               |
+|----------------------|------------------------------|------------------------------------------------------------------------|
+| constants.py (fixed) | IPv4\_GW\_ROUTES             | IPv4 specific constant                                                 |
+| organize.py (fixed)  | action\_ADJUST\_TO\_NEW\_SYSTEM\_STATE | Usage of IPv4 only constant.                                           |
+| organize.py (fixed)  |  action\_REMOVE\_PEER            | Usage of IPv4 only constant.                                           |
+| peer.py (fixed)      | Peers.with_ip                 | Usage of IPv4Address data type                                         |
+| prefs.py (fixed)     | default                      | Hardcoded IPv4 addresses.                                              |
+| syspyroute.py (fixed)| sync\_peer                     | Usage of IPv4 only constant.                                           |
+| syspyroute.py (fixed)| remove\_unknown                | Hardcoded IPv4 addresses.                                              |
+| wg.py (fixed) | set                          | IPv6 incompatible string splitting of IP and port (splitting with ':') |
 
 As a result, according commentary was added to the above functions in commit 633678d2023fe1bc2531ac00c44887245a01cf5f
 
