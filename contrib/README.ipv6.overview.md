@@ -63,8 +63,8 @@ For IPv6 enhancements to update relevant functionality for vula then:
 - A peer's IPv6 link-local addresses should be used by other peers as the vula
   device endpoint
 - Each peer will likely need a vula assigned IPv6 Unique Local Address such as
-  an example in our own Unique Local Address (ULA) block of `fd::/8` for peer's
-  to perform IPv6 name resolution
+  an example in our own Unique Local Address (ULA) block contained within the
+  larger ULA subnet of `fc::/7` for peer's to perform IPv6 name resolution
 - To support the vula gateway feature for IPv6 as functions with IPv4, each
   peer will require an additional ULA such as one provided by DHCPv6 or other
   IPv6 Route Announcements by routers on local-area network for the gateway to
@@ -80,8 +80,8 @@ The primary research questions that we identified are as follows:
 - 1. It is possible for vula to operate without DHCPv4 or DHCPv6 given the
   requirement of automatic `fe80::/64` addresses in IPv6 enabled networks?
 - 2. It is possible we protect `fe80::/64` addresses?
-- 3. Is it possible to register a ULA prefix `fd::/` for use in vula?
-- 4. Is it possible to protect the `fd::/` addresses with vula as we would any
+- 3. Is it possible to register a ULA prefix inside of `fd::/8` for use in vula?
+- 4. Is it possible to protect any `fd::/8` addresses with vula as we would any
   other IP in `subnets_allowed`?
 - 5. Will `vula_libnss` continue to be a viable way to resolve vula peer names
   to an IPv4 and/or an IPv6 address for the peer?
@@ -187,7 +187,7 @@ originating from vula peers.
 ### Generated ULA addresses
 
 In research question three we ask: "Is it possible to register a ULA prefix
-`fd::/` for use in vula?"
+`fd::/8` for use in vula?"
 
 While registration is not strictly necessary as the `fc00::/7` block as defined
 in RFC6724 is free for ULA use. The `fc00::/7` block is split into `fc00::/8`
@@ -199,15 +199,21 @@ intention to use this address space for vula peers.  This provides vula with
 
 We conclude that it is possible to register a prefix, though it is not
 required, and so we have registered `fdff:ffff:ffdf::/48` for use as the
-default IPv6 peer address. We call a vula host's `fd::/128` their synthetic
-IPv6 address.
+default IPv6 peer address. As an example we refer to a vula generated random
+address in the vula ULA range of `fdff:ffff:ffdf::/48` to be the vula host's
+synthetic IPv6 address. This synthetic address could be managed by vula for
+generation, rotation or persistence in a state file, and it would consist of a
+single /128 IPv6 address in the `fdff:ffff:ffdf::/48` vula ULA. It would serve
+as the canonical IPv6 address for a peer.
 
 ### ULA address use and their lifetime
 
 To use an address in `fd00::/8`, we decided to assign them randomly with no
-guarantee of their lifetime. A peer may or may not keep their `fd::` addresses
-and updates to this address are propagated as any other property of a vula peer
-through mutual vula descriptor exchange. 
+guarantee of their lifetime. The vula synthetic address may be changed with the
+usual constraints of vula peers needing to know the current value. A peer may
+or may not keep their synthetic address and updates to this address are
+propagated as any other property of a vula peer through mutual vula descriptor
+exchange. 
 
 This address, while nominally ephemeral, could serve as the primary IPv6
 address when vula peers look up their respective peer's IPv6 address by their
@@ -216,17 +222,19 @@ vula protected name.
 
 ### ULA addresses
 
-In research question four we ask: "Is it possible to protect the `fd::/`
+In research question four we ask: "Is it possible to protect any `fd::/8`
 addresses with vula as we would any other IP in `subnets_allowed`?" The
 protection notion is similar to the `fe80::/64` traffic. Is it possible for
-vula to automatically encrypted traffic originating from a vula peer's `fd::/8`
-and to another vula peer's `fd::/8` when they are on the same network segment?
+vula to automatically encrypted traffic originating from a vula peer's
+synthetic address and to another vula peer's synthetic address when they are on
+the same network segment?
 
 We create a virtual interface that is bound on a vula host with a single
-`fd::/8` address. Including this address in generated vula descriptors was
-possible after the IPv6 enhancements to ensure all required functions were
-compatible with IPv4 and IPv6. We additionally modified the `subnets_allowed`
-to include `fd::/8`:
+synthetic address within the vula ULA prefix. Including this address in
+generated vula descriptors was possible after the IPv6 enhancements to ensure
+all required functions were compatible with IPv4 and IPv6. We additionally
+modified the `subnets_allowed` to include `fd::/8` which is contained within
+`fc00::/7`:
 ```
 subnets_allowed:
 - fe80::/10
@@ -270,12 +278,12 @@ learn each other's addresses.
 
 However, in IPv6 things are a bit different. We consider four categories of
 IPv6 addresses which peers may use:
-* Link-local addresses (fe80::/10)
-* Addresses from RFC 4193's Unique Local Address (ULA) block (fc00::/7)
+* Link-local addresses (`fe80::/10`)
+* Addresses from RFC 4193's Unique Local Address (ULA) block (`fc00::/7`)
 * Multicast addresses
 * All other unicast addresses (including publicly-routable addresses)
 
-The first category is link-local, the fe80::/10 addresses every interface has
+The first category is link-local, the `fe80::/10` addresses every interface has
 bound. Addresses in this block are are specified to be unique only to a single
 interface. The IPv6 address notation for them can optionally include %zone-id
 appended to the address, where zone-id is a local identifier for the interface
@@ -322,21 +330,21 @@ In order to provide automatic encryption in the absence of ULA or RFC1918
 addresses, we decided to make vula peers each generate their own ULA address
 within a vula-specific network prefix.
 
-We registered the fdff:ffff:ffdf::/48
+We registered the `fdff:ffff:ffdf::/48`
 block with the Ungleich IPv6 ULA registry for this purpose. These are the IPv6
 addresses which vula names will now resolve to. The address is bound to
 *localhost* rather than the vula interface, because having no address bound to
-the vula interface is what enables the correct source IP to be determiend for
+the vula interface is what enables the correct source IP to be determined for
 internet-bound traffic via a vula-enabled gateway. The vula-provided ULA
 address is never used outside of the tunnel. Wireguard's encrypted traffic is
 sent on the physical interface using link-local addresses.
 
-Besides IPv6 connectivity in the absence of a router advertizing ULA prefixes,
+Besides IPv6 connectivity in the absence of a router advertising ULA prefixes,
 this solution also provides vula-protected connectivity absent any router at
 all. Also, previously, two IPv6-capable pinned peers who found themselves on a
 network assigning only public IPv4 addresses would be unable to communicate
 over vula: applications using vula to resolve names of pinned peers would
-resolve to the last acceptable address they had, and these packes would be
+resolve to the last acceptable address they had, and these packets would be
 routed to the wireguard interface where that pinned peer has a stale session
 with an unroutable old IP and therefore cannot route traffic. Now, instead, the
 hosts can resolve ULA IPs for each other and communicate using link-local
@@ -345,21 +353,21 @@ addresses for the wireguard packets.
 Default route encryption in a LAN using ULA addresses and prefix translation
 should work similarly to the way it works on IPv4 networks with RFC1918
 addresses. In the more common IPv6 environment where clients are given public
-IPs, a vula enabled router must add the subnet(s) that it advertizes to its
+IPs, a vula enabled router must add the subnet(s) that it advertises to its
 `subnets_allowed` list so that it will allow peers to route packets to it using
 source addresses from that subnet.
 
-To make automatic default route encruption possible, vula peers must now
+To make automatic default route encryption possible, vula peers must now
 announce all of their IP addresses that vula is enabled for including addresses
 that are not in their `allowed_subnets` list. This will only work in the common
-case that the announced route is actually a link-local address (in fe80::/10)
+case that the announced route is actually a link-local address (in `fe80::/10`)
 as this is what allows clients to identify the peer as their gateway. With the
 default `subnets_allowed` settings peers will not recognize routers advertising
 non-link-local addresses as the default route. We do not provide automatic
 encryption for those routers in our default configuration.
 
 In the course of implementing IPv6 support, a number of other issues were also
-addressed, inclduing fixing support for multihomed hosts: now when vula is
+addressed, including fixing support for multi-homed hosts: now when vula is
 enabled on multiple interfaces, different descriptors are sent on each with the
 correct IP addresses for that interface.
 
