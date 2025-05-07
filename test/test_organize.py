@@ -5,7 +5,7 @@ import pytest
 
 from unittest.mock import MagicMock, patch
 from click.globals import push_context, pop_context
-from highctidh import ctidh
+from highctidh import ctidh  # type: ignore
 
 from vula.csidh import ctidh_parameters
 from vula.organize import Organize
@@ -33,11 +33,14 @@ class TestOrganize(unittest.TestCase):
 
         ctx = MagicMock()
         push_context(ctx)
+        # mypy is reporting: Missing positional argument "ctx" in call to
+        # "Organize" but the argument ctx is provided by the
+        # @click.pass_context decorator
         organize = Organize(
             keys_file=keys_file.as_posix(),
             state_file=state_file.as_posix(),
             interface=MagicMock(),
-        )
+        )  # type: ignore[call-arg]
         pop_context()
         _ctidh = ctidh(ctidh_parameters)
         private_key_one = _ctidh.generate_secret_key()

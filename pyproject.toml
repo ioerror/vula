@@ -55,3 +55,29 @@ filterwarnings = [
     "ignore::_BetaConfiguration",
     "ignore::package distutils is deprecated:DeprecationWarning",
 ]
+
+[[tool.mypy.overrides]]
+module = [
+    "tkinter.*", # unmaintained third party library: https://github.com/insolor/tkinter-stubs
+    "schema.*", # no stubs found
+    "systemd.*", # no stubs found
+    "pyroute2.*", # no stubs found (open discussion in https://github.com/svinota/pyroute2/issues/911)
+    "highctidh.*", # no stubs found (possible contribution to https://codeberg.org/vula/highctidh)
+    "hkdf.*", # no stubs found (possible contribution to https://github.com/casebeer/python-hkdf/tree/master)
+    "dbus.*", # no stubs found
+    "txtoflow.*", # no stubs found
+    "pygraphviz.*", # no stubs found
+    "ggwave.*", # no stubs found
+    "services.*", # no stubs found
+    "click_man.*", # no stubs found
+    "pyzbar.*", # no stubs found
+    "pystray.*", # no stubs found
+    "atheris.*", # no stubs found
+    "pkg_resources.*", # no stubs found
+    "pyfiglet.*", # no stubs found
+    "printy.*", # no stubs found
+    "scapy.*", # no stubs found
+    "pyshark.*", # no stubs found
+    "click_repl.*", # no stubs found
+]
+ignore_missing_imports = true

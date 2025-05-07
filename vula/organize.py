@@ -1,8 +1,8 @@
 """
- *vula-organize* is a daemon that reads configuration files as well as peer
- descriptors. It configures the `vula` WireGuard device for new peers. It
- requires administrative privileges for managing the `vula` device and for
- modifying routing information. It does not need network access.
+*vula-organize* is a daemon that reads configuration files as well as peer
+descriptors. It configures the `vula` WireGuard device for new peers. It
+requires administrative privileges for managing the `vula` device and for
+modifying routing information. It does not need network access.
 
 """
 
@@ -16,9 +16,11 @@ from ipaddress import ip_address, ip_network
 from logging import Logger, getLogger
 from pathlib import Path
 from platform import node
+from typing import Any
 
 import click
 import pydbus
+from click import Context
 from gi.repository import GLib
 from schema import And
 from schema import Optional as Optional_
@@ -526,6 +528,7 @@ class Organize(attrdict):
     It provides DBus interfaces for client tools to view and modify its state.
     """
 
+    cli: click.Group
     dbus = '''
     <node>
       <interface name='local.vula.organize1.Sync'>
@@ -628,7 +631,7 @@ class Organize(attrdict):
     </node>
     '''
 
-    def __init__(self, ctx, **kw):
+    def __init__(self, ctx: Context, **kw: Any) -> None:
         self.update(**kw)
         self.log: Logger = getLogger()
         self.log.debug("Debug level logging enabled")
@@ -641,7 +644,7 @@ class Organize(attrdict):
         self._state.save = self.save
         self._state.info_log = self.log.info
         self._state.debug_log = self.log.debug
-        self._current_descriptors = {}
+        self._current_descriptors: dict[str, str] = {}
 
         if ctx.invoked_subcommand is None:
             self.run(monolithic=False)
@@ -654,7 +657,7 @@ class Organize(attrdict):
 
             @lru_cache(maxsize=_LRU_CACHE_MAX_SIZE)
             def _ctidh_dh(pk: bytes):
-                self.log.debug("Generating CTIDH PSK for pk {}".format(pk))
+                self.log.debug(f"Generating CTIDH PSK for pk {pk!r}")
                 return _ctidh.dh(
                     _ctidh.private_key_from_bytes(sk),
                     _ctidh.public_key_from_bytes(pk),
@@ -732,12 +735,14 @@ class Organize(attrdict):
         if reason:
             reason = f"because {reason}"
         if old_state == new_system_state:
-            self.log.info(f"checked system state{reason}; no changes")
+            self.log.info(
+                f"checked system state{reason}; no changes"
+            )  # ignore: E702
         else:
             self.log.info(
                 f"checked system state{reason}; found changes,"
                 " running sync/repair"
-            )
+            )  # ignore: E702, E231
             res = self.state.event_NEW_SYSTEM_STATE(new_system_state)
             if res.error:
                 raise Exception(
@@ -790,7 +795,7 @@ class Organize(attrdict):
         return self._state.prefs
 
     @DualUse.method()
-    def _write_hosts_file(self):
+    def _write_hosts_file(self) -> bool:
         """
         Write the hosts file
         """
@@ -984,8 +989,8 @@ class Organize(attrdict):
             self.log.info("calling GLib.MainLoop().run()")
             main_loop.run()
 
-    def _instruct_zeroconf(self):
-        descriptors = {}
+    def _instruct_zeroconf(self) -> None:
+        descriptors: dict[str, str] = {}
         vf: int = int(time.time())
         ips_to_publish = []
         discover_ips = []
@@ -1018,7 +1023,7 @@ class Organize(attrdict):
                 pub=(
                     'on same'
                     if sorted(ips_to_publish) == discover_ips
-                    else ips_to_publish
+                    else ips_to_publish,
                 ),
             )
         )
@@ -1050,14 +1055,14 @@ class Organize(attrdict):
         peer = self.peers.query(query)
         return str(peer.descriptor) if peer else ''
 
-    def process_descriptor_string(self: Organize, descriptor: str):
-        self.log.debug("about to parse descriptor: %r", descriptor)
+    def process_descriptor_string(self: Organize, descriptor_string: str):
+        self.log.debug("about to parse descriptor: %r", descriptor_string)
         try:
-            descriptor = Descriptor.parse(descriptor)
+            descriptor = Descriptor.parse(descriptor_string)
         except Exception as ex:
             self.log.info(
                 "organize failed to parse descriptor because %r (descriptor "
-                "was %r)" % (ex, descriptor)
+                "was %r)" % (ex, descriptor_string)
             )
             return
 

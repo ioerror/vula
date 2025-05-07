@@ -1,6 +1,6 @@
 """
- *vula-configuration* creates *vula.conf* and enables the *vula*
- WireGuard device with *wg-quick*.
+*vula-configuration* creates *vula.conf* and enables the *vula*
+WireGuard device with *wg-quick*.
 """
 
 import os
@@ -9,8 +9,10 @@ from base64 import b64encode
 from logging import Logger, getLogger
 from os import geteuid, mkdir, system
 from sys import platform
+from typing import Any, Optional
 
 import click
+from click import Context
 from click.exceptions import Exit
 from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives import serialization
@@ -49,7 +51,9 @@ from .notclick import DualUse
 )
 @click.pass_context
 class Configure(attrdict):
-    def __init__(self, ctx, **kw):
+    cli: click.Group
+
+    def __init__(self, ctx: Optional[Context] = None, **kw: Any) -> None:
         """
         Configure interface (generating keys if necessary).
         """

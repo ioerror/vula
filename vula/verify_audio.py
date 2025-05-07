@@ -1,20 +1,20 @@
 import hashlib
 import os
 import sys
+from typing import Optional
 
 import click
-from typing import Optional
 from types import ModuleType
 
+ggwave: Optional[ModuleType]
 try:
-    ggwave: Optional[ModuleType]
-    import ggwave
+    import ggwave  # type: ignore[no-redef]
 except ImportError:
     ggwave = None
 
+pyaudio: Optional[ModuleType]
 try:
-    pyaudio: Optional[ModuleType]
-    import pyaudio
+    import pyaudio  # type: ignore[no-redef]
 except ImportError:
     pyaudio = None
 

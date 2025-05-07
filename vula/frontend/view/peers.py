@@ -190,7 +190,7 @@ class Peers(Frame):
             if peer["name"]:
                 name = peer["name"]
             else:
-                name = peer["other_names"]
+                name = peer["other_names"] or ""
 
             # Peer name
             canvas.create_text(
@@ -207,41 +207,42 @@ class Peers(Frame):
                 20.0,
                 40.0,
                 anchor="nw",
-                text=peer["endpoint"],
+                text=peer["endpoint"] or "",
                 fill=TEXT_COLOR_GREY,
                 font=(FONT, FONT_SIZE_TEXT_XS),
             )
 
             # Status labels
-            if "enabled" in peer["status"]:
-                canvas.create_text(
-                    205.0,
-                    40.0,
-                    anchor="nw",
-                    text="enabled",
-                    fill=TEXT_COLOR_YELLOW,
-                    font=(FONT, FONT_SIZE_TEXT_M),
-                )
-            if "unpinned" not in peer["status"]:
-                canvas.create_text(
-                    270.0,
-                    40.0,
-                    anchor="nw",
-                    text="pinned",
-                    fill=TEXT_COLOR_PURPLE,
-                    font=(FONT, FONT_SIZE_TEXT_M),
-                )
-            if "unverified" not in peer["status"]:
-                canvas.create_text(
-                    325.0,
-                    40.0,
-                    anchor="nw",
-                    text="verified",
-                    fill=TEXT_COLOR_GREEN,
-                    font=(FONT, FONT_SIZE_TEXT_M),
-                )
+            if peer["status"] is not None:
+                if "enabled" in peer["status"]:
+                    canvas.create_text(
+                        205.0,
+                        40.0,
+                        anchor="nw",
+                        text="enabled",
+                        fill=TEXT_COLOR_YELLOW,
+                        font=(FONT, FONT_SIZE_TEXT_M),
+                    )
+                if "unpinned" not in peer["status"]:
+                    canvas.create_text(
+                        270.0,
+                        40.0,
+                        anchor="nw",
+                        text="pinned",
+                        fill=TEXT_COLOR_PURPLE,
+                        font=(FONT, FONT_SIZE_TEXT_M),
+                    )
+                if "unverified" not in peer["status"]:
+                    canvas.create_text(
+                        325.0,
+                        40.0,
+                        anchor="nw",
+                        text="verified",
+                        fill=TEXT_COLOR_GREEN,
+                        font=(FONT, FONT_SIZE_TEXT_M),
+                    )
 
-            canvas.bind("<Button-1>", lambda e=_, p=peer: self.open_details(p))
+            canvas.bind("<Button-1>", lambda e: self.open_details(peer))
 
             self.peer_frames.append(peer_frame)
             counter += 1

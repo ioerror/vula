@@ -15,7 +15,7 @@ from base64 import b64decode, b64encode  # noqa: F401
 from datetime import timedelta
 from ipaddress import ip_address, ip_network
 from logging import Logger, getLogger
-from typing import Tuple
+from typing import Tuple, Self
 
 import click
 from pyroute2 import IPRoute
@@ -170,7 +170,7 @@ class PeerConfig(schemattrdict, serializable):
     @property
     def wg_show(self: PeerConfig):
         return "\n  ".join(
-            click.style(label, bold=True) + ': ' + value
+            click.style(label, bold=True) + ': ' + str(value)
             for label, value in {
                 click.style('peer', fg="yellow"): click.style(
                     self['public_key'], fg="yellow"
@@ -204,7 +204,7 @@ class PeerConfig(schemattrdict, serializable):
                     and "every %s seconds" % (self['persistent_keepalive'],)
                 ),
             }.items()
-            if value not in (None, False)
+            if value is not False and value is not None
         )
 
     @property
@@ -254,7 +254,10 @@ class Interface(attrdict, yamlrepr_hl):
     etc.
     """
 
-    def __init__(self, name, ipr=None):
+    # Type information for @DualUse.method
+    cli: click.Group
+
+    def __init__(self, name: str, ipr: Optional[IPRoute] = None):
         """
         >>> iface = Interface("test interface")
         >>> iface.name
@@ -347,7 +350,7 @@ class Interface(attrdict, yamlrepr_hl):
         return res
 
     @DualUse.method()
-    def query(self):
+    def query(self) -> Self:
         """
         This calls "info" for the interface via pyroute2, and (re-)populates
         our dictionary. (We're a dict subclass, recall). It returns self.
@@ -360,15 +363,17 @@ class Interface(attrdict, yamlrepr_hl):
             self.log.warn("Failed to query interface %r: %r", self.name, ex)
             return self
 
-        res = {
+        data: dict[str, dict | list] = {
             k.replace('WGDEVICE_A_', '').lower(): (
                 dict(v) if isinstance(v, netlink_atom) else v
             )
             for k, v in dict(res[0]['attrs']).items()
         }
-        res['peers'] = list(map(PeerConfig.from_netlink, res.get('peers', ())))
+        data['peers'] = list(
+            map(PeerConfig.from_netlink, data.get('peers', ()))
+        )
         self.clear()
-        self.update(res)
+        self.update(data)
         return self
 
     def set(self, **kwargs):
@@ -377,7 +382,7 @@ class Interface(attrdict, yamlrepr_hl):
         self.log.debug("WireGuard.set(%r, **%r) -> %r", self.name, kwargs, res)
         return res
 
-    def apply_peerconfig(self, new: attrdict, dryrun=False):
+    def apply_peerconfig(self, new: attrdict, dryrun: bool = False) -> str:
         """
         This sets only the keys that have changed, and returns a list of the
         new keys that needed to be set. Due to a bug in PyRoute2 and/or Linux,
@@ -386,7 +391,7 @@ class Interface(attrdict, yamlrepr_hl):
         """
         self.query()
         cur = self._peers_by_pubkey.get(new["public_key"])
-        res = []
+        res: list[str] = []
         if cur:
             if new.get('remove'):
                 res.append(
@@ -483,8 +488,7 @@ class Interface(attrdict, yamlrepr_hl):
             if not dryrun:
                 self.set(peer=new)
 
-        res = "\n".join(filter(None, res))
-        return res
+        return "\n".join(filter(None, res))
 
     @property
     def peers(self):
@@ -567,6 +571,9 @@ class wg(object):
     wg.Interface class, and aren't currently intended for normal use.
     """
 
+    # Type information for @DualUse.method
+    cli: click.Group
+
     def __init__(self, ctx, *a, **kw):
         if ctx.invoked_subcommand is None:
             click.echo(self.show())
@@ -617,6 +624,7 @@ class wg(object):
         """
         return Interface(interface).query().wg_showconf
 
+    @staticmethod
     @DualUse.method(
         short_help="Change the current configuration, add peers, remove "
         "peers, or change peers."

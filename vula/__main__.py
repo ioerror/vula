@@ -161,7 +161,7 @@ def release_gateway():
 
 for name, value in list(globals().items()):
     if name == 'wg':
-        wg = wg.main
+        wg = wg.main  # type: ignore
         # wg is accessible in debug mode via Debuggable's magic interface
         # but we don't want it in our command list in the GUI because it isn't
         # supported (it is mostly an incomplete replica of the normal wg tools;

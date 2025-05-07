@@ -22,7 +22,7 @@ class TestOrganizeEngine(unittest.TestCase):
             self.state.event_USER_EDIT('SET', 'prefs.local_domains', ['local'])
         )
 
-    def _assert_res_no_error(self, result: {}):
+    def _assert_res_no_error(self, result):
         self.assertEqual(
             (result.error, getattr(result, 'traceback', None)), (None, None)
         )

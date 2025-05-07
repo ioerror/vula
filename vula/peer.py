@@ -6,7 +6,7 @@ from base64 import b64encode
 from datetime import timedelta
 from io import StringIO
 from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
-from typing import List
+from typing import List, Self, Any
 
 import click
 from nacl.exceptions import BadSignatureError
@@ -37,6 +37,7 @@ from .common import (
     serializable,
     yamlrepr,
     yamlrepr_hl,
+    comma_separated_IPs,
 )
 from .engine import Result
 from .notclick import (
@@ -115,7 +116,7 @@ class Descriptor(schemattrdict, serializable):
     default = dict(r="")
 
     @classmethod
-    def from_zeroconf_properties(cls, props: dict):
+    def from_zeroconf_properties(cls, props: dict[bytes, Any]) -> Self:
         """
         This instantiates a descriptor from a dictionary of bytes values, as
         the zeroconf library gives us.
@@ -125,9 +126,11 @@ class Descriptor(schemattrdict, serializable):
         This function should be called from within a try block, as invalid
         descriptors with raise an exception.
         """
-        data = {}
-        for k, v in props.items():
-            k = k.decode()
+        data: dict[
+            str, comma_separated_IPs | IPv4Address | IPv6Address | str
+        ] = {}
+        for _k, v in props.items():
+            k = _k.decode()
             typ = cls.schema._schema.get(k) or cls.schema._schema.get(
                 Optional(k)
             )
@@ -692,6 +695,9 @@ class PeerCommands(object):
     contents). Note that we do not currently check to ensure that there is not
     an organize daemon running when "organize peer ..." commands are run.
     """
+
+    # Type information for @DualUse.method
+    cli: click.Group
 
     def __init__(self, ctx):
         self.organize = (

@@ -13,7 +13,8 @@ from base64 import b64decode, b64encode
 from ipaddress import ip_address, ip_network, IPv4Address, IPv6Address
 from logging import Logger, getLogger
 from pathlib import Path
-from typing import Any, Dict, Optional
+import types
+from typing import Any, Dict, Optional, Callable
 
 import click
 import pydbus
@@ -22,6 +23,8 @@ from schema import And, Or, Schema, SchemaError, Use
 
 from .constants import _ORGANIZE_DBUS_NAME, _ORGANIZE_DBUS_PATH
 from .notclick import DualUse, Exit  # noqa: F401
+
+pygments: Optional[types.ModuleType]
 
 try:
     import pygments
@@ -290,7 +293,11 @@ class serializable(dict):
 
 class schemadict(ro_dict, serializable):
     schema = NotImplemented
-    default = None
+    # @TODO: Any maybe replaceable by a generic type, because data
+    # (which is derived from default) will be validated against
+    # the schema definition, but IDK the schema library and this
+    # could become a rather complex task
+    default: Optional[dict[str, Any]] = None
 
     def __init__(self, *a, **kw):
         self._as_dict = None
@@ -386,61 +393,61 @@ class jsonrepr(serializable):
         return json.dumps(self._dict())
 
 
-if pygments is not None:
-    #    from pygments.style import Style
-    #    from pygments.token import ( Keyword, Name, Comment, String,
-    #        Error, Number, Operator, Generic,)
-    #
-    #    class MyStyle(Style):
-    #        default_style = ""
-    #        styles = {
-    #            Name: 'bold #0f0',
-    #        }
+#    from pygments.style import Style
+#    from pygments.token import ( Keyword, Name, Comment, String,
+#        Error, Number, Operator, Generic,)
+#
+#    class MyStyle(Style):
+#        default_style = ""
+#        styles = {
+#            Name: 'bold #0f0',
+#        }
 
-    class yamlrepr_hl(yamlrepr):
-        def __repr__(self):
-            # aaa = list(
-            #    pygments.lexers.YamlLexer().get_tokens_unprocessed(
-            #        yaml.dump(self._dict(), default_style='', sort_keys=False)
-            #    )
-            # )
 
-            res = pygments.highlight(
-                yaml.safe_dump(
-                    self._dict(), default_style='', sort_keys=False
-                ),
-                pygments.lexers.YamlLexer(),
-                pygments.formatters.TerminalTrueColorFormatter(
-                    #    style=MyStyle,
-                    style='paraiso-dark'
-                ),
-            )
-            return res
+class yamlrepr_hl(yamlrepr):
+    def __repr__(self):
+        if pygments is None:
+            return super().__repr__()
+        # aaa = list(
+        #    pygments.lexers.YamlLexer().get_tokens_unprocessed(
+        #        yaml.dump(self._dict(), default_style='', sort_keys=False)
+        #    )
+        # )
 
-    class jsonrepr_hl(jsonrepr):
-        def __repr__(self):
-            r"""
-            Function to return raw JSON-formatted content with syntax
-            highlighting.
-            >>> serializableObj = serializable(("ab", "cd"))
-            >>> jsonReprObj = jsonrepr(serializableObj)
-            >>> jsonReprhlObj = jsonrepr_hl(jsonReprObj)
-            >>> jsonReprhlObj.__repr__()
-            '\x1b[38;2;231;233;219m{\x1b[39m\n\x1b[38;2;231;233;219m  \x1b[39m\x1b[38;2;91;196;191m"a"\x1b[39m\x1b[38;2;231;233;219m:\x1b[39m\x1b[38;2;231;233;219m \x1b[39m\x1b[38;2;72;182;133m"b"\x1b[39m\x1b[38;2;231;233;219m,\x1b[39m\n\x1b[38;2;231;233;219m  \x1b[39m\x1b[38;2;91;196;191m"c"\x1b[39m\x1b[38;2;231;233;219m:\x1b[39m\x1b[38;2;231;233;219m \x1b[39m\x1b[38;2;72;182;133m"d"\x1b[39m\n\x1b[38;2;231;233;219m}\x1b[39m\n'
-            """  # noqa: E501
+        res = pygments.highlight(
+            yaml.safe_dump(self._dict(), default_style='', sort_keys=False),
+            pygments.lexers.YamlLexer(),
+            pygments.formatters.TerminalTrueColorFormatter(
+                #    style=MyStyle,
+                style='paraiso-dark'
+            ),
+        )
+        return res
 
-            res = pygments.highlight(
-                json.dumps(self._dict(), indent=2),
-                pygments.lexers.JsonLexer(),
-                pygments.formatters.TerminalTrueColorFormatter(
-                    style='paraiso-dark'
-                ),
-            )
-            return res
 
-else:
-    yamlrepr_hl = yamlrepr  # type: ignore
-    jsonrepr_hl = jsonrepr  # type: ignore
+class jsonrepr_hl(jsonrepr):
+    def __repr__(self):
+        r"""
+        Function to return raw JSON-formatted content with syntax
+        highlighting.
+        >>> serializableObj = serializable(("ab", "cd"))
+        >>> jsonReprObj = jsonrepr(serializableObj)
+        >>> jsonReprhlObj = jsonrepr_hl(jsonReprObj)
+        >>> jsonReprhlObj.__repr__()
+        '\x1b[38;2;231;233;219m{\x1b[39m\n\x1b[38;2;231;233;219m  \x1b[39m\x1b[38;2;91;196;191m"a"\x1b[39m\x1b[38;2;231;233;219m:\x1b[39m\x1b[38;2;231;233;219m \x1b[39m\x1b[38;2;72;182;133m"b"\x1b[39m\x1b[38;2;231;233;219m,\x1b[39m\n\x1b[38;2;231;233;219m  \x1b[39m\x1b[38;2;91;196;191m"c"\x1b[39m\x1b[38;2;231;233;219m:\x1b[39m\x1b[38;2;231;233;219m \x1b[39m\x1b[38;2;72;182;133m"d"\x1b[39m\n\x1b[38;2;231;233;219m}\x1b[39m\n'
+        """  # noqa: E501
+
+        if pygments is None:
+            return super().__repr__()
+
+        res = pygments.highlight(
+            json.dumps(self._dict(), indent=2),
+            pygments.lexers.JsonLexer(),
+            pygments.formatters.TerminalTrueColorFormatter(
+                style='paraiso-dark'
+            ),
+        )
+        return res
 
 
 class Bug(Exception):
@@ -452,7 +459,9 @@ class ConsistencyError(Exception):
 
 
 class comma_separated_IPs(object):
-    addr_cls = lambda _, a: ip_address(a)
+    addr_cls: Callable[[Any, Any], IPv4Address | IPv6Address] | type[
+        IPv4Address
+    ] | type[IPv6Address] = lambda _, a: ip_address(a)
     size: Optional[int] = None
 
     def __init__(self, arg):
@@ -606,11 +615,11 @@ class IPs(comma_separated_IPs):
     "TODO: rename comma_separated_IPs to IPs"
 
     @property
-    def v4s(self):
+    def v4s(self) -> list[IPv4Address]:
         return [a for a in self if a.version == 4]
 
     @property
-    def v6s(self):
+    def v6s(self) -> list[IPv6Address]:
         return [a for a in self if a.version == 6]
 
 

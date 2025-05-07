@@ -14,7 +14,6 @@ from vula.frontend.constants import (
     TEXT_COLOR_WHITE,
 )
 from vula.peer import Descriptor
-
 from .popupMessage import PopupMessage
 
 _ = gettext.gettext
@@ -89,6 +88,9 @@ class VerificationKeyOverlay(tk.Toplevel):
                 font=(FONT, FONT_SIZE_TEXT_L),
             ).grid(row=0, column=0)
 
+            def command(key: str = vk) -> None:
+                self.add_to_clipbaord(key)
+
             copy_button = tk.Button(
                 text_frame,
                 text="Copy",
@@ -99,7 +101,7 @@ class VerificationKeyOverlay(tk.Toplevel):
                 background=BACKGROUND_COLOR,
                 activebackground=BACKGROUND_COLOR,
                 activeforeground=BACKGROUND_COLOR,
-                command=lambda key=vk: self.add_to_clipbaord(key),
+                command=command,
             )
             copy_button.grid(row=0, column=1)
 
