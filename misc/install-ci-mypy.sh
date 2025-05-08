@@ -17,12 +17,18 @@ DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
     python3-pytest python3-pytest-runner python3-pytest-xdist \
     python3-qrcode python3-schema python3-setuptools \
     python3-setuptools-scm python3-socks python3-sphinx python3-stem \
-    python3-systemd python3-tk python3-toml python3-venv python3-wheel \
-    python3-xlib python3-yaml python3-zeroconf sudo time wireguard-tools;
+    python3-systemd python3-tk python3-toml python3-typeshed python3-venv \
+    python3-wheel python3-xlib python3-yaml python3-zeroconf sudo time \
+    wireguard-tools;
 
 pip install --break-system-packages \
     babel black build click cryptography flake8 highctidh isort \
     mypy opencv-python packaging pillow printy pyaudio pydbus pydbus-stubs \
     pydeps pygobject pygobject-stubs pyfiglet pluggy progress pyroute2 \
     pyaudio pynacl pystray pytest pytest-cov qrcode rendez schema setuptools \
-    zeroconf pyyaml;
+    types-colorama types-defusedxml types-pexpect types-pyaudio \
+    types-Pygments types-PyYAML types-qrcode types-python-xlib zeroconf \
+    pyyaml;
+
+mypy test vula || true;
+mypy --install-types --non-interactive || true;

@@ -12,8 +12,6 @@ steps:
       - export CI=true
       - PATH=$PATH:~/.local/bin
       - ./misc/install-ci-mypy.sh
-      - mypy test vula || true
-      - mypy --install-types --non-interactive
       - mypy test vula
 
   check_test:
