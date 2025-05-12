@@ -1,3 +1,9 @@
+vula (0.3.2025051200-1) unstable; urgency=medium
+
+  * Update to 0.3.2025051200
+
+ -- Vula Authors <security@vula.link>  Mon, 12 May 2025 16:00:00 +0000
+
 vula (0.3.2025041800-1) unstable; urgency=low
 
   * wip ipv6 support
