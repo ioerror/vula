@@ -63,7 +63,6 @@ module = [
     "systemd.*", # no stubs found
     "pyroute2.*", # no stubs found (open discussion in https://github.com/svinota/pyroute2/issues/911)
     "highctidh.*", # no stubs found (possible contribution to https://codeberg.org/vula/highctidh)
-    "hkdf.*", # no stubs found (possible contribution to https://github.com/casebeer/python-hkdf/tree/master)
     "dbus.*", # no stubs found
     "txtoflow.*", # no stubs found
     "pygraphviz.*", # no stubs found
